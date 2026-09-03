@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ supplier.name }} - Pharmacy Management{% endblock %}
+
+{% block page_title %}Supplier Profile{% endblock %}
+{% block page_subtitle %}View supplier details and supplied medicines{% endblock %}
+
+{% block content %}
+<!-- Supplier Information Card -->
+<div class="card p-8 mb-8">
+    <div class="flex items-start justify-between mb-6">
+        <div class="flex items-center gap-4">
+            <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-lg">
+                {{ supplier.name.0|upper }}{{ supplier.name.1|upper|default:"" }}
+            </div>
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-1">{{ supplier.name }}</h2>
+                <p class="text-gray-500">Supplier ID: #{{ supplier.id }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'export_supplier_stock' supplier.id %}" class="btn bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Export Stock
+            </a>
+            <a href="{% url 'edit_supplier' supplier.id %}" class="btn btn-secondary flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit Supplier
+            </a>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="bg-cyan-100 p-2 rounded-lg">
+                    <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Location</p>
+                    <p class="text-gray-800 font-semibold">{{ supplier.location }}</p>
+                </div>
+            </div>
+            
+            <div class="flex items-start gap-3">
+                <div class="bg-green-100 p-2 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Email</p>
+                    <p class="text-gray-800 font-semibold break-all">{{ supplier.email }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="bg-blue-100 p-2 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Contact Number</p>
+                    <p class="text-gray-800 font-semibold">{{ supplier.contact_number }}</p>
+                </div>
+            </div>
+            
+            <div class="flex items-start gap-3">
+                <div class="bg-purple-100 p-2 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Joined</p>
+                    <p class="text-gray-800 font-semibold">{{ supplier.created_at|date:"M d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if supplier.description %}
+    <div class="bg-gray-50 p-4 rounded-lg">
+        <p class="text-sm text-gray-500 font-medium mb-2">Description</p>
+        <p class="text-gray-700">{{ supplier.description }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="card p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">Total Medicines</p>
+                <h3 class="text-3xl font-bold text-cyan-600 mt-1">{{ medicines.count }}</h3>
+            </div>
+            <div class="bg-cyan-100 p-3 rounded-lg">
+                <svg class="w-8 h-8 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">Total Batches</p>
+                <h3 class="text-3xl font-bold text-indigo-600 mt-1">
+                    {% widthratio medicines 1 1 as total_batches %}
+                    {{ medicines|length }}
+                </h3>
+            </div>
+            <div class="bg-indigo-100 p-3 rounded-lg">
+                <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">Active Since</p>
+                <h3 class="text-xl font-bold text-green-600 mt-1">{{ supplier.created_at|timesince }}</h3>
+            </div>
+            <div class="bg-green-100 p-3 rounded-lg">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Supplied Medicines -->
+<div class="card p-6">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-semibold text-gray-800">Supplied Medicines</h3>
+        <form method="get" class="relative w-full sm:max-w-md">
+        <!-- Search icon -->
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+
+        <!-- Input field -->
+        <input
+            type="text"
+            name="search"
+            id="searchInput"
+            value="{{ search_query }}"
+            class="w-full pl-10 pr-10 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+            placeholder="Search supplied medicines..."
+            oninput="handleSearchInput()"
+        >
+
+        <!-- Clear button -->
+        {% if search_query %}
+        <button type="button" onclick="clearSearch()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        {% endif %}
+        </form>
+
+    </div>
+    
+    {% if medicines %}
+    <div class="overflow-x-auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Medicine Name</th>
+                    <th>Price</th>
+                    <th>Total Quantity</th>
+                    <th>Batches</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for medicine in medicines %}
+                <tr>
+                    <td class="font-semibold text-gray-800">{{ medicine.name }}</td>
+                    <td class="text-cyan-600 font-semibold">₹{{ medicine.price|floatformat:2 }}</td>
+                    <td class="font-medium">{{ medicine.total_quantity }} units</td>
+                    <td>
+                        <div class="space-y-1">
+                            {% for batch in medicine.batches.all|slice:":2" %}
+                            <div class="text-sm bg-gray-50 px-2 py-1 rounded">
+                                <span class="font-medium">{{ batch.batch_name }}</span> - {{ batch.quantity }} units
+                                <span class="text-xs text-gray-500">(Exp: {{ batch.expiry_date|date:"M d, Y" }})</span>
+                            </div>
+                            {% endfor %}
+                            {% if medicine.batches.count > 2 %}
+                            <p class="text-xs text-gray-500">+{{ medicine.batches.count|add:"-2" }} more</p>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if medicine.is_low_stock %}
+                        <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">
+                            Low Stock
+                        </span>
+                        {% else %}
+                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                            In Stock
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+        </svg>
+        <p class="text-lg font-medium text-gray-500">No medicines supplied yet</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="mt-6">
+    <a href="{% url 'supplier_list' %}" class="btn bg-gray-500 text-white hover:bg-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Back to Suppliers
+    </a>
+</div>
+
+<script>
+function handleSearchInput() {
+  const input = document.getElementById('searchInput');
+  clearTimeout(window.searchTimer);
+  window.searchTimer = setTimeout(() => input.form.submit(), 400);
+}
+
+function clearSearch() {
+  const input = document.getElementById('searchInput');
+  input.value = '';
+  input.form.submit();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "admin/change_form.html" %}
+
+{% block after_field_sets %}
+{{ block.super }}
+
+<!-- Datalist Autocomplete Suggestions for Customer Name, Customer Email, and Medicine Name -->
+<datalist id="customer_name_list">
+  {% for c in all_customers %}
+    <option value="{{ c.name }}">{{ c.email }} ({{ c.contact_number }})</option>
+  {% endfor %}
+</datalist>
+
+<datalist id="customer_email_list">
+  {% for c in all_customers %}
+    <option value="{{ c.email }}">{{ c.name }}</option>
+  {% endfor %}
+</datalist>
+
+<datalist id="medicine_name_list">
+  {% for m in all_medicines %}
+    <option value="{{ m.name }}">{{ m.category.name|default:"General" }}</option>
+  {% endfor %}
+</datalist>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const customerMap = {
+        {% for c in all_customers %}
+        "{{ c.name|escapejs }}": { email: "{{ c.email|escapejs }}", name: "{{ c.name|escapejs }}" },
+        {% endfor %}
+    };
+
+    const emailMap = {
+        {% for c in all_customers %}
+        "{{ c.email|escapejs }}": { email: "{{ c.email|escapejs }}", name: "{{ c.name|escapejs }}" },
+        {% endfor %}
+    };
+
+    const medicineExpiryMap = {
+        {% for m in all_medicines %}
+          {% with b=m.batches.first %}
+            {% if b and b.expiry_date %}
+            "{{ m.name|escapejs }}": "{{ b.expiry_date|date:'Y-m-d' }}",
+            {% endif %}
+          {% endwith %}
+        {% endfor %}
+    };
+
+    const nameInput = document.getElementById("id_customer_name");
+    const emailInput = document.getElementById("id_customer_email");
+    const medInput = document.getElementById("id_medicine_name");
+    const expiryInput = document.getElementById("id_expiry_date");
+
+    if (nameInput) {
+        nameInput.setAttribute("list", "customer_name_list");
+        nameInput.setAttribute("placeholder", "Start typing customer name...");
+        nameInput.addEventListener("input", function() {
+            const val = this.value.trim();
+            if (customerMap[val] && emailInput && !emailInput.value) {
+                emailInput.value = customerMap[val].email;
+            }
+        });
+        nameInput.addEventListener("change", function() {
+            const val = this.value.trim();
+            if (customerMap[val] && emailInput) {
+                emailInput.value = customerMap[val].email;
+            }
+        });
+    }
+
+    if (emailInput) {
+        emailInput.setAttribute("list", "customer_email_list");
+        emailInput.setAttribute("placeholder", "Start typing customer email...");
+        emailInput.addEventListener("input", function() {
+            const val = this.value.trim();
+            if (emailMap[val] && nameInput && !nameInput.value) {
+                nameInput.value = emailMap[val].name;
+            }
+        });
+        emailInput.addEventListener("change", function() {
+            const val = this.value.trim();
+            if (emailMap[val] && nameInput) {
+                nameInput.value = emailMap[val].name;
+            }
+        });
+    }
+
+    if (medInput) {
+        medInput.setAttribute("list", "medicine_name_list");
+        medInput.setAttribute("placeholder", "Start typing medicine name...");
+        medInput.addEventListener("change", function() {
+            const val = this.value.trim();
+            if (medicineExpiryMap[val] && expiryInput && !expiryInput.value) {
+                expiryInput.value = medicineExpiryMap[val];
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools %}
+<div class="flex items-center gap-3 flex-wrap">
+    <button type="button" onclick="triggerBulkEmailSend()" class="button" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color: white; font-weight: 700; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(8, 145, 178, 0.35); font-size: 13px; transition: all 0.2s ease;">
+        <svg style="width:16px;height:16px;fill:none;stroke:currentColor;" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        <span>Send Expiry Reminder Email to Selected</span>
+    </button>
+    {{ block.super }}
+</div>
+{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const actionSelect = document.querySelector('select[name="action"]');
+    const changelistForm = document.getElementById('changelist-form');
+
+    // Automatically set default selected action to 'send_expiry_reminder_email_to_selected_customers'
+    if (actionSelect && (!actionSelect.value || actionSelect.value === '')) {
+        const option = actionSelect.querySelector('option[value="send_expiry_reminder_email_to_selected_customers"]');
+        if (option) {
+            option.selected = true;
+        }
+    }
+
+    // Intercept Run button to prevent "No action selected" if dropdown is accidentally reset
+    if (changelistForm) {
+        changelistForm.addEventListener('submit', function(e) {
+            const selectAcross = document.querySelector('input[name="select_across"]');
+            const selectedCheckboxes = document.querySelectorAll('input.action-select:checked');
+            const isAcross = selectAcross && selectAcross.value === "1";
+
+            if (actionSelect && (!actionSelect.value || actionSelect.value === '')) {
+                const opt = actionSelect.querySelector('option[value="send_expiry_reminder_email_to_selected_customers"]');
+                if (opt) {
+                    opt.selected = true;
+                } else {
+                    e.preventDefault();
+                    alert("⚠️ Please select an action from the dropdown first!");
+                    return false;
+                }
+            }
+
+            if (selectedCheckboxes.length === 0 && !isAcross) {
+                e.preventDefault();
+                alert("⚠️ Please select at least one customer using the checkboxes first!");
+                return false;
+            }
+        });
+    }
+});
+
+function triggerBulkEmailSend() {
+    const changelistForm = document.getElementById('changelist-form');
+    const actionSelect = document.querySelector('select[name="action"]');
+    const selectedCheckboxes = document.querySelectorAll('input.action-select:checked');
+    const selectAcross = document.querySelector('input[name="select_across"]');
+
+    const isAcross = selectAcross && selectAcross.value === "1";
+
+    if (selectedCheckboxes.length === 0 && !isAcross) {
+        alert("⚠️ Please select at least one customer using the checkboxes first!");
+        return;
+    }
+
+    if (actionSelect) {
+        actionSelect.value = "send_expiry_reminder_email_to_selected_customers";
+    }
+
+    if (changelistForm) {
+        const countText = isAcross ? 'all selected' : selectedCheckboxes.length;
+        if (confirm(`Are you sure you want to send expiry reminder email to ${countText} customer(s)?`)) {
+            changelistForm.submit();
+        }
+    }
+}
+</script>
+{% endblock %}

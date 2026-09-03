@@ -1,0 +1,589 @@
+{% extends 'base.html' %}
+
+{% block title %}Create New Sale - Pharmacy Management{% endblock %}
+
+{% block page_title %}Create New Sale{% endblock %}
+{% block page_subtitle %}Add items and process sale{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl">
+    <form method="post" id="saleForm">
+        {% csrf_token %}
+        
+        <!-- Customer Selection -->
+        <div class="card p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                Customer Information
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Customer Type
+                    </label>
+                    <select id="customerType" class="form-select" onchange="toggleCustomerSearch()" aria-label="Customer Type">
+                        <option value="walk-in">Walk-in Customer</option>
+                        <option value="registered">Registered Customer</option>
+                    </select>
+                </div>
+                
+                <div id="customerSearchDiv" class="hidden">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Search Customer
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="customerSearch" 
+                            class="form-input" 
+                            placeholder="Search by name, email or phone..."
+                            autocomplete="off"
+                            aria-label="Search Customer"
+                        >
+                        <input type="hidden" name="customer_id" id="customerId" value="walk-in">
+                        <div id="customerResults" class="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-48 overflow-y-auto hidden shadow-lg"></div>
+                    </div>
+                    <p id="selectedCustomer" class="text-sm text-gray-600 mt-2"></p>
+                </div>
+            </div>
+
+            <!-- Customer History Preview (loads after selection) -->
+            <div id="customerHistoryPanel" class="hidden mt-5 pt-5 border-t border-gray-100">
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1">
+                <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Previous Purchases
+              </p>
+              <div id="customerHistoryContent" class="space-y-2 text-sm text-gray-500">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Sale Items -->
+        <div class="card p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    Sale Items
+                </h3>
+                <button type="button" onclick="addSaleItem()" class="btn btn-secondary">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add Item
+                </button>
+            </div>
+            
+            <div id="saleItemsContainer">
+                <!-- Initial sale item row -->
+                <div class="sale-item bg-gray-50 p-4 rounded-lg mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Medicine *</label>
+                            <input 
+                                type="text" 
+                                class="medicine-search form-input" 
+                                placeholder="Search medicine..."
+                                autocomplete="off"
+                                required
+                                aria-label="Search Medicine"
+                            >
+                            <input type="hidden" name="medicine_id[]" class="medicine-id" required>
+                            <div class="medicine-results absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-48 overflow-y-auto hidden shadow-lg"></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Batch *</label>
+                            <select name="batch_id[]" class="batch-select form-select" required disabled aria-label="Select Batch">
+                                <option value="">Select batch</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity *</label>
+                            <input 
+                                type="number" 
+                                name="quantity[]" 
+                                class="quantity-input form-input" 
+                                placeholder="1"
+                                min="1"
+                                required
+                                onchange="calculateItemTotal(this)"
+                                aria-label="Quantity"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Price (₹) *</label>
+                            <input 
+                                type="number" 
+                                name="price[]" 
+                                class="price-input form-input" 
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0.01"
+                                required
+                                onchange="calculateItemTotal(this)"
+                                aria-label="Price"
+                            >
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between">
+
+                        <p class="text-sm text-gray-600">Subtotal: 
+                            <span class="item-subtotal font-bold text-cyan-600">₹0.00</span>
+                        </p>
+
+                        <p class="text-sm text-gray-600 mt-1">
+                            GST (5%): <span class="item-gst font-bold text-orange-500">₹0.00</span>
+                        </p>
+
+                        <p class="text-sm text-gray-700 mt-1">
+                            Subtotal + GST: <span class="item-total font-bold text-green-700">₹0.00</span>
+                        </p>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Discount Section -->
+        <div class="card p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Discount
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Discount Amount (₹)
+                    </label>
+                    <input 
+                        type="number" 
+                        name="discount" 
+                        id="discountInput"
+                        class="form-input" 
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0"
+                        value="0"
+                        onchange="calculateTotal()"
+                        oninput="calculateTotal()"
+                        aria-label="Discount Amount"
+                    >
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Quick Discount
+                    </label>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="applyPercentDiscount(5)" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition">5%</button>
+                        <button type="button" onclick="applyPercentDiscount(10)" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition">10%</button>
+                        <button type="button" onclick="applyPercentDiscount(15)" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition">15%</button>
+                        <button type="button" onclick="applyPercentDiscount(20)" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition">20%</button>
+                        <button type="button" onclick="clearDiscount()" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition">Clear</button>
+                    </div>
+                </div>
+                
+                <div class="text-right">
+                    <p class="text-sm text-gray-600">You Save:</p>
+                    <p class="text-2xl font-bold text-green-600" id="discountDisplay">₹0.00</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Summary -->
+        <div class="card p-6 mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end space-y-4 sm:space-y-0">
+                
+                <div class="w-full sm:w-1/3">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Payment Method *
+                    </label>
+                    <select name="payment_method" class="form-select w-full" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="flex flex-col items-end space-y-2 w-full sm:w-auto">
+                
+                <div class="text-gray-600">
+                    Subtotal (without GST): <span id="total-subtotal" class="font-semibold">₹0.00</span>
+                </div>
+                <div class="text-gray-600">
+                    GST Total: <span id="total-gst" class="font-semibold">₹0.00</span>
+                </div>
+                <div class="text-gray-600">
+                    Grand Total (MRP): <span id="grand-total" class="font-semibold">₹0.00</span>
+                </div>
+                <div class="text-green-600">
+                    Discount: <span id="total-discount" class="font-semibold">- ₹0.00</span>
+                </div>
+                <div class="border-t pt-2 mt-2">
+                    <span class="text-xl font-bold text-gray-800">Final Amount: </span>
+                    <span id="final-total" class="text-2xl font-bold text-cyan-600">₹0.00</span>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex gap-4">
+            <button type="submit" class="btn btn-primary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Complete Sale
+            </button>
+            <a href="{% url 'sales_list' %}" class="btn bg-gray-500 text-white hover:bg-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+let itemCount = 1;
+
+function toggleCustomerSearch() {
+    const type = document.getElementById('customerType').value;
+    const searchDiv = document.getElementById('customerSearchDiv');
+    const customerId = document.getElementById('customerId');
+    
+    if (type === 'registered') {
+        searchDiv.classList.remove('hidden');
+    } else {
+        searchDiv.classList.add('hidden');
+        customerId.value = 'walk-in';
+        document.getElementById('selectedCustomer').textContent = '';
+    }
+}
+
+function addSaleItem() {
+    itemCount++;
+    const container = document.getElementById('saleItemsContainer');
+    const newItem = document.createElement('div');
+    newItem.className = 'sale-item bg-gray-50 p-4 rounded-lg mb-4 relative';
+    newItem.innerHTML = `
+        <button type="button" onclick="this.parentElement.remove(); calculateTotal();" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="md:col-span-2 relative">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Medicine *</label>
+                <input type="text" class="medicine-search form-input" placeholder="Search medicine..." autocomplete="off" required aria-label="Search Medicine">
+                <input type="hidden" name="medicine_id[]" class="medicine-id" required>
+                <div class="medicine-results absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-48 overflow-y-auto hidden shadow-lg"></div>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Batch *</label>
+                <select name="batch_id[]" class="batch-select form-select" required disabled aria-label="Select Batch">
+                    <option value="">Select batch</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity *</label>
+                <input type="number" name="quantity[]" class="quantity-input form-input" placeholder="1" min="1" required onchange="calculateItemTotal(this)" aria-label="Quantity">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Price (₹) *</label>
+                <input type="number" name="price[]" class="price-input form-input" placeholder="0.00" step="0.01" min="0.01" required onchange="calculateItemTotal(this)" aria-label="Price">
+            </div>
+        </div>
+        <div class="mt-2 flex items-center justify-between">
+            <p class="text-sm text-gray-600">Subtotal: 
+                <span class="item-subtotal font-bold text-cyan-600">₹0.00</span>
+            </p>
+
+            <p class="text-sm text-gray-600 mt-1">
+                GST (5%): <span class="item-gst font-bold text-orange-500">₹0.00</span>
+            </p>
+
+            <p class="text-sm text-gray-700 mt-1">
+                Subtotal + GST: <span class="item-total font-bold text-green-700">₹0.00</span>
+            </p>
+        </div>
+    `;
+    container.appendChild(newItem);
+    setupMedicineSearch(newItem);
+}
+
+// Customer search
+const customerSearch = document.getElementById('customerSearch');
+const customerResults = document.getElementById('customerResults');
+const customerId = document.getElementById('customerId');
+
+let customerSearchTimeout;
+customerSearch.addEventListener('input', function() {
+    clearTimeout(customerSearchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        customerResults.classList.add('hidden');
+        return;
+    }
+    
+    customerSearchTimeout = setTimeout(() => {
+        fetch(`/api/search-customers/?q=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.customers.length > 0) {
+                    customerResults.innerHTML = data.customers.map(c => `
+                        <div class="p-3 hover:bg-gray-100 cursor-pointer border-b" onclick="selectCustomer(${c.id}, '${c.name}', '${c.email}', '${c.contact_number}')">
+                            <p class="font-semibold">${c.name}</p>
+                            <p class="text-sm text-gray-500">${c.email} | ${c.contact_number}</p>
+                        </div>
+                    `).join('');
+                    customerResults.classList.remove('hidden');
+                } else {
+                    customerResults.innerHTML = '<div class="p-3 text-gray-500">No customers found</div>';
+                    customerResults.classList.remove('hidden');
+                }
+            });
+    }, 300);
+});
+
+function selectCustomer(id, name, email, phone) {
+    customerId.value = id;
+    customerSearch.value = name;
+    document.getElementById('selectedCustomer').textContent = `Selected: ${name} (${phone})`;
+    customerResults.classList.add('hidden');
+
+    // Load purchase history preview
+    const panel = document.getElementById('customerHistoryPanel');
+    const content = document.getElementById('customerHistoryContent');
+    panel.classList.remove('hidden');
+    content.innerHTML = '<span class="text-xs text-gray-400">Loading history...</span>';
+
+    fetch(`/customer/${id}/purchase-history/`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.sales || data.sales.length === 0) {
+                content.innerHTML = '<p class="text-xs text-gray-400 italic">No previous purchases found for this customer.</p>';
+                return;
+            }
+            content.innerHTML = data.sales.map(sale => `
+                <div class="flex items-start justify-between bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                    <div>
+                        <span class="font-semibold text-gray-700">#${sale.id}</span>
+                        <span class="text-xs text-gray-400 ml-2">${sale.date}</span>
+                        <div class="text-xs text-gray-500 mt-0.5">
+                            ${sale.items.map(i => `${i.name} ×${i.quantity}`).join(', ')}
+                        </div>
+                    </div>
+                    <div class="text-right ml-4 flex-shrink-0">
+                        <p class="font-bold text-gray-800 text-sm">₹${sale.total}</p>
+                        <span class="text-xs ${sale.status === 'Completed' ? 'text-green-600' : 'text-red-500'}">${sale.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        })
+        .catch(() => {
+            content.innerHTML = '<p class="text-xs text-red-400">Could not load purchase history.</p>';
+        });
+}
+
+// Medicine search setup
+function setupMedicineSearch(container) {
+    const searchInput = container.querySelector('.medicine-search');
+    const resultsDiv = container.querySelector('.medicine-results');
+    const medicineIdInput = container.querySelector('.medicine-id');
+    const batchSelect = container.querySelector('.batch-select');
+    const priceInput = container.querySelector('.price-input');
+    
+    let timeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(timeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            resultsDiv.classList.add('hidden');
+            return;
+        }
+        
+        timeout = setTimeout(() => {
+            fetch(`/api/search-medicines/?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.medicines.length > 0) {
+                        resultsDiv.innerHTML = data.medicines.map(m => `
+                            <div class="p-3 hover:bg-gray-100 cursor-pointer border-b ${!m.is_active ? 'opacity-75' : ''}" data-id="${m.id}" data-name="${m.name}" data-price="${m.price}" data-active="${m.is_active}">
+                                <div class="flex justify-between items-center">
+                                    <p class="font-semibold">${m.name}</p>
+                                    ${!m.is_active ? '<span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-bold">Discontinued</span>' : ''}
+                                </div>
+                                <p class="text-sm text-gray-500">₹${m.price}</p>
+                            </div>
+                        `).join('');
+                        
+                        resultsDiv.querySelectorAll('div[data-id]').forEach(div => {
+                            div.addEventListener('click', function() {
+                                selectMedicine(
+                                    this.dataset.id,
+                                    this.dataset.name,
+                                    this.dataset.price,
+                                    searchInput,
+                                    medicineIdInput,
+                                    batchSelect,
+                                    priceInput,
+                                    resultsDiv
+                                );
+                            });
+                        });
+                        
+                        resultsDiv.classList.remove('hidden');
+                    } else {
+                        resultsDiv.innerHTML = '<div class="p-3 text-gray-500">No medicines found</div>';
+                        resultsDiv.classList.remove('hidden');
+                    }
+                });
+        }, 300);
+    });
+}
+
+function selectMedicine(id, name, price, searchInput, medicineIdInput, batchSelect, priceInput, resultsDiv) {
+    medicineIdInput.value = id;
+    searchInput.value = name;
+    priceInput.value = price;
+    resultsDiv.classList.add('hidden');
+    
+    // Fetch batches
+    fetch(`/api/medicine-batches/?medicine_id=${id}`)
+        .then(res => res.json())
+        .then(data => {
+            batchSelect.innerHTML = '<option value="">Select batch</option>';
+            data.batches.forEach(batch => {
+                const option = document.createElement('option');
+                option.value = batch.id;
+                option.textContent = `${batch.batch_name} (Qty: ${batch.quantity}, Exp: ${batch.expiry_date})`;
+                batchSelect.appendChild(option);
+            });
+            batchSelect.disabled = false;
+        });
+}
+
+// Setup initial medicine search
+document.querySelectorAll('.sale-item').forEach(item => {
+    setupMedicineSearch(item);
+});
+
+// Calculate item total
+function calculateItemTotal(input) {
+    const item = input.closest('.sale-item');
+    const quantity = parseFloat(item.querySelector('.quantity-input').value) || 0;
+    const price = parseFloat(item.querySelector('.price-input').value) || 0; // MRP including GST
+
+    // Extract base price & GST from MRP
+    const basePrice = price / 1.05;
+    const gstAmount = price - basePrice;
+
+    const subtotal = quantity * basePrice;  
+    const gst = quantity * gstAmount;       
+    const totalWithGst = quantity * price;  
+
+    item.querySelector('.item-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+    item.querySelector('.item-gst').textContent = `₹${gst.toFixed(2)}`;
+    item.querySelector('.item-total').textContent = `₹${totalWithGst.toFixed(2)}`;
+
+    calculateTotal();
+}
+
+// Apply percentage discount
+function applyPercentDiscount(percent) {
+    const grandTotal = parseFloat(document.querySelector('#grand-total').textContent.replace('₹', '')) || 0;
+    const discountAmount = (grandTotal * percent / 100).toFixed(2);
+    document.getElementById('discountInput').value = discountAmount;
+    calculateTotal();
+}
+
+// Clear discount
+function clearDiscount() {
+    document.getElementById('discountInput').value = '0';
+    calculateTotal();
+}
+
+// Calculate grand total with discount
+function calculateTotal() {
+    const items = document.querySelectorAll('.sale-item');
+
+    let totalSubtotal = 0;
+    let totalGst = 0;
+    let grandTotal = 0;
+
+    items.forEach(item => {
+        const subtotal = parseFloat(item.querySelector('.item-subtotal').textContent.replace('₹', '')) || 0;
+        const gst = parseFloat(item.querySelector('.item-gst').textContent.replace('₹', '')) || 0;
+        const total = parseFloat(item.querySelector('.item-total').textContent.replace('₹', '')) || 0;
+
+        totalSubtotal += subtotal;
+        totalGst += gst;
+        grandTotal += total;
+    });
+
+    // Get discount
+    let discount = parseFloat(document.getElementById('discountInput').value) || 0;
+    
+    // Ensure discount doesn't exceed grand total
+    if (discount > grandTotal) {
+        discount = grandTotal;
+        document.getElementById('discountInput').value = discount.toFixed(2);
+    }
+    
+    const finalTotal = grandTotal - discount;
+
+    document.querySelector('#total-subtotal').textContent = `₹${totalSubtotal.toFixed(2)}`;
+    document.querySelector('#total-gst').textContent = `₹${totalGst.toFixed(2)}`;
+    document.querySelector('#grand-total').textContent = `₹${grandTotal.toFixed(2)}`;
+    document.querySelector('#total-discount').textContent = `- ₹${discount.toFixed(2)}`;
+    document.querySelector('#final-total').textContent = `₹${finalTotal.toFixed(2)}`;
+    document.querySelector('#discountDisplay').textContent = `₹${discount.toFixed(2)}`;
+}
+
+
+// Form validation
+document.getElementById('saleForm').addEventListener('submit', function(e) {
+    const items = document.querySelectorAll('.sale-item');
+    if (items.length === 0) {
+        e.preventDefault();
+        showAlert('Please add at least one item to the sale', 'error');
+        return;
+    }
+    
+    let valid = true;
+    items.forEach(item => {
+        if (!item.querySelector('.medicine-id').value || !item.querySelector('.batch-select').value) {
+            valid = false;
+        }
+    });
+    
+    if (!valid) {
+        e.preventDefault();
+        showAlert('Please select medicine and batch for all items', 'error');
+    }
+});
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!customerSearch.contains(e.target) && !customerResults.contains(e.target)) {
+        customerResults.classList.add('hidden');
+    }
+});
+</script>
+{% endblock %}

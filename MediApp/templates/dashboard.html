@@ -1,0 +1,380 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Pharmacy Management{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Overview of your pharmacy operations{% endblock %}
+
+{% block content %}
+
+<!-- Duration Filter Bar -->
+<div class="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+  <h2 class="text-lg font-semibold text-gray-700">
+    Showing stats for:
+    <span class="text-cyan-600 font-bold" id="duration-label">
+      {% if duration == 'today' %}Today
+      {% elif duration == 'week' %}Last 7 Days
+      {% elif duration == 'month' %}Last 30 Days
+      {% elif duration == 'year' %}This Year
+      {% else %}Today{% endif %}
+    </span>
+  </h2>
+
+  <form method="get" id="duration-form" class="flex items-center gap-2 flex-wrap">
+    {% for val, label in duration_choices %}
+    {% endfor %}
+    <a href="?duration=today"
+       class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 border
+              {% if duration == 'today' %}bg-cyan-600 text-white border-cyan-600 shadow-md{% else %}bg-white text-gray-600 border-gray-200 hover:border-cyan-400 hover:text-cyan-600{% endif %}">
+      Today
+    </a>
+    <a href="?duration=week"
+       class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 border
+              {% if duration == 'week' %}bg-cyan-600 text-white border-cyan-600 shadow-md{% else %}bg-white text-gray-600 border-gray-200 hover:border-cyan-400 hover:text-cyan-600{% endif %}">
+      Last 7 Days
+    </a>
+    <a href="?duration=month"
+       class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 border
+              {% if duration == 'month' %}bg-cyan-600 text-white border-cyan-600 shadow-md{% else %}bg-white text-gray-600 border-gray-200 hover:border-cyan-400 hover:text-cyan-600{% endif %}">
+      Last 30 Days
+    </a>
+    <a href="?duration=year"
+       class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 border
+              {% if duration == 'year' %}bg-cyan-600 text-white border-cyan-600 shadow-md{% else %}bg-white text-gray-600 border-gray-200 hover:border-cyan-400 hover:text-cyan-600{% endif %}">
+      This Year
+    </a>
+  </form>
+</div>
+
+<!-- All-time Statistics Cards (Inventory Overview) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Medicines -->
+    <div class="stat-card">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Total Medicines</p>
+                <h3 class="text-dynamic text-4xl font-bold mt-2">{{ total_medicines }}</h3>
+                <p class="text-white text-opacity-60 text-xs mt-1">All time inventory</p>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Low Stock -->
+    <div class="bg-gradient-to-br from-orange-500 to-red-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Low Stock Items</p>
+                <h3 class="text-dynamic text-4xl font-bold mt-2">{{ low_stock_count }}</h3>
+                <p class="text-white text-opacity-60 text-xs mt-1">Needs restocking</p>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expired Products -->
+    <div class="card p-6 border-l-4 border-red-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">Expired Batches</p>
+                <h4 class="text-dynamic text-2xl font-bold text-red-600 mt-1">{{ expired_count }}</h4>
+                <p class="text-gray-400 text-xs mt-1">{{ expired_subtext|default:"With stock remaining" }}</p>
+            </div>
+            <div class="bg-red-100 p-3 rounded-lg">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expiring Soon -->
+    <div class="card p-6 border-l-4 border-orange-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">{{ expiring_label|default:"Expiring Soon" }}</p>
+                <h4 class="text-dynamic text-2xl font-bold text-orange-600 mt-1">{{ expiring_soon_count }}</h4>
+                <p class="text-gray-400 text-xs mt-1">{{ expiring_subtext|default:"Batches expiring soon" }}</p>
+            </div>
+            <div class="bg-orange-100 p-3 rounded-lg">
+                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dataset Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="stat-card">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Total Customers</p>
+                <h3 class="text-dynamic text-4xl font-bold mt-2">{{ total_customers }}</h3>
+                <p class="text-white text-opacity-60 text-xs mt-1">Customers in database</p>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Total Suppliers</p>
+                <h3 class="text-dynamic text-4xl font-bold mt-2">{{ total_suppliers }}</h3>
+                <p class="text-white text-opacity-60 text-xs mt-1">Supplier records</p>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c4.418 0 8 1.79 8 4v2H4v-2c0-2.21 3.582-4 8-4z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Total Categories</p>
+                <h3 class="text-dynamic text-4xl font-bold mt-2">{{ total_categories }}</h3>
+                <p class="text-white text-opacity-60 text-xs mt-1">Medicine categories</p>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Total Sales</p>
+                <h3 class="text-dynamic text-4xl font-bold mt-2">{{ total_sales }}</h3>
+                <p class="text-white text-opacity-60 text-xs mt-1">Sales records</p>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18v4H3V3zm0 8h18v4H3v-4zm0 8h18v4H3v-4z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Period Stats (dynamic based on filter) -->
+<div class="mb-2">
+  <h3 class="text-base font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+    <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+    </svg>
+    Period Statistics &mdash;
+    <span class="text-cyan-600 normal-case font-bold">
+      {% if duration == 'today' %}Today
+      {% elif duration == 'week' %}Last 7 Days
+      {% elif duration == 'month' %}Last 30 Days
+      {% elif duration == 'year' %}This Year
+      {% else %}Today{% endif %}
+    </span>
+  </h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Period Sales -->
+    <div class="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Sales</p>
+                <h3 class="text-dynamic text-4xl font-bold mt-2">{{ period_sales_count }}</h3>
+                <p class="text-white text-opacity-60 text-xs mt-1">Transactions</p>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Period Revenue -->
+    <div class="bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Revenue</p>
+                <h3 class="text-4xl font-bold mt-2 text-dynamic">₹{{ period_revenue|floatformat:2 }}</h3>
+                <p class="text-white text-opacity-60 text-xs mt-1">Total earned</p>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Medicines -->
+    <div class="card p-6 border-l-4 border-cyan-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">New Medicines Added</p>
+                <h4 class="text-dynamic text-2xl font-bold text-cyan-600 mt-1">{{ period_new_medicines }}</h4>
+                <p class="text-gray-400 text-xs mt-1">Added in period</p>
+            </div>
+            <div class="bg-cyan-100 p-3 rounded-lg">
+                <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Suppliers -->
+    <div class="card p-6 border-l-4 border-blue-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium">New Suppliers Added</p>
+                <h4 class="text-dynamic text-2xl font-bold text-blue-600 mt-1">{{ period_new_suppliers }}</h4>
+                <p class="text-gray-400 text-xs mt-1">Added in period</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-lg">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tables Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Recent Inventory Log -->
+    <div class="table-container">
+        <div class="p-6 border-b flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-gray-800">Recent Inventory Updates</h3>
+            <span class="text-sm text-gray-500">Last 10 updates</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Action</th>
+                        <th>Quantity</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td class="font-medium">{{ log.medicine.name }}</td>
+                        <td>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                {% if log.action == 'add' %}bg-green-100 text-green-800
+                                {% elif log.action == 'sale' %}bg-blue-100 text-blue-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ log.get_action_display }}
+                            </span>
+                        </td>
+                        <td class="{% if log.quantity_change > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ log.quantity_change|stringformat:"+d" }}
+                        </td>
+                        <td class="text-sm text-gray-500">{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-gray-500">No inventory updates yet</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Recent Sales -->
+    <div class="table-container">
+        <div class="p-6 border-b flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-gray-800">Recent Sales</h3>
+            <a href="{% url 'sales_list' %}" class="text-sm text-cyan-600 hover:text-cyan-700 font-semibold">View All →</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sale ID</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in recent_sales %}
+                    <tr>
+                        <td class="font-mono font-semibold text-cyan-600">#{{ sale.id }}</td>
+                        <td>{{ sale.customer.name|default:"Walk-in" }}</td>
+                        <td class="font-semibold text-green-600">₹{{ sale.total_price|floatformat:2 }}</td>
+                        <td class="text-sm text-gray-500">{{ sale.date|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-gray-500">No sales yet</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Medicines -->
+<div class="table-container">
+    <div class="p-6 border-b flex items-center justify-between">
+        <h3 class="text-xl font-semibold text-gray-800">Low Stock Medicines</h3>
+        {% if user.role in 'admin,pharmacist' %}
+        <a href="{% url 'medicine_list' %}" class="text-sm text-cyan-600 hover:text-cyan-700 font-semibold">Manage Inventory →</a>
+        {% endif %}
+    </div>
+    <div class="overflow-x-auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Medicine Name</th>
+                    <th>Supplier</th>
+                    <th>Total Quantity</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for medicine in low_stock_medicines %}
+                <tr>
+                    <td class="font-medium">{{ medicine.name }}</td>
+                    <td>{{ medicine.supplier.name|default:"N/A" }}</td>
+                    <td class="font-semibold text-red-600">{{ medicine.total_quantity }}</td>
+                    <td>₹{{ medicine.price|floatformat:2 }}</td>
+                    <td>
+                        <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">
+                            Low Stock
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-gray-500">All medicines are well stocked! 🎉</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,6 @@
+id,name,contact_person,email,phone,address,city,state,gst_number
+1,MediLife Pharma,Rajesh Kumar,rajesh.kumar@medilife.com,9876543210,123 Industrial Estate, Andheri East,Mumbai,Maharashtra,27AABCU1234D1Z1
+2,HealthCare Distributors,Priya Sharma,priya.sharma@healthcare.in,9876543211,456 Business Park, Connaught Place,Delhi,Delhi,07AABCU5678E1Z1
+3,VitaMed Solutions,Amit Patel,amit.patel@vitamed.com,9876543212,789 Warehouse Zone, Electronic City,Bangalore,Karnataka,29AABCU9012F1Z1
+4,Glenmark Pharmaceuticals,Suresh Reddy,suresh@glenmark.com,9876543213,321 Pharma City, Miyapur,Hyderabad,Telangana,36AABCU3456G1Z1
+5,Sun Pharma Industries,Deepak Mehta,deepak@sunpharma.com,9876543214,654 Industrial Area, Okhla,Delhi,Delhi,07AABCU7890H1Z1

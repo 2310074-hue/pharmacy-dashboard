@@ -1,0 +1,31 @@
+id,name,generic_name,category,description,strength,dosage_form,purchase_price,selling_price,mrp,current_stock,reorder_level,batch_number,expiry_date,supplier,manufacturer,is_prescription_required,is_seasonal,season_category
+1,Amoxicillin 500mg,Amoxicillin,Antibiotics,Broad-spectrum antibiotic for bacterial infections including respiratory, urinary tract, and skin infections.,500mg,Capsule,12.00,25.00,30.00,120,20,AMX-2027-001,2027-08-15,Cipla Limited,Cipla Limited,TRUE,FALSE,
+2,Azithromycin 500mg,Azithromycin,Antibiotics,Antibiotic for respiratory infections, skin infections, and ear infections.,500mg,Tablet,40.00,65.00,75.00,85,15,AZM-2027-002,2027-06-30,Sun Pharma,Sun Pharma,TRUE,TRUE,Monsoon
+3,Ciprofloxacin 500mg,Ciprofloxacin,Antibiotics,Broad-spectrum antibiotic for urinary tract infections, respiratory infections.,500mg,Tablet,25.00,45.00,55.00,60,10,CIP-2027-003,2027-09-20,Dr. Reddy's,Dr. Reddy's,TRUE,FALSE,
+4,Doxycycline 100mg,Doxycycline,Antibiotics,Tetracycline antibiotic for bacterial infections, acne, and malaria prophylaxis.,100mg,Capsule,18.00,35.00,42.00,95,15,DOX-2027-004,2027-11-10,Glenmark,Glenmark,TRUE,TRUE,Summer
+5,Metronidazole 400mg,Metronidazole,Antibiotics,Antibiotic for anaerobic bacterial infections including dental infections.,400mg,Tablet,8.00,15.00,20.00,150,25,MET-2027-006,2027-10-05,Sun Pharma,Sun Pharma,TRUE,FALSE,
+6,Metformin 500mg,Metformin,Antidiabetics,First-line medication for type 2 diabetes. Reduces blood sugar levels.,500mg,Tablet,5.00,10.00,15.00,200,30,MET-500-2027,2028-03-15,Cipla,Cipla,TRUE,FALSE,
+7,Glimepiride 2mg,Glimepiride,Antidiabetics,Sulfonylurea medication for type 2 diabetes.,2mg,Tablet,8.00,16.00,22.00,120,20,GLIM-2027-002,2027-12-20,Sun Pharma,Sun Pharma,TRUE,FALSE,
+8,Empagliflozin 25mg,Empagliflozin,Antidiabetics,SGLT2 inhibitor for type 2 diabetes.,25mg,Tablet,50.00,85.00,100.00,55,10,EMPA-2027-005,2028-02-28,Cipla,Cipla,TRUE,FALSE,
+9,Amlodipine 5mg,Amlodipine,Antihypertensives,Calcium channel blocker for hypertension and angina.,5mg,Tablet,4.00,8.00,12.00,180,25,AMLO-2027-001,2028-04-20,Dr. Reddy's,Dr. Reddy's,TRUE,FALSE,
+10,Losartan 50mg,Losartan,Antihypertensives,ARB for hypertension and diabetic nephropathy.,50mg,Tablet,6.00,12.00,18.00,150,20,LOS-2027-002,2028-06-10,Sun Pharma,Sun Pharma,TRUE,FALSE,
+11,Telmisartan 40mg,Telmisartan,Antihypertensives,ARB for hypertension with long-lasting effect.,40mg,Tablet,10.00,18.00,25.00,130,20,TEL-2027-003,2028-07-05,Glenmark,Glenmark,TRUE,FALSE,
+12,Paracetamol 500mg,Paracetamol,Antipyretics,Widely used analgesic and antipyretic for fever and pain.,500mg,Tablet,3.50,6.00,10.00,350,30,PARA-2027-001,2027-11-30,Cipla,Cipla,FALSE,TRUE,Summer
+13,Paracetamol 650mg,Paracetamol,Antipyretics,Higher strength analgesic and antipyretic.,650mg,Tablet,5.00,9.00,15.00,250,25,PARA-2027-002,2027-12-15,Sun Pharma,Sun Pharma,FALSE,TRUE,Winter
+14,Ibuprofen 400mg,Ibuprofen,Antipyretics,NSAID for pain relief, fever reduction, and anti-inflammatory effects.,400mg,Tablet,6.00,12.00,18.00,180,20,IBU-2027-003,2027-10-20,Dr. Reddy's,Dr. Reddy's,FALSE,TRUE,Monsoon
+15,Cetirizine 10mg,Cetirizine,Antihistamines,Antihistamine for allergies and cold symptoms. Non-drowsy.,10mg,Tablet,2.00,5.00,8.00,400,30,CET-2027-001,2028-03-10,Glenmark,Glenmark,FALSE,TRUE,Spring
+16,Levocetirizine 5mg,Levocetirizine,Antihistamines,Antihistamine for seasonal allergies and chronic urticaria.,5mg,Tablet,3.00,7.00,12.00,300,25,LEVO-2027-002,2028-04-15,Sun Pharma,Sun Pharma,FALSE,TRUE,Spring
+17,Diclofenac 50mg,Diclofenac,Analgesics,NSAID for pain and inflammation in arthritis.,50mg,Tablet,4.00,8.00,12.00,220,25,DICL-2027-001,2028-02-28,Dr. Reddy's,Dr. Reddy's,TRUE,FALSE,
+18,Tramadol 50mg,Tramadol,Analgesics,Opioid analgesic for moderate to severe pain.,50mg,Tablet,15.00,25.00,35.00,80,10,TRAM-2027-002,2027-09-30,Sun Pharma,Sun Pharma,TRUE,FALSE,
+19,Salbutamol 100mcg,Salbutamol,Bronchodilators,Bronchodilator for asthma and COPD.,100mcg,Inhaler,80.00,120.00,150.00,60,15,SALB-2027-001,2028-06-10,Glenmark,Glenmark,TRUE,TRUE,Winter
+20,Budesonide 200mcg,Budesonide,Bronchodilators,Corticosteroid inhaler for asthma prevention.,200mcg,Inhaler,150.00,220.00,280.00,45,10,BUD-2027-002,2028-07-20,Cipla,Cipla,TRUE,TRUE,Winter
+21,Atorvastatin 20mg,Atorvastatin,Cardiovascular,Statin for high cholesterol.,20mg,Tablet,8.00,16.00,22.00,200,25,ATOR-2027-001,2028-09-10,Dr. Reddy's,Dr. Reddy's,TRUE,FALSE,
+22,Aspirin 75mg,Aspirin,Cardiovascular,Antiplatelet agent for cardiovascular prevention.,75mg,Tablet,2.00,5.00,8.00,350,30,ASP-2027-002,2028-10-15,Cipla,Cipla,FALSE,FALSE,
+23,Vitamin D3 2000IU,Cholecalciferol,Vitamins & Supplements,Vitamin D supplement for bone health and immunity.,2000IU,Tablet,3.00,8.00,12.00,400,30,VITD-2027-001,2028-12-31,Glenmark,Glenmark,FALSE,TRUE,Winter
+24,Vitamin B12 1000mcg,Methylcobalamin,Vitamins & Supplements,Vitamin B12 supplement for nerve function and energy.,1000mcg,Tablet,5.00,12.00,18.00,300,25,VITB12-2027-002,2028-08-15,Cipla,Cipla,FALSE,FALSE,
+25,Vitamin C 500mg,Ascorbic Acid,Vitamins & Supplements,Vitamin C for immune health and antioxidant protection.,500mg,Tablet,2.00,6.00,10.00,500,40,VITC-2027-003,2028-07-20,Sun Pharma,Sun Pharma,FALSE,TRUE,Summer
+26,Omega-3 1000mg,Fish Oil,Vitamins & Supplements,Omega-3 supplement for heart health and inflammation.,1000mg,Capsule,10.00,20.00,28.00,200,25,OMEGA-2027-004,2028-09-10,Dr. Reddy's,Dr. Reddy's,FALSE,FALSE,
+27,Omeprazole 20mg,Omeprazole,Gastrointestinal,Proton pump inhibitor for acid reflux and GERD.,20mg,Capsule,4.00,10.00,15.00,250,25,OMEP-2027-001,2028-03-20,Cipla,Cipla,FALSE,FALSE,
+28,Pantoprazole 40mg,Pantoprazole,Gastrointestinal,Proton pump inhibitor for GERD and esophagitis.,40mg,Tablet,6.00,12.00,18.00,200,20,PANT-2027-002,2028-04-25,Sun Pharma,Sun Pharma,FALSE,FALSE,
+29,Clobetasol 0.05%,Clobetasol,Dermatologicals,Topical corticosteroid for eczema and psoriasis.,0.05%,Cream,25.00,45.00,55.00,80,15,CLOB-2027-001,2028-06-15,Glenmark,Glenmark,TRUE,FALSE,
+30,Miconazole 2%,Miconazole,Dermatologicals,Antifungal cream for athlete's foot and ringworm.,2%,Cream,15.00,28.00,35.00,120,20,MICO-2027-002,2028-07-20,Cipla,Cipla,FALSE,TRUE,Monsoon

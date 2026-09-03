@@ -1,0 +1,31 @@
+# Environment variables
+.env
+.env.*
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+env/
+venv/
+ENV/
+
+# Database (db.sqlite3 included so live site has all 4,354 records)
+
+# Static / Media collection
+staticfiles/
+media/
+
+# Logs
+*.log
+celerybeat-schedule
+celerybeat.pid
+
+# OS files
+.DS_Store
+Thumbs.db

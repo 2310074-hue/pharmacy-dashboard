@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Medicine Categories - Pharmacy Management{% endblock %}
+
+{% block page_title %}Medicine Categories{% endblock %}
+{% block page_subtitle %}Manage medicine categories in your pharmacy{% endblock %}
+
+{% block content %}
+<div class="card p-6">
+    <div class="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+        <form method="GET" action="{% url 'category_list' %}" class="flex gap-2 w-full sm:w-auto">
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search categories..." 
+                   class="form-input flex-1 sm:w-64">
+            <button type="submit" class="btn btn-secondary">Search</button>
+        </form>
+        
+        <a href="{% url 'add_category' %}" class="btn btn-primary flex items-center gap-2 whitespace-nowrap">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Category
+        </a>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Total Medicines</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td class="font-semibold text-gray-800">{{ category.name }}</td>
+                    <td class="text-gray-600">{{ category.description|default:"No description" }}</td>
+                    <td>
+                        <span class="badge badge-blue">
+                            {{ category.medicine_count }} items
+                        </span>
+                    </td>
+                    <td class="text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{% url 'edit_category' category.id %}" class="btn-icon text-indigo-600 hover:bg-indigo-50" title="Edit">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </a>
+                            
+                            {% if request.user.is_superuser or request.user.role == 'admin' %}
+                            <a href="{% url 'delete_category' category.id %}" class="btn-icon text-red-600 hover:bg-red-50" title="Delete">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-8 text-gray-500">
+                        <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                        <p class="text-lg">No categories found</p>
+                        {% if search_query %}
+                        <p class="text-sm mt-1">Try adjusting your search</p>
+                        <a href="{% url 'category_list' %}" class="btn btn-secondary mt-4 inline-block">Clear Search</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

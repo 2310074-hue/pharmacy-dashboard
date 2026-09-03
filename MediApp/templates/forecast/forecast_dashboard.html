@@ -1,0 +1,588 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}AI Demand Forecasting{% endblock %}
+{% block page_subtitle %}Predictive analytics, 30-day demand curves, and automated stockout risk prevention{% endblock %}
+
+{% block content %}
+<div class="space-y-8 pb-12">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       1. TOP HEADER & MEDICINE PICKER TOOLBAR
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div class="card p-6 md:p-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-cyan-950 text-white border-0 shadow-xl relative overflow-hidden">
+    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <span class="px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 text-xs font-bold rounded-full tracking-wider uppercase flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            Predictive AI Engine
+          </span>
+          <span class="text-xs text-slate-300">Model: Holt-Winters Exponential Smoothing + Seasonality</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Pharmacy Demand Forecasting & Stockout Risk</h1>
+        <p class="text-slate-300 text-sm mt-1 max-w-2xl">
+          Forecast next 30-day demand from 12-month historical trends, detect upcoming stock shortages before they happen, and automate optimal reorder quantities.
+        </p>
+      </div>
+
+      <!-- Actions: Manual Alert Trigger & Quick Medicine Selector -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <!-- Manual Alert Trigger Button -->
+        <button onclick="sendCriticalAlertNow()" id="btn-send-alert" class="px-4 py-3 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-900/30 border border-red-400/30 flex items-center justify-center gap-2 transition-all active:scale-95 whitespace-nowrap cursor-pointer">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <span id="btn-alert-text">Send Critical Stock Alert Now</span>
+        </button>
+
+        <!-- Quick Medicine Selector -->
+        <div class="bg-white/10 backdrop-blur-md p-3 rounded-xl border border-white/15 min-w-[280px]">
+          <label for="medicine-select" class="block text-[11px] font-bold uppercase tracking-wider text-cyan-200 mb-1 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+            Select Medicine to Inspect
+          </label>
+          <select id="medicine-select" onchange="switchMedicineForecast(this.value)" class="w-full bg-slate-900/90 text-white font-semibold text-xs rounded-lg px-3 py-2 border border-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer">
+            {% for med in medicines %}
+              <option value="{{ med.id }}" {% if med.id == selected_med_id %}selected{% endif %}>
+                {{ med.name }} (Stock: {{ med.total_quantity }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       2. EXECUTIVE SUMMARY KPI CARDS
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    
+    <!-- KPI 1: Total Forecasted Demand -->
+    <div class="card p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">30-Day Total Forecast</p>
+          <h3 class="text-2xl font-extrabold text-slate-900 mt-1.5">{{ total_projected_units|floatformat:0 }} <span class="text-xs font-semibold text-slate-500">units</span></h3>
+          <p class="text-xs text-cyan-700 font-semibold mt-1">Across {{ catalog_count }} medicines</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center text-xl font-bold border border-cyan-100">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 2: Critical Stockout Risk -->
+    <div class="card p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Critical Stockout Risk</p>
+          <h3 class="text-2xl font-extrabold text-red-600 mt-1.5">{{ critical_risk_count }} <span class="text-xs font-semibold text-slate-500">medicines</span></h3>
+          <p class="text-xs text-red-700 font-semibold mt-1">Supply runs out in &lt; 7 days</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl font-bold border border-red-100">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 3: High / Moderate Risk -->
+    <div class="card p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Reorder Watchlist</p>
+          <h3 class="text-2xl font-extrabold text-amber-600 mt-1.5">{{ high_risk_count|add:moderate_risk_count }} <span class="text-xs font-semibold text-slate-500">medicines</span></h3>
+          <p class="text-xs text-amber-700 font-semibold mt-1">{{ high_risk_count }} urgent + {{ moderate_risk_count }} moderate</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold border border-amber-100">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 4: Recommended Restock Units -->
+    <div class="card p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Suggested Reorders</p>
+          <h3 class="text-2xl font-extrabold text-indigo-600 mt-1.5">{{ total_reorder_units }} <span class="text-xs font-semibold text-slate-500">units</span></h3>
+          <p class="text-xs text-indigo-700 font-semibold mt-1">45-day safety buffer target</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold border border-indigo-100">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       3. INTERACTIVE FORECAST CHART & INSPECTION PANEL
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div class="card bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden" id="forecast-detail-panel">
+    
+    <!-- Card Header -->
+    <div class="p-6 md:p-7 border-b border-slate-100 bg-slate-50/70 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-600 to-indigo-600 text-white flex items-center justify-center text-xl font-bold shadow-md shadow-cyan-600/20">
+          💊
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <h2 class="text-xl font-extrabold text-slate-900" id="card-med-name">{{ selected_forecast.medicine_name }}</h2>
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-200 text-slate-700" id="card-med-cat">{{ selected_forecast.category }}</span>
+            <span class="px-3 py-0.5 rounded-full text-xs font-extrabold shadow-sm border" id="card-risk-badge" style="background-color: {{ selected_forecast.risk_color }}18; color: {{ selected_forecast.risk_color }}; border-color: {{ selected_forecast.risk_color }}40;">
+              {{ selected_forecast.risk_badge }}
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">
+            Historical Actual Sales vs. 30-Day Future Projected Demand with Confidence Interval Bounds
+          </p>
+        </div>
+      </div>
+
+      <!-- Live Metric Badges -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-center shadow-xs">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Current Stock</span>
+          <span class="text-base font-extrabold text-slate-800" id="card-current-stock">{{ selected_forecast.current_stock }} units</span>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-center shadow-xs">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">30-Day Demand</span>
+          <span class="text-base font-extrabold text-cyan-600" id="card-forecast-demand">{{ selected_forecast.total_30_day_demand }} units</span>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-center shadow-xs">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Days Left</span>
+          <span class="text-base font-extrabold text-indigo-600" id="card-days-left">{{ selected_forecast.days_of_stock_left }} days</span>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-center shadow-xs">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Suggested Reorder</span>
+          <span class="text-base font-extrabold text-amber-600" id="card-reorder-qty">{{ selected_forecast.recommended_reorder_qty }} units</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="p-6 md:p-8">
+      <!-- Chart Legend & Toggle info -->
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4 text-xs font-semibold text-slate-600">
+        <div class="flex items-center gap-4 flex-wrap">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-slate-300"></span> Actual Historical Sales</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-indigo-600"></span> 7-Day Moving Average</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-cyan-500 border-t border-dashed border-cyan-500"></span> AI Forecast (Next 30 Days)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-cyan-500/15 border border-cyan-300"></span> Confidence Band (±25%)</span>
+        </div>
+        <div class="text-slate-400 text-xs">
+          Projected Stockout: <strong class="text-slate-700" id="card-stockout-date">{{ selected_forecast.projected_stockout_date }}</strong>
+        </div>
+      </div>
+
+      <!-- Chart Canvas -->
+      <div class="relative w-full h-[360px] md:h-[420px]">
+        <canvas id="forecastChart"></canvas>
+      </div>
+
+      <!-- 4-Week Projected Demand Pills -->
+      <div class="mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl text-center">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Week 1 (Days 1-7)</span>
+          <span class="text-lg font-extrabold text-slate-800" id="w1-pred">{{ selected_forecast.chart_data.weekly_forecast.0|default:0 }} units</span>
+        </div>
+        <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl text-center">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Week 2 (Days 8-14)</span>
+          <span class="text-lg font-extrabold text-slate-800" id="w2-pred">{{ selected_forecast.chart_data.weekly_forecast.1|default:0 }} units</span>
+        </div>
+        <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl text-center">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Week 3 (Days 15-21)</span>
+          <span class="text-lg font-extrabold text-slate-800" id="w3-pred">{{ selected_forecast.chart_data.weekly_forecast.2|default:0 }} units</span>
+        </div>
+        <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl text-center">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Week 4 (Days 22-30)</span>
+          <span class="text-lg font-extrabold text-slate-800" id="w4-pred">{{ selected_forecast.chart_data.weekly_forecast.3|default:0 }} units</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       4. ALL MEDICINES DEMAND & STOCKOUT RISK RANKING TABLE
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div class="card bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    
+    <!-- Table Toolbar -->
+    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+          <span>📋 Catalog 30-Day Demand & Stockout Priority Matrix</span>
+        </h3>
+        <p class="text-xs text-slate-500 mt-0.5">Ranked by stockout urgency (Critical stockout risks at top)</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Search Filter -->
+        <div class="relative min-w-[240px]">
+          <input type="text" id="tableSearch" onkeyup="filterForecastTable()" placeholder="Search medicine or category..." class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Responsive Wrap -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse" id="forecast-table">
+        <thead>
+          <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+            <th class="py-3.5 px-5">Medicine Name</th>
+            <th class="py-3.5 px-4">Category</th>
+            <th class="py-3.5 px-4 text-right">Current Stock</th>
+            <th class="py-3.5 px-4 text-right">30-Day Demand</th>
+            <th class="py-3.5 px-4 text-right">Daily Run Rate</th>
+            <th class="py-3.5 px-4 text-center">Days of Supply</th>
+            <th class="py-3.5 px-4 text-center">Risk Level</th>
+            <th class="py-3.5 px-4 text-right">Suggested Reorder</th>
+            <th class="py-3.5 px-5 text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+          {% for item in all_forecasts %}
+          <tr class="hover:bg-cyan-50/40 transition-colors group {% if item.medicine_id == selected_med_id %}bg-cyan-50/60{% endif %}" id="row-med-{{ item.medicine_id }}">
+            <td class="py-3.5 px-5 font-bold text-slate-900 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full" style="background-color: {{ item.risk_color }};"></span>
+              {{ item.medicine_name }}
+            </td>
+            <td class="py-3.5 px-4 text-slate-600">
+              <span class="px-2 py-0.5 rounded bg-slate-100 text-[11px] font-semibold text-slate-600">{{ item.category }}</span>
+            </td>
+            <td class="py-3.5 px-4 text-right font-extrabold text-slate-900">
+              {{ item.current_stock }}
+            </td>
+            <td class="py-3.5 px-4 text-right font-bold text-cyan-700">
+              {{ item.total_30_day_demand|floatformat:1 }}
+            </td>
+            <td class="py-3.5 px-4 text-right font-medium text-slate-500">
+              {{ item.avg_daily_demand|floatformat:2 }}/day
+            </td>
+            <td class="py-3.5 px-4 text-center font-extrabold">
+              <span class="{% if item.days_of_stock_left < 7 %}text-red-600 font-extrabold{% elif item.days_of_stock_left < 15 %}text-amber-600{% else %}text-emerald-700{% endif %}">
+                {{ item.days_of_stock_left }} days
+              </span>
+            </td>
+            <td class="py-3.5 px-4 text-center">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-extrabold border" style="background-color: {{ item.risk_color }}14; color: {{ item.risk_color }}; border-color: {{ item.risk_color }}40;">
+                {{ item.risk_badge }}
+              </span>
+            </td>
+            <td class="py-3.5 px-4 text-right font-extrabold">
+              {% if item.recommended_reorder_qty > 0 %}
+                <span class="text-amber-600 font-extrabold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">+{{ item.recommended_reorder_qty }} units</span>
+              {% else %}
+                <span class="text-emerald-600 font-semibold">Adequate</span>
+              {% endif %}
+            </td>
+            <td class="py-3.5 px-5 text-center">
+              <button onclick="switchMedicineForecast({{ item.medicine_id }})" class="px-3 py-1 bg-white hover:bg-cyan-600 text-cyan-700 hover:text-white border border-cyan-300 hover:border-cyan-600 rounded-lg text-xs font-bold transition shadow-2xs inline-flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Inspect
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     CHART.JS SCRIPT & REAL-TIME AJAX INSPECTION LOGIC
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  let forecastChartInstance = null;
+  const initialForecastData = {{ selected_forecast_json|safe }};
+
+  document.addEventListener("DOMContentLoaded", function() {
+    if (initialForecastData) {
+      renderForecastChart(initialForecastData);
+    }
+  });
+
+  function switchMedicineForecast(medicineId) {
+    // Update select dropdown
+    const select = document.getElementById('medicine-select');
+    if (select) select.value = medicineId;
+
+    // Fetch JSON from endpoint
+    fetch(`/api/forecast/${medicineId}/`)
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load forecast data");
+        return res.json();
+      })
+      .then(data => {
+        updateForecastUI(data);
+        renderForecastChart(data);
+
+        // Scroll smoothly to chart view
+        document.getElementById('forecast-detail-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      })
+      .catch(err => {
+        console.error("Forecast fetch error:", err);
+        alert("Error loading forecast: " + err.message);
+      });
+  }
+
+  function updateForecastUI(data) {
+    document.getElementById('card-med-name').innerText = data.medicine_name;
+    document.getElementById('card-med-cat').innerText = data.category;
+    
+    const badge = document.getElementById('card-risk-badge');
+    badge.innerText = data.risk_badge;
+    badge.style.backgroundColor = data.risk_color + '18';
+    badge.style.color = data.risk_color;
+    badge.style.borderColor = data.risk_color + '40';
+
+    document.getElementById('card-current-stock').innerText = data.current_stock + ' units';
+    document.getElementById('card-forecast-demand').innerText = data.total_30_day_demand + ' units';
+    document.getElementById('card-days-left').innerText = data.days_of_stock_left + ' days';
+    document.getElementById('card-reorder-qty').innerText = data.recommended_reorder_qty + ' units';
+    document.getElementById('card-stockout-date').innerText = data.projected_stockout_date;
+
+    if (data.chart_data && data.chart_data.weekly_forecast) {
+      const wf = data.chart_data.weekly_forecast;
+      document.getElementById('w1-pred').innerText = (wf[0] || 0) + ' units';
+      document.getElementById('w2-pred').innerText = (wf[1] || 0) + ' units';
+      document.getElementById('w3-pred').innerText = (wf[2] || 0) + ' units';
+      document.getElementById('w4-pred').innerText = (wf[3] || 0) + ' units';
+    }
+
+    // Highlight row in table
+    document.querySelectorAll('#forecast-table tbody tr').forEach(tr => tr.classList.remove('bg-cyan-50/60'));
+    const targetRow = document.getElementById(`row-med-${data.medicine_id}`);
+    if (targetRow) targetRow.classList.add('bg-cyan-50/60');
+  }
+
+  function renderForecastChart(data) {
+    const ctx = document.getElementById('forecastChart').getContext('2d');
+    if (forecastChartInstance) {
+      forecastChartInstance.destroy();
+    }
+
+    const cd = data.chart_data;
+    const allLabels = cd.hist_dates.concat(cd.forecast_dates);
+
+    // Build historical actual series (null for future)
+    const histSalesData = cd.hist_sales.concat(new Array(cd.forecast_dates.length).fill(null));
+    
+    // Build 7-day SMA series
+    const histSMAData = cd.hist_sma.concat(new Array(cd.forecast_dates.length).fill(null));
+
+    // Build forecast series (padded with nulls for historical portion, except last point to connect lines)
+    const lastHistVal = cd.hist_sales[cd.hist_sales.length - 1];
+    const forecastLineData = new Array(cd.hist_dates.length - 1).fill(null)
+                              .concat([lastHistVal])
+                              .concat(cd.forecast_sales);
+
+    const upperBand = new Array(cd.hist_dates.length - 1).fill(null)
+                       .concat([lastHistVal])
+                       .concat(cd.forecast_upper);
+
+    const lowerBand = new Array(cd.hist_dates.length - 1).fill(null)
+                       .concat([lastHistVal])
+                       .concat(cd.forecast_lower);
+
+    forecastChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: allLabels,
+        datasets: [
+          // 1. Historical Actual Daily Sales (Bar / Dots)
+          {
+            label: 'Actual Daily Sales',
+            data: histSalesData,
+            type: 'bar',
+            backgroundColor: 'rgba(148, 163, 184, 0.45)',
+            borderColor: 'rgba(100, 116, 139, 0.8)',
+            borderWidth: 1,
+            borderRadius: 4,
+            order: 3,
+          },
+          // 2. 7-Day Moving Average
+          {
+            label: '7-Day Rolling Moving Avg',
+            data: histSMAData,
+            borderColor: '#3b82f6',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.35,
+            order: 2,
+          },
+          // 3. 30-Day AI Predicted Demand
+          {
+            label: '30-Day AI Forecast',
+            data: forecastLineData,
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+            borderWidth: 3,
+            borderDash: [6, 4],
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#06b6d4',
+            tension: 0.3,
+            order: 1,
+          },
+          // 4. Upper Bound Confidence Interval
+          {
+            label: 'Upper Confidence (90%)',
+            data: upperBand,
+            borderColor: 'transparent',
+            backgroundColor: 'rgba(6, 182, 212, 0.12)',
+            fill: '+1',
+            pointRadius: 0,
+            tension: 0.3,
+            order: 4,
+          },
+          // 5. Lower Bound Confidence Interval
+          {
+            label: 'Lower Confidence (90%)',
+            data: lowerBand,
+            borderColor: 'transparent',
+            backgroundColor: 'transparent',
+            fill: false,
+            pointRadius: 0,
+            tension: 0.3,
+            order: 5,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleColor: '#ffffff',
+            bodyColor: '#e2e8f0',
+            borderColor: '#334155',
+            borderWidth: 1,
+            padding: 12,
+            boxPadding: 6,
+            usePointStyle: true,
+            callbacks: {
+              label: function(context) {
+                if (context.parsed.y !== null && context.dataset.label !== 'Lower Confidence (90%)') {
+                  return ` ${context.dataset.label}: ${context.parsed.y} units`;
+                }
+                return null;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: {
+              maxTicksLimit: 14,
+              font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+              color: '#64748b',
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#f1f5f9' },
+            ticks: {
+              font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+              color: '#64748b',
+              callback: function(val) { return val + ' units'; }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function filterForecastTable() {
+    const input = document.getElementById("tableSearch");
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById("forecast-table");
+    const trs = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < trs.length; i++) {
+      const tdName = trs[i].getElementsByTagName("td")[0];
+      const tdCat = trs[i].getElementsByTagName("td")[1];
+      if (tdName || tdCat) {
+        const txtValue = (tdName.textContent || tdName.innerText) + " " + (tdCat.textContent || tdCat.innerText);
+        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+          trs[i].style.display = "";
+        } else {
+          trs[i].style.display = "none";
+        }
+      }
+    }
+  }
+
+  function sendCriticalAlertNow() {
+    const btn = document.getElementById('btn-send-alert');
+    const btnText = document.getElementById('btn-alert-text');
+    const origHtml = btnText.innerHTML;
+
+    btn.disabled = true;
+    btn.classList.add('opacity-75', 'cursor-not-allowed');
+    btnText.innerHTML = `<span>⏳ Auditing & Sending Email...</span>`;
+
+    fetch('{% url "trigger_critical_stock_alert_now" %}', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.classList.remove('opacity-75', 'cursor-not-allowed');
+      btnText.innerHTML = origHtml;
+
+      if (data.success && data.email_sent) {
+        alert("✅ " + data.message + "\n\nAn executive critical inventory report has been dispatched to your email address (sharmaneeraj3415@gmail.com).");
+      } else if (data.success && !data.email_sent) {
+        alert("ℹ️ " + data.message);
+      } else {
+        alert("❌ " + (data.message || data.error || "Failed to send alert email."));
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.classList.remove('opacity-75', 'cursor-not-allowed');
+      btnText.innerHTML = origHtml;
+      alert("❌ Error sending alert: " + err.message);
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,12 @@
+id,name,description,icon,color
+1,Antibiotics,Medications used to treat bacterial infections,💊,#FF6B6B
+2,Antidiabetics,Diabetes management drugs,💉,#4ECDC4
+3,Antihypertensives,Blood pressure control medications,❤️,#45B7D1
+4,Antipyretics,Fever reducing medicines,🌡️,#FFA07A
+5,Antihistamines,Allergy and cold relief,🤧,#98D8C8
+6,Analgesics,Pain relief medications,💉,#F7DC6F
+7,Bronchodilators,Respiratory and asthma medications,🫁,#1ABC9C
+8,Cardiovascular,Heart and circulation medications,❤️,#E74C3C
+9,Dermatologicals,Skin care and treatment,🧴,#F4D03F
+10,Gastrointestinal,Digestive system medications,🍽️,#27AE60
+11,Vitamins & Supplements,Nutritional supplements,💪,#2ECC71

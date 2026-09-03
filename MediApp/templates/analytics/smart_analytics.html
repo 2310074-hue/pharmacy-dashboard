@@ -1,0 +1,337 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Smart Sales Analytics — PharmaCare{% endblock %}
+{% block page_title %}⚡ Smart Sales Analytics{% endblock %}
+{% block page_subtitle %}AI-powered insights into your pharmacy performance{% endblock %}
+
+{% block content %}
+<style>
+.sa-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:32px}
+.sa-kpi-card{border-radius:16px;padding:22px 24px;position:relative;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease}
+.sa-kpi-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.18)}
+.sa-kpi-card.cyan{background:linear-gradient(135deg,#ecfeff,#cffafe);border:1.5px solid #67e8f9}
+.sa-kpi-card.emerald{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1.5px solid #6ee7b7}
+.sa-kpi-card.indigo{background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1.5px solid #a5b4fc}
+.sa-kpi-card.amber{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fcd34d}
+.sa-kpi-card.rose{background:linear-gradient(135deg,#fff1f2,#ffe4e6);border:1.5px solid #fda4af}
+.sa-kpi-card.purple{background:linear-gradient(135deg,#faf5ff,#f3e8ff);border:1.5px solid #d8b4fe}
+.sa-kpi-icon{font-size:28px;margin-bottom:8px}
+.sa-kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:4px}
+.sa-kpi-value{font-size:24px;font-weight:800;color:#0f172a;line-height:1.1;animation:saCountUp .5s ease-out both}
+.sa-kpi-sub{font-size:11.5px;color:#64748b;margin-top:4px}
+@keyframes saCountUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.sa-kpi-card:nth-child(1) .sa-kpi-value{animation-delay:.05s}
+.sa-kpi-card:nth-child(2) .sa-kpi-value{animation-delay:.10s}
+.sa-kpi-card:nth-child(3) .sa-kpi-value{animation-delay:.15s}
+.sa-kpi-card:nth-child(4) .sa-kpi-value{animation-delay:.20s}
+.sa-kpi-card:nth-child(5) .sa-kpi-value{animation-delay:.25s}
+.sa-kpi-card:nth-child(6) .sa-kpi-value{animation-delay:.30s}
+.sa-chart-card{background:white;border-radius:16px;padding:24px;box-shadow:0 4px 24px rgba(0,0,0,.07);border:1px solid #f1f5f9;margin-bottom:0}
+.sa-chart-title{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.sa-chart-title .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+.sa-chart-wrap{position:relative;height:280px}
+.sa-insights{background:linear-gradient(135deg,#0891b2 0%,#6366f1 100%);border-radius:16px;padding:28px 32px;color:white;margin-bottom:28px;box-shadow:0 8px 32px rgba(8,145,178,.3)}
+.sa-insights h3{font-size:17px;font-weight:700;margin-bottom:14px}
+.sa-insights ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.sa-insights li{background:rgba(255,255,255,.15);border-radius:10px;padding:10px 16px;font-size:13.5px;line-height:1.5;backdrop-filter:blur(8px)}
+.sa-insights li strong{color:#fef08a}
+.sa-filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:white;border-radius:14px;padding:16px 20px;box-shadow:0 4px 16px rgba(0,0,0,.07);margin-bottom:28px;border:1px solid #f1f5f9}
+.sa-filter-label{font-size:13px;font-weight:600;color:#475569}
+.sa-date-range{display:flex;align-items:center;gap:8px}
+.sa-top-customers{width:100%;border-collapse:collapse;font-size:13.5px}
+.sa-top-customers th{background:linear-gradient(135deg,#0891b2,#6366f1);color:white;padding:10px 14px;text-align:left;font-weight:600;font-size:12px}
+.sa-top-customers th:first-child{border-radius:10px 0 0 0}
+.sa-top-customers th:last-child{border-radius:0 10px 0 0}
+.sa-top-customers td{padding:10px 14px;border-bottom:1px solid #f1f5f9;color:#374151}
+.sa-top-customers tr:last-child td{border-bottom:none}
+.sa-top-customers tr:hover td{background:#f8fafc}
+.sa-rank-badge{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white}
+.rank-1{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.rank-2{background:linear-gradient(135deg,#94a3b8,#64748b)}
+.rank-3{background:linear-gradient(135deg,#cd7c34,#a05c20)}
+.rank-other{background:linear-gradient(135deg,#0891b2,#6366f1)}
+.sa-loading-overlay{position:absolute;inset:0;background:rgba(255,255,255,.85);border-radius:16px;display:flex;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
+.sa-spinner{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#0891b2;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<!-- Filter Bar -->
+<div class="sa-filter-bar">
+  <span class="sa-filter-label">📅 Period:</span>
+  <select id="saFilter" class="form-select" onchange="handleSAFilter()">
+    <option value="today">Today</option>
+    <option value="week">This Week</option>
+    <option value="month" selected>This Month</option>
+    <option value="year">This Year</option>
+    <option value="custom">Custom Range</option>
+  </select>
+  <div id="saCustom" class="sa-date-range hidden">
+    <input type="date" id="saStart" class="form-input text-sm">
+    <span style="color:#94a3b8">→</span>
+    <input type="date" id="saEnd" class="form-input text-sm">
+    <button onclick="loadAnalytics()" class="btn btn-primary text-sm">Apply</button>
+  </div>
+  <button onclick="loadAnalytics()" class="btn btn-primary" style="margin-left:auto">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:4px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+    Refresh
+  </button>
+  <span id="saMeta" style="font-size:12px;color:#94a3b8"></span>
+</div>
+
+<!-- KPI Cards -->
+<div class="sa-kpi-grid">
+  <div class="sa-kpi-card cyan">
+    <div class="sa-kpi-icon">💰</div>
+    <div class="sa-kpi-label">Total Revenue</div>
+    <div class="sa-kpi-value" id="kpiRevenue">—</div>
+    <div class="sa-kpi-sub">Completed sales</div>
+  </div>
+  <div class="sa-kpi-card emerald">
+    <div class="sa-kpi-icon">📈</div>
+    <div class="sa-kpi-label">Net Profit</div>
+    <div class="sa-kpi-value" id="kpiProfit">—</div>
+    <div class="sa-kpi-sub" id="kpiProfitSub">After cost &amp; discounts</div>
+  </div>
+  <div class="sa-kpi-card indigo">
+    <div class="sa-kpi-icon">🛒</div>
+    <div class="sa-kpi-label">Total Sales</div>
+    <div class="sa-kpi-value" id="kpiCount">—</div>
+    <div class="sa-kpi-sub">Completed transactions</div>
+  </div>
+  <div class="sa-kpi-card amber">
+    <div class="sa-kpi-icon">🧾</div>
+    <div class="sa-kpi-label">Avg Order Value</div>
+    <div class="sa-kpi-value" id="kpiAvg">—</div>
+    <div class="sa-kpi-sub">Per completed sale</div>
+  </div>
+  <div class="sa-kpi-card rose">
+    <div class="sa-kpi-icon">↩️</div>
+    <div class="sa-kpi-label">Refund Rate</div>
+    <div class="sa-kpi-value" id="kpiRefund">—</div>
+    <div class="sa-kpi-sub">% of all transactions</div>
+  </div>
+  <div class="sa-kpi-card purple">
+    <div class="sa-kpi-icon">🏆</div>
+    <div class="sa-kpi-label">Top Medicine</div>
+    <div class="sa-kpi-value" id="kpiTopMed" style="font-size:15px;word-break:break-word">—</div>
+    <div class="sa-kpi-sub" id="kpiTopMedSub">units sold</div>
+  </div>
+</div>
+
+<!-- Smart Insights -->
+<div class="sa-insights">
+  <h3>🤖 Smart Insights</h3>
+  <ul id="saInsightsList"><li>Loading insights…</li></ul>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <div class="sa-chart-card">
+    <div class="sa-chart-title"><span class="dot" style="background:#10b981"></span>Revenue &amp; Profit Trend</div>
+    <div class="sa-chart-wrap">
+      <canvas id="trendChart"></canvas>
+      <div class="sa-loading-overlay" id="trendLoading"><div class="sa-spinner"></div></div>
+    </div>
+  </div>
+  <div class="sa-chart-card">
+    <div class="sa-chart-title"><span class="dot" style="background:#f59e0b"></span>Hourly Sales Heatmap</div>
+    <div class="sa-chart-wrap">
+      <canvas id="hourlyChart"></canvas>
+      <div class="sa-loading-overlay" id="hourlyLoading"><div class="sa-spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <div class="sa-chart-card">
+    <div class="sa-chart-title"><span class="dot" style="background:#6366f1"></span>Revenue by Category</div>
+    <div class="sa-chart-wrap">
+      <canvas id="categoryChart"></canvas>
+      <div class="sa-loading-overlay" id="categoryLoading"><div class="sa-spinner"></div></div>
+    </div>
+  </div>
+  <div class="sa-chart-card">
+    <div class="sa-chart-title"><span class="dot" style="background:#0891b2"></span>Payment Method Mix</div>
+    <div class="sa-chart-wrap">
+      <canvas id="paymentChart"></canvas>
+      <div class="sa-loading-overlay" id="paymentLoading"><div class="sa-spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Top Customers -->
+<div class="sa-chart-card">
+  <div class="sa-chart-title"><span class="dot" style="background:#ec4899"></span>Top Customers by Spend</div>
+  <div id="customersLoading" style="display:flex;justify-content:center;padding:24px"><div class="sa-spinner"></div></div>
+  <div id="customersTable" style="display:none;overflow-x:auto">
+    <table class="sa-top-customers">
+      <thead><tr><th>#</th><th>Customer</th><th>Total Spend</th><th>Orders</th><th>Avg / Order</th></tr></thead>
+      <tbody id="customersTbody"></tbody>
+    </table>
+    <p id="customersEmpty" class="text-center text-gray-400 py-6" style="display:none">No customer data for this period.</p>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+'use strict';
+let trendChart=null,hourlyChart=null,categoryChart=null,paymentChart=null;
+const PALETTE=['#0891b2','#6366f1','#10b981','#f59e0b','#ec4899','#8b5cf6','#ef4444','#14b8a6'];
+const fmtRupee=v=>'₹'+Number(v).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtNum=v=>Number(v).toLocaleString('en-IN');
+
+function handleSAFilter(){
+  const v=document.getElementById('saFilter').value;
+  document.getElementById('saCustom').classList.toggle('hidden',v!=='custom');
+  if(v!=='custom')loadAnalytics();
+}
+function getSAParams(){
+  const f=document.getElementById('saFilter').value;
+  let p=`filter=${f}`;
+  if(f==='custom'){
+    const s=document.getElementById('saStart').value,e=document.getElementById('saEnd').value;
+    if(!s||!e){showAlert('Please select both dates','warning');return null;}
+    p+=`&start_date=${s}&end_date=${e}`;
+  }
+  return p;
+}
+function setLd(id,show){const el=document.getElementById(id);if(el)el.style.display=show?'flex':'none';}
+
+function animateCounter(el,target,isCurrency,suffix){
+  suffix=suffix||'';const dur=900,start=Date.now();
+  function step(){
+    const prog=Math.min((Date.now()-start)/dur,1);
+    const eased=1-Math.pow(1-prog,3);
+    const cur=target*eased;
+    el.textContent=isCurrency?fmtRupee(cur):(fmtNum(Math.round(cur))+suffix);
+    if(prog<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function loadAnalytics(){
+  const params=getSAParams();if(!params)return;
+  ['trendLoading','hourlyLoading','categoryLoading','paymentLoading'].forEach(id=>setLd(id,true));
+  setLd('customersLoading',true);
+  document.getElementById('customersTable').style.display='none';
+  fetch(`/api/smart-analytics/?${params}`)
+    .then(r=>{if(!r.ok)throw new Error('failed');return r.json();})
+    .then(data=>{
+      renderKPIs(data.kpi);
+      renderInsights(data.insights);
+      renderTrend(data.trend);
+      renderHourly(data.hourly);
+      renderCategories(data.categories);
+      renderPayments(data.payments);
+      renderCustomers(data.top_customers);
+      if(data.meta)document.getElementById('saMeta').textContent=`${data.meta.start} → ${data.meta.end}`;
+    })
+    .catch(()=>showAlert('Failed to load analytics data','error'));
+}
+
+function renderKPIs(kpi){
+  animateCounter(document.getElementById('kpiRevenue'),kpi.total_revenue,true);
+  const pe=document.getElementById('kpiProfit');
+  animateCounter(pe,Math.abs(kpi.total_profit),true);
+  pe.style.color=kpi.total_profit<0?'#ef4444':'#0f172a';
+  document.getElementById('kpiProfitSub').textContent=kpi.total_profit<0?'⚠️ Loss period':'After cost & discounts';
+  animateCounter(document.getElementById('kpiCount'),kpi.sale_count,false);
+  animateCounter(document.getElementById('kpiAvg'),kpi.avg_order_value,true);
+  animateCounter(document.getElementById('kpiRefund'),kpi.refund_rate,false,'%');
+  document.getElementById('kpiTopMed').textContent=kpi.top_medicine;
+  document.getElementById('kpiTopMedSub').textContent=fmtNum(kpi.top_medicine_qty)+' units sold';
+}
+
+function renderInsights(ins){
+  document.getElementById('saInsightsList').innerHTML=ins.map(i=>`<li>${i}</li>`).join('');
+}
+
+function renderTrend(t){
+  setLd('trendLoading',false);
+  const ctx=document.getElementById('trendChart').getContext('2d');
+  if(trendChart)trendChart.destroy();
+  trendChart=new Chart(ctx,{
+    type:'line',
+    data:{labels:t.labels,datasets:[
+      {label:'Revenue (₹)',data:t.revenue,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.10)',fill:true,tension:.4,borderWidth:2.5,pointRadius:3,pointHoverRadius:6,pointBackgroundColor:'#10b981'},
+      {label:'Profit (₹)',data:t.profit,borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.08)',fill:true,tension:.4,borderWidth:2,pointRadius:3,pointHoverRadius:6,pointBackgroundColor:'#6366f1'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top',labels:{usePointStyle:true,pointStyleWidth:8}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtRupee(c.parsed.y)}`}}},
+      scales:{y:{beginAtZero:true,ticks:{callback:v=>'₹'+Number(v).toLocaleString('en-IN')},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}}}
+  });
+}
+
+function renderHourly(h){
+  setLd('hourlyLoading',false);
+  const ctx=document.getElementById('hourlyChart').getContext('2d');
+  if(hourlyChart)hourlyChart.destroy();
+  const labels=h.hours.map(x=>x===0?'12am':x===12?'12pm':x<12?`${x}am`:`${x-12}pm`);
+  const maxR=Math.max(...h.revenue,1);
+  const bg=h.revenue.map(v=>`rgba(8,145,178,${.15+(v/maxR)*.75})`);
+  hourlyChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'Revenue (₹)',data:h.revenue,backgroundColor:bg,borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>[`Revenue: ${fmtRupee(c.parsed.y)}`,`Sales: ${h.counts[c.dataIndex]}`]}}},
+      scales:{y:{beginAtZero:true,ticks:{callback:v=>'₹'+Number(v).toLocaleString('en-IN')},grid:{color:'rgba(0,0,0,.04)'}},x:{grid:{display:false},ticks:{font:{size:9},maxRotation:45}}}}
+  });
+}
+
+function renderCategories(cats){
+  setLd('categoryLoading',false);
+  const ctx=document.getElementById('categoryChart').getContext('2d');
+  if(categoryChart)categoryChart.destroy();
+  const hasData=cats.labels&&cats.labels.length>0;
+  categoryChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:hasData?cats.labels:['No data'],datasets:[{label:'Revenue (₹)',data:hasData?cats.data:[0],backgroundColor:PALETTE.slice(0,cats.labels.length||1),borderRadius:8,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`Revenue: ${fmtRupee(c.parsed.x)}`}}},
+      scales:{x:{beginAtZero:true,ticks:{callback:v=>'₹'+Number(v).toLocaleString('en-IN')},grid:{color:'rgba(0,0,0,.04)'}},y:{grid:{display:false}}}}
+  });
+}
+
+function renderPayments(pay){
+  setLd('paymentLoading',false);
+  const ctx=document.getElementById('paymentChart').getContext('2d');
+  if(paymentChart)paymentChart.destroy();
+  const hasData=pay.labels&&pay.labels.length>0;
+  paymentChart=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:hasData?pay.labels:['No data'],datasets:[{data:hasData?pay.amounts:[1],backgroundColor:hasData?PALETTE.slice(0,pay.labels.length):['#e2e8f0'],borderWidth:3,borderColor:'#fff',hoverOffset:12}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'right',labels:{usePointStyle:true,pointStyleWidth:10}},
+        tooltip:{callbacks:{label:c=>{if(!hasData)return'No data';const i=c.dataIndex;return[`Amount: ${fmtRupee(pay.amounts[i])}`,`Orders: ${pay.counts[i]}`];}}}}}
+  });
+}
+
+function renderCustomers(cs){
+  setLd('customersLoading',false);
+  document.getElementById('customersTable').style.display='block';
+  const tbody=document.getElementById('customersTbody');
+  const empty=document.getElementById('customersEmpty');
+  if(!cs||cs.length===0){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const rc=i=>['rank-1','rank-2','rank-3'][i]||'rank-other';
+  tbody.innerHTML=cs.map((c,i)=>{
+    const avg=c.orders?(c.spend/c.orders):0;
+    return `<tr><td><span class="sa-rank-badge ${rc(i)}">${i+1}</span></td><td><strong>${c.name}</strong></td><td>${fmtRupee(c.spend)}</td><td>${fmtNum(c.orders)}</td><td>${fmtRupee(avg)}</td></tr>`;
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const today=new Date(),ago=new Date();ago.setDate(today.getDate()-30);
+  const fmt=d=>d.toISOString().split('T')[0];
+  document.getElementById('saStart').value=fmt(ago);
+  document.getElementById('saEnd').value=fmt(today);
+  loadAnalytics();
+});
+</script>
+{% endblock %}

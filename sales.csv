@@ -1,0 +1,21 @@
+sale_id,sale_number,customer_name,subtotal,discount_amount,gst_amount,total_amount,payment_method,payment_status,status,created_at
+1,SALE-2026-07-22-0001,Rajesh Kumar,250.00,12.50,11.88,249.38,Cash,Paid,Completed,2026-07-22 10:30:00
+2,SALE-2026-07-22-0002,Priya Sharma,180.00,9.00,8.55,179.55,UPI,Paid,Completed,2026-07-22 11:15:00
+3,SALE-2026-07-22-0003,Amit Patel,320.00,16.00,15.20,319.20,Credit Card,Paid,Completed,2026-07-22 14:45:00
+4,SALE-2026-07-22-0004,Sunita Gupta,95.00,0.00,4.75,99.75,Cash,Paid,Completed,2026-07-22 16:20:00
+5,SALE-2026-07-21-0005,Rajesh Kumar,210.00,10.50,9.98,209.48,UPI,Paid,Completed,2026-07-21 09:30:00
+6,SALE-2026-07-21-0006,Vikram Singh,150.00,7.50,7.13,149.63,Credit Card,Paid,Completed,2026-07-21 12:00:00
+7,SALE-2026-07-21-0007,Neha Reddy,85.00,0.00,4.25,89.25,Cash,Paid,Completed,2026-07-21 15:30:00
+8,SALE-2026-07-20-0008,Rahul Verma,420.00,21.00,19.95,418.95,Insurance,Paid,Completed,2026-07-20 10:00:00
+9,SALE-2026-07-20-0009,Deepa Nair,180.00,9.00,8.55,179.55,UPI,Paid,Completed,2026-07-20 13:45:00
+10,SALE-2026-07-20-0010,Suresh Krishnan,350.00,17.50,16.63,349.13,Cash,Paid,Completed,2026-07-20 17:00:00
+11,SALE-2026-07-19-0011,Meera Joshi,125.00,6.25,5.94,124.69,Debit Card,Paid,Completed,2026-07-19 11:20:00
+12,SALE-2026-07-19-0012,Ankit Shah,75.00,0.00,3.75,78.75,Cash,Paid,Completed,2026-07-19 14:10:00
+13,SALE-2026-07-18-0013,Kavya Menon,280.00,14.00,13.30,279.30,UPI,Paid,Completed,2026-07-18 09:45:00
+14,SALE-2026-07-18-0014,Arjun Rao,195.00,9.75,9.26,194.51,Credit Card,Paid,Completed,2026-07-18 16:30:00
+15,SALE-2026-07-17-0015,Lakshmi Venkatesh,65.00,0.00,3.25,68.25,Cash,Paid,Completed,2026-07-17 10:15:00
+16,SALE-2026-07-17-0016,Vijay Shetty,450.00,22.50,21.38,448.88,Insurance,Paid,Completed,2026-07-17 15:00:00
+17,SALE-2026-07-16-0017,Pooja Deshmukh,110.00,5.50,5.23,109.73,UPI,Paid,Completed,2026-07-16 12:30:00
+18,SALE-2026-07-16-0018,Ravi Kulkarni,230.00,11.50,10.93,229.43,Cash,Paid,Completed,2026-07-16 17:45:00
+19,SALE-2026-07-15-0019,Anjali Sinha,160.00,8.00,7.60,159.60,Credit Card,Paid,Completed,2026-07-15 11:00:00
+20,SALE-2026-07-15-0020,Manoj Tiwari,380.00,19.00,18.05,379.05,Cash,Paid,Completed,2026-07-15 14:30:00

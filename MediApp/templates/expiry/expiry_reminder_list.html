@@ -1,0 +1,885 @@
+{% extends 'base.html' %}
+
+{% block title %}Expiry Reminders & Customer Alerts - PharmaCare{% endblock %}
+{% block page_title %}Expiry Reminders{% endblock %}
+{% block page_subtitle %}Track expiring customer purchases and dispatch automated email reminders{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Top KPI Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Alerts -->
+        <div class="card p-5 bg-gradient-to-br from-cyan-50 to-white border-l-4 border-cyan-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-cyan-700">Total Expiry Alerts</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1">{{ total_alerts_count }}</h3>
+                    <p class="text-xs text-gray-500 mt-1">Customer purchase records</p>
+                </div>
+                <div class="w-12 h-12 bg-cyan-100 text-cyan-600 rounded-xl flex items-center justify-center text-2xl">
+                    📅
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Unsent Reminders -->
+        <div class="card p-5 bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-amber-700">Pending Reminders</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1">{{ pending_alerts_count }}</h3>
+                    <p class="text-xs text-amber-600 font-semibold mt-1">Ready for email dispatch</p>
+                </div>
+                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-2xl">
+                    ⏳
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical / Soon Expiring -->
+        <div class="card p-5 bg-gradient-to-br from-rose-50 to-white border-l-4 border-rose-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-rose-700">Critical (≤ 7 Days)</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1">{{ critical_alerts_count }}</h3>
+                    <p class="text-xs text-rose-600 font-semibold mt-1">{{ expired_alerts_count }} already expired</p>
+                </div>
+                <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-2xl">
+                    ⚠️
+                </div>
+            </div>
+        </div>
+
+        <!-- Sent Reminders -->
+        <div class="card p-5 bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Sent Reminders</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1">{{ sent_alerts_count }}</h3>
+                    <p class="text-xs text-emerald-600 font-semibold mt-1">Successfully notified</p>
+                </div>
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl">
+                    ✅
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Expiry Reminders Table Card -->
+    <div class="card p-6">
+        <!-- Form wrapping the table for bulk action -->
+        <form id="bulkReminderForm" method="post" action="{% url 'send_expiry_reminders_bulk' %}">
+            {% csrf_token %}
+            <input type="hidden" name="redirect_url" value="{{ request.get_full_path }}">
+
+            <!-- Header & Action Row -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                        <span>⏰ Customer Expiry Alerts</span>
+                        <span class="text-xs px-2.5 py-1 bg-cyan-100 text-cyan-800 font-bold rounded-full">{{ filtered_count }} Records</span>
+                    </h2>
+                    <p class="text-sm text-gray-500 mt-0.5">Select customers to send automated medicine expiry reminder emails</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Add Custom Reminder Button -->
+                    <button 
+                        type="button" 
+                        onclick="openAddReminderModal()" 
+                        class="btn btn-primary flex items-center gap-1.5 shadow-sm font-bold bg-cyan-600 hover:bg-cyan-700 text-white"
+                    >
+                        <span>➕</span> Create Reminder
+                    </button>
+
+                    <!-- Bulk Send Button -->
+                    <button 
+                        type="submit" 
+                        id="bulkSendBtn" 
+                        class="btn btn-secondary flex items-center gap-2 shadow-sm font-bold opacity-60 cursor-not-allowed" 
+                        disabled
+                        onclick="return confirmBulkSend()"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        <span>Send Reminder Email</span>
+                        <span id="selectedCountBadge" class="hidden px-2 py-0.5 bg-white text-cyan-700 text-xs font-black rounded-full">0</span>
+                    </button>
+
+                    <!-- Manual Sync Button -->
+                    <a href="{% url 'sync_expiry_reminders_view' %}" class="btn btn-outline flex items-center gap-1.5 shadow-sm text-sm" title="Re-scan sales history to discover any new expiring medicine purchases">
+                        <span>🔄</span> Sync Alerts
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filter Controls & Search -->
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 space-y-3">
+                <!-- Quick Status Tabs -->
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <!-- Status Filter Tabs -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-gray-500 uppercase mr-1">Status:</span>
+                        <a href="?status=all{% if timeline_filter != 'all' %}&timeline={{ timeline_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {% if status_filter == 'all' or not status_filter %}bg-cyan-600 text-white shadow-sm{% else %}bg-white text-gray-700 hover:bg-gray-100 border border-gray-200{% endif %}">
+                            All ({{ total_alerts_count }})
+                        </a>
+                        <a href="?status=pending{% if timeline_filter != 'all' %}&timeline={{ timeline_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {% if status_filter == 'pending' %}bg-cyan-600 text-white shadow-sm{% else %}bg-white text-gray-700 hover:bg-gray-100 border border-gray-200{% endif %}">
+                            ⏳ Pending ({{ pending_alerts_count }})
+                        </a>
+                        <a href="?status=sent{% if timeline_filter != 'all' %}&timeline={{ timeline_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {% if status_filter == 'sent' %}bg-cyan-600 text-white shadow-sm{% else %}bg-white text-gray-700 hover:bg-gray-100 border border-gray-200{% endif %}">
+                            ✅ Sent ({{ sent_alerts_count }})
+                        </a>
+                    </div>
+
+                    <!-- Timeline Filter Pills -->
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="text-xs font-bold text-gray-500 uppercase mr-1">Timeline:</span>
+                        <a href="?timeline=all{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="px-2.5 py-1 rounded-md text-xs font-semibold {% if timeline_filter == 'all' or not timeline_filter %}bg-gray-800 text-white{% else %}bg-white text-gray-600 hover:bg-gray-200 border border-gray-200{% endif %}">
+                            All
+                        </a>
+                        <a href="?timeline=critical{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="px-2.5 py-1 rounded-md text-xs font-semibold {% if timeline_filter == 'critical' %}bg-red-600 text-white{% else %}bg-white text-red-600 hover:bg-red-50 border border-red-200{% endif %}">
+                            ≤ 7 Days
+                        </a>
+                        <a href="?timeline=soon{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="px-2.5 py-1 rounded-md text-xs font-semibold {% if timeline_filter == 'soon' %}bg-amber-600 text-white{% else %}bg-white text-amber-700 hover:bg-amber-50 border border-amber-200{% endif %}">
+                            ≤ 30 Days
+                        </a>
+                        <a href="?timeline=expired{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="px-2.5 py-1 rounded-md text-xs font-semibold {% if timeline_filter == 'expired' %}bg-rose-700 text-white{% else %}bg-white text-rose-700 hover:bg-rose-50 border border-rose-200{% endif %}">
+                            Expired
+                        </a>
+                        <a href="?timeline=safe{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="px-2.5 py-1 rounded-md text-xs font-semibold {% if timeline_filter == 'safe' %}bg-emerald-600 text-white{% else %}bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-200{% endif %}">
+                            Safe (> 30d)
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Search Input Form -->
+                <div class="pt-2 border-t border-gray-200">
+                    <div class="flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                🔍
+                            </span>
+                            <input 
+                                type="text" 
+                                name="q_search" 
+                                id="searchInput"
+                                value="{{ search_query }}" 
+                                class="form-input text-sm pl-9" 
+                                placeholder="Search by customer name, email address, or medicine name..."
+                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); applySearch(); }"
+                            >
+                        </div>
+                        <button type="button" onclick="applySearch()" class="btn btn-secondary text-sm font-bold px-4">
+                            Search
+                        </button>
+                        {% if search_query or status_filter != 'all' or timeline_filter != 'all' %}
+                        <a href="{% url 'expiry_reminder_list' %}" class="btn btn-outline text-sm font-semibold px-3" title="Clear Filters">
+                            ✕ Reset
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table of Expiry Reminders -->
+            <div class="overflow-x-auto rounded-xl border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-center w-12">
+                                <input 
+                                    type="checkbox" 
+                                    id="selectAllCheckbox" 
+                                    class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500 cursor-pointer"
+                                    onclick="toggleSelectAll(this)"
+                                    title="Select / Deselect all on this page"
+                                >
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Customer</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Medicine Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Expiry Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status / Timeline</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Notification</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100 text-sm">
+                        {% for log in logs %}
+                        <tr class="hover:bg-cyan-50/40 transition-colors">
+                            <!-- Checkbox -->
+                            <td class="px-4 py-3 text-center">
+                                <input 
+                                    type="checkbox" 
+                                    name="selected_logs" 
+                                    value="{{ log.id }}" 
+                                    class="log-checkbox w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500 cursor-pointer"
+                                    onchange="updateSelectionState()"
+                                >
+                            </td>
+
+                            <!-- Customer -->
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                        {{ log.customer_name|slice:":1"|upper|default:"C" }}
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-gray-900">{{ log.customer_name|default:"Valued Customer" }}</p>
+                                        <p class="text-xs text-gray-500 font-mono">{{ log.customer_email }}</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Medicine Name -->
+                            <td class="px-4 py-3 font-semibold text-gray-800">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-base">💊</span>
+                                    <span>{{ log.medicine_name }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Expiry Date -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                {% if log.expiry_date %}
+                                <span class="font-bold text-gray-900">{{ log.expiry_date|date:"d-M-Y" }}</span>
+                                {% else %}
+                                <span class="text-gray-400 italic">No date</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Timeline Status Badge -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border {{ log.badge_class }}">
+                                    <span>{{ log.badge_icon }}</span>
+                                    <span>{{ log.badge_text }}</span>
+                                </span>
+                            </td>
+
+                            <!-- Notification Status -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                {% if log.reminder_sent %}
+                                <div>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                                        <span>✅</span> Sent
+                                    </span>
+                                    {% if log.sent_at %}
+                                    <p class="text-[11px] text-gray-500 mt-0.5">{{ log.sent_at|date:"M d, Y h:i A" }}</p>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                                    <span>⏳</span> Pending
+                                </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Single Action -->
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
+                                <a 
+                                    href="{% url 'send_single_expiry_reminder' log.id %}" 
+                                    class="btn btn-sm btn-outline py-1 px-2.5 text-xs font-bold text-cyan-700 hover:bg-cyan-50 flex items-center gap-1 inline-flex"
+                                    title="Send reminder email to this customer immediately"
+                                    onclick="return confirm('Send expiry reminder email to {{ log.customer_name }} ({{ log.customer_email }})?');"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>{% if log.reminder_sent %}Resend{% else %}Send Email{% endif %}</span>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-12 text-gray-500 bg-gray-50">
+                                <div class="text-4xl mb-2">🎉</div>
+                                <p class="font-bold text-gray-700">No expiring medicine records found matching your filters</p>
+                                <p class="text-xs text-gray-400 mt-1">All customer medicine supplies are within safe expiry periods or no matching records found.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+
+        <!-- Pagination Controls -->
+        {% if is_paginated %}
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-200">
+            <div class="text-xs text-gray-600">
+                Showing page <strong class="text-gray-900">{{ page_obj.number }}</strong> of <strong class="text-gray-900">{{ paginator.num_pages }}</strong> 
+                (Total <strong class="text-cyan-700">{{ filtered_count }}</strong> records)
+            </div>
+            
+            <div class="flex items-center gap-1">
+                {% if page_obj.has_previous %}
+                <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if timeline_filter %}&timeline={{ timeline_filter }}{% endif %}" class="btn btn-sm btn-outline py-1 px-2.5 text-xs" title="First Page">
+                    « First
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if timeline_filter %}&timeline={{ timeline_filter }}{% endif %}" class="btn btn-sm btn-outline py-1 px-2.5 text-xs">
+                    ‹ Prev
+                </a>
+                {% endif %}
+
+                <span class="px-3 py-1 bg-cyan-600 text-white rounded-md text-xs font-bold">
+                    Page {{ page_obj.number }}
+                </span>
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if timeline_filter %}&timeline={{ timeline_filter }}{% endif %}" class="btn btn-sm btn-outline py-1 px-2.5 text-xs">
+                    Next ›
+                </a>
+                <a href="?page={{ paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if timeline_filter %}&timeline={{ timeline_filter }}{% endif %}" class="btn btn-sm btn-outline py-1 px-2.5 text-xs" title="Last Page">
+                    Last »
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- =========================================================================
+     SMART CREATE EXPIRY REMINDER MODAL
+     (With live customer auto-suggest & purchase history auto-display)
+========================================================================= -->
+<div id="addReminderModal" class="modal fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display:none;">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-100 animate-slide-down">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 bg-gradient-to-r from-cyan-600 to-indigo-600 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">⏰</span>
+                <div>
+                    <h3 class="text-lg font-bold">Create Expiry Reminder</h3>
+                    <p class="text-xs text-cyan-100">Select customer to view purchase history & send reminder emails</p>
+                </div>
+            </div>
+            <button onclick="closeAddReminderModal()" class="text-white/80 hover:text-white text-2xl font-bold p-1 rounded-lg hover:bg-white/10 transition">
+                ✕
+            </button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div class="p-6 overflow-y-auto space-y-5 flex-1">
+            <!-- Step 1: Customer Search / Select -->
+            <div class="space-y-2 relative">
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                    1. Search & Select Customer <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="modalCustomerSearch" 
+                        class="form-input text-sm pr-10" 
+                        placeholder="Type customer name, phone number, or email..."
+                        autocomplete="off"
+                        oninput="onCustomerSearchInput(this.value)"
+                    >
+                    <div id="customerSearchSpinner" class="hidden absolute right-3 top-2.5 text-cyan-600 animate-spin">
+                        ⌛
+                    </div>
+                </div>
+
+                <!-- Autocomplete Dropdown Suggestions -->
+                <div id="customerSuggestionsBox" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-gray-100">
+                    <!-- Dynamic suggestions populated here -->
+                </div>
+            </div>
+
+            <!-- Customer Details Summary (Auto-Filled) -->
+            <div id="selectedCustomerCard" class="hidden bg-cyan-50/70 border border-cyan-200 rounded-xl p-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-cyan-600 text-white font-black text-sm flex items-center justify-center">
+                        <span id="selectedCustomerInitial">C</span>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-900 text-sm" id="selectedCustomerNameDisplay">Customer Name</p>
+                        <p class="text-xs text-gray-500 font-mono" id="selectedCustomerEmailDisplay">customer@email.com</p>
+                    </div>
+                </div>
+                <button type="button" onclick="resetSelectedCustomer()" class="text-xs text-rose-600 hover:text-rose-800 font-bold px-2 py-1 rounded hover:bg-rose-50 border border-rose-200">
+                    Change
+                </button>
+            </div>
+
+            <!-- Manual Name / Email Inputs (if new walk-in customer) -->
+            <div id="manualCustomerInputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Customer Full Name</label>
+                    <input type="text" id="manualCustomerName" class="form-input text-sm" placeholder="e.g. Rahul Sharma">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Email Address <span class="text-rose-500">*</span></label>
+                    <input type="email" id="manualCustomerEmail" class="form-input text-sm" placeholder="customer@example.com">
+                </div>
+            </div>
+
+            <!-- Step 2: Purchased Medicines Auto-Display -->
+            <div class="space-y-2 pt-2 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                        2. Select Medicines to Remind <span class="text-rose-500">*</span>
+                    </label>
+                    <button type="button" id="modalSelectAllMedsBtn" onclick="toggleSelectAllModalMeds()" class="hidden text-xs text-cyan-700 font-bold hover:underline">
+                        Select All
+                    </button>
+                </div>
+
+                <!-- Empty State / Loading State -->
+                <div id="purchasedMedsLoading" class="hidden text-center py-6 text-cyan-600 text-sm font-semibold">
+                    <span class="inline-block animate-spin mr-1.5">⏳</span> Loading customer purchase history...
+                </div>
+
+                <div id="purchasedMedsEmpty" class="text-center py-6 bg-gray-50 rounded-xl border border-gray-200 text-gray-500 text-xs">
+                    <span>📦 Select a customer above to see all medicines they have purchased, or add a custom medicine below.</span>
+                </div>
+
+                <!-- Medicines Checklist Container -->
+                <div id="purchasedMedsList" class="hidden space-y-2 max-h-56 overflow-y-auto pr-1">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Step 3: Add Custom / Extra Medicine Option -->
+            <div class="pt-2 border-t border-gray-200">
+                <details class="group">
+                    <summary class="text-xs font-bold text-cyan-700 hover:text-cyan-800 cursor-pointer flex items-center gap-1 select-none">
+                        <span>➕ Add another custom medicine to this reminder</span>
+                    </summary>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Medicine Name</label>
+                            <input type="text" id="customMedName" class="form-input text-xs" placeholder="Type medicine name (e.g. Azithromycin 500mg)..." list="catalogMedicineDatalist">
+                            <datalist id="catalogMedicineDatalist"></datalist>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Expiry Date</label>
+                            <input type="date" id="customMedExpiry" class="form-input text-xs">
+                        </div>
+                        <div class="sm:col-span-3 flex justify-end">
+                            <button type="button" onclick="addCustomMedicineToList()" class="btn btn-sm btn-secondary text-xs font-bold py-1 px-3">
+                                ➕ Add to Selection
+                            </button>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-wrap items-center justify-between gap-3">
+            <div class="text-xs text-gray-500 font-semibold" id="selectedMedsCountSummary">
+                0 medicines selected
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="closeAddReminderModal()" class="btn btn-outline text-xs font-bold py-2 px-3">
+                    Cancel
+                </button>
+                <button type="button" onclick="submitReminderModal(false)" class="btn btn-secondary text-xs font-bold py-2 px-4 shadow-sm" id="modalSaveOnlyBtn">
+                    💾 Save Alert
+                </button>
+                <button type="button" onclick="submitReminderModal(true)" class="btn btn-primary text-xs font-bold py-2 px-4 shadow-sm bg-cyan-600 hover:bg-cyan-700 text-white flex items-center gap-1.5" id="modalSendEmailBtn">
+                    <span>✉️</span> Send Reminder Email Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Search Handler
+    function applySearch() {
+        const val = document.getElementById('searchInput').value.trim();
+        const urlParams = new URLSearchParams(window.location.search);
+        if (val) {
+            urlParams.set('q', val);
+        } else {
+            urlParams.delete('q');
+        }
+        urlParams.set('page', '1');
+        window.location.search = urlParams.toString();
+    }
+
+    // Toggle Select All
+    function toggleSelectAll(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.log-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = masterCheckbox.checked;
+        });
+        updateSelectionState();
+    }
+
+    // Update Selection Count and Button State
+    function updateSelectionState() {
+        const checkboxes = document.querySelectorAll('.log-checkbox:checked');
+        const count = checkboxes.length;
+        const btn = document.getElementById('bulkSendBtn');
+        const badge = document.getElementById('selectedCountBadge');
+        const master = document.getElementById('selectAllCheckbox');
+        const allBoxes = document.querySelectorAll('.log-checkbox');
+
+        if (count > 0) {
+            btn.disabled = false;
+            btn.classList.remove('opacity-60', 'cursor-not-allowed');
+            badge.classList.remove('hidden');
+            badge.textContent = count;
+        } else {
+            btn.disabled = true;
+            btn.classList.add('opacity-60', 'cursor-not-allowed');
+            badge.classList.add('hidden');
+        }
+
+        if (master) {
+            master.checked = (allBoxes.length > 0 && count === allBoxes.length);
+        }
+    }
+
+    // Confirmation dialog before sending bulk emails
+    function confirmBulkSend() {
+        const count = document.querySelectorAll('.log-checkbox:checked').length;
+        if (count === 0) return false;
+        return confirm(`Are you sure you want to send expiry reminder emails to ${count} selected customer(s)?`);
+    }
+
+    // =========================================================================
+    // 🌟 SMART REMINDER MODAL JAVASCRIPT
+    // =========================================================================
+
+    let currentSelectedCustomerId = null;
+    let customerSearchTimeout = null;
+    let selectedMedicinesForModal = []; // list of { medicine_name, expiry_date, batch_name }
+
+    function openAddReminderModal() {
+        document.getElementById('addReminderModal').style.display = 'flex';
+        resetReminderModalForm();
+        loadPharmacyCatalogDatalist();
+    }
+
+    function closeAddReminderModal() {
+        document.getElementById('addReminderModal').style.display = 'none';
+        resetReminderModalForm();
+    }
+
+    function resetReminderModalForm() {
+        currentSelectedCustomerId = null;
+        selectedMedicinesForModal = [];
+        document.getElementById('modalCustomerSearch').value = '';
+        document.getElementById('manualCustomerName').value = '';
+        document.getElementById('manualCustomerEmail').value = '';
+        document.getElementById('selectedCustomerCard').classList.add('hidden');
+        document.getElementById('manualCustomerInputs').classList.remove('hidden');
+        document.getElementById('purchasedMedsList').innerHTML = '';
+        document.getElementById('purchasedMedsList').classList.add('hidden');
+        document.getElementById('purchasedMedsEmpty').classList.remove('hidden');
+        document.getElementById('modalSelectAllMedsBtn').classList.add('hidden');
+        updateModalSelectionSummary();
+    }
+
+    // Autocomplete Customer Search
+    function onCustomerSearchInput(val) {
+        clearTimeout(customerSearchTimeout);
+        const box = document.getElementById('customerSuggestionsBox');
+        if (!val || val.trim().length < 1) {
+            box.classList.add('hidden');
+            box.innerHTML = '';
+            return;
+        }
+
+        customerSearchTimeout = setTimeout(() => {
+            fetch(`/api/customer-medicines-for-reminder/?q=${encodeURIComponent(val.trim())}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.results && data.results.length > 0) {
+                        let html = '';
+                        data.results.forEach(c => {
+                            html += `
+                                <div onclick="selectCustomerFromDropdown(${c.id}, '${escapeHtml(c.name)}', '${escapeHtml(c.email)}', '${escapeHtml(c.contact_number)}')" 
+                                     class="p-3 hover:bg-cyan-50 cursor-pointer flex items-center justify-between transition">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-7 h-7 rounded-full bg-cyan-100 text-cyan-700 font-bold text-xs flex items-center justify-center">
+                                            ${(c.name || 'C').charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-gray-800 text-xs">${escapeHtml(c.name)}</p>
+                                            <p class="text-[11px] text-gray-500 font-mono">${escapeHtml(c.email || 'No email')} ${c.contact_number ? '• ' + escapeHtml(c.contact_number) : ''}</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs font-bold text-cyan-700">Select ➔</span>
+                                </div>
+                            `;
+                        });
+                        box.innerHTML = html;
+                        box.classList.remove('hidden');
+                    } else {
+                        box.innerHTML = `<div class="p-3 text-xs text-gray-400 italic text-center">No existing customer found. Type name & email below for new customer.</div>`;
+                        box.classList.remove('hidden');
+                    }
+                })
+                .catch(() => {
+                    box.classList.add('hidden');
+                });
+        }, 250);
+    }
+
+    function selectCustomerFromDropdown(id, name, email, phone) {
+        currentSelectedCustomerId = id;
+        document.getElementById('customerSuggestionsBox').classList.add('hidden');
+        document.getElementById('modalCustomerSearch').value = name;
+        document.getElementById('manualCustomerName').value = name;
+        document.getElementById('manualCustomerEmail').value = email;
+
+        document.getElementById('selectedCustomerNameDisplay').textContent = name;
+        document.getElementById('selectedCustomerEmailDisplay').textContent = email ? `${email} ${phone ? '• 📞 ' + phone : ''}` : '(No email on file)';
+        document.getElementById('selectedCustomerInitial').textContent = name.charAt(0).toUpperCase();
+
+        document.getElementById('selectedCustomerCard').classList.remove('hidden');
+        document.getElementById('manualCustomerInputs').classList.add('hidden');
+
+        // Fetch purchased medicines for this customer
+        loadCustomerPurchasedMedicines(id);
+    }
+
+    function resetSelectedCustomer() {
+        currentSelectedCustomerId = null;
+        document.getElementById('selectedCustomerCard').classList.add('hidden');
+        document.getElementById('manualCustomerInputs').classList.remove('hidden');
+        document.getElementById('modalCustomerSearch').value = '';
+        document.getElementById('modalCustomerSearch').focus();
+    }
+
+    // Load customer purchase history
+    function loadCustomerPurchasedMedicines(customerId) {
+        const loadingEl = document.getElementById('purchasedMedsLoading');
+        const emptyEl = document.getElementById('purchasedMedsEmpty');
+        const listEl = document.getElementById('purchasedMedsList');
+        const selectAllBtn = document.getElementById('modalSelectAllMedsBtn');
+
+        loadingEl.classList.remove('hidden');
+        emptyEl.classList.add('hidden');
+        listEl.classList.add('hidden');
+        listEl.innerHTML = '';
+
+        fetch(`/api/customer-medicines-for-reminder/?customer_id=${customerId}`)
+            .then(r => r.json())
+            .then(data => {
+                loadingEl.classList.add('hidden');
+                if (data.success && data.purchased_medicines && data.purchased_medicines.length > 0) {
+                    let html = '';
+                    data.purchased_medicines.forEach((med, idx) => {
+                        const isExpiredOrSoon = (med.days_left !== null && med.days_left <= 30);
+                        const badgeColorClass = med.status_color === 'rose' ? 'bg-rose-100 text-rose-800 border-rose-200' :
+                                                med.status_color === 'red'  ? 'bg-red-100 text-red-800 border-red-200' :
+                                                med.status_color === 'amber'? 'bg-amber-100 text-amber-800 border-amber-200' :
+                                                                              'bg-emerald-100 text-emerald-800 border-emerald-200';
+
+                        html += `
+                            <label class="flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-cyan-400 bg-white hover:bg-cyan-50/30 transition cursor-pointer">
+                                <div class="flex items-center gap-3">
+                                    <input 
+                                        type="checkbox" 
+                                        class="modal-med-cb w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500 cursor-pointer"
+                                        data-name="${escapeHtml(med.medicine_name)}"
+                                        data-batch="${escapeHtml(med.batch_name)}"
+                                        data-expiry="${med.expiry_date}"
+                                        ${isExpiredOrSoon ? 'checked' : ''}
+                                        onchange="updateModalSelectionSummary()"
+                                    >
+                                    <div>
+                                        <p class="font-bold text-gray-900 text-xs flex items-center gap-1.5">
+                                            <span>💊</span> ${escapeHtml(med.medicine_name)}
+                                            <span class="text-[10px] text-gray-500 font-mono font-normal">(${escapeHtml(med.batch_name)})</span>
+                                        </p>
+                                        <p class="text-[11px] text-gray-500">Purchased: ${med.purchase_date || 'Recent'}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeColorClass}">
+                                        ${med.status_tag}
+                                    </span>
+                                    <p class="text-[10px] font-mono font-bold text-gray-700 mt-0.5">Exp: ${med.expiry_display}</p>
+                                </div>
+                            </label>
+                        `;
+                    });
+
+                    listEl.innerHTML = html;
+                    listEl.classList.remove('hidden');
+                    selectAllBtn.classList.remove('hidden');
+                    updateModalSelectionSummary();
+                } else {
+                    emptyEl.innerHTML = `<span>⚠️ No past purchases found in record for this customer. Add custom medicine below.</span>`;
+                    emptyEl.classList.remove('hidden');
+                }
+            })
+            .catch(() => {
+                loadingEl.classList.add('hidden');
+                emptyEl.innerHTML = `<span>Could not load purchase history. You can add medicine manually below.</span>`;
+                emptyEl.classList.remove('hidden');
+            });
+    }
+
+    function toggleSelectAllModalMeds() {
+        const cbs = document.querySelectorAll('.modal-med-cb');
+        const allChecked = Array.from(cbs).every(cb => cb.checked);
+        cbs.forEach(cb => cb.checked = !allChecked);
+        document.getElementById('modalSelectAllMedsBtn').textContent = allChecked ? 'Select All' : 'Deselect All';
+        updateModalSelectionSummary();
+    }
+
+    // Add custom medicine manually
+    function addCustomMedicineToList() {
+        const nameInput = document.getElementById('customMedName');
+        const expInput = document.getElementById('customMedExpiry');
+
+        const name = nameInput.value.trim();
+        const exp = expInput.value;
+
+        if (!name) {
+            alert('Please enter medicine name');
+            nameInput.focus();
+            return;
+        }
+
+        const listEl = document.getElementById('purchasedMedsList');
+        const emptyEl = document.getElementById('purchasedMedsEmpty');
+
+        emptyEl.classList.add('hidden');
+        listEl.classList.remove('hidden');
+
+        const itemHtml = `
+            <label class="flex items-center justify-between p-3 rounded-xl border-2 border-cyan-400 bg-cyan-50/40 transition cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <input 
+                        type="checkbox" 
+                        class="modal-med-cb w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500 cursor-pointer"
+                        data-name="${escapeHtml(name)}"
+                        data-batch="Manual"
+                        data-expiry="${exp}"
+                        checked
+                        onchange="updateModalSelectionSummary()"
+                    >
+                    <div>
+                        <p class="font-bold text-cyan-900 text-xs flex items-center gap-1.5">
+                            <span>✨</span> ${escapeHtml(name)} <span class="text-[10px] bg-cyan-200 text-cyan-800 px-1.5 py-0.2 rounded font-bold">Custom</span>
+                        </p>
+                        <p class="text-[11px] text-gray-500">Exp: ${exp || 'Not specified'}</p>
+                    </div>
+                </div>
+                <button type="button" onclick="this.closest('label').remove(); updateModalSelectionSummary();" class="text-xs text-rose-600 font-bold hover:text-rose-800 px-2 py-1">✕</button>
+            </label>
+        `;
+
+        listEl.insertAdjacentHTML('afterbegin', itemHtml);
+        nameInput.value = '';
+        expInput.value = '';
+        updateModalSelectionSummary();
+    }
+
+    function updateModalSelectionSummary() {
+        const checked = document.querySelectorAll('.modal-med-cb:checked');
+        const summaryEl = document.getElementById('selectedMedsCountSummary');
+        const count = checked.length;
+        summaryEl.textContent = `${count} medicine${count === 1 ? '' : 's'} selected for reminder`;
+    }
+
+    // Load pharmacy catalog datalist
+    function loadPharmacyCatalogDatalist() {
+        const datalist = document.getElementById('catalogMedicineDatalist');
+        if (datalist.children.length > 0) return;
+        fetch('/api/customer-medicines-for-reminder/')
+            .then(r => r.json())
+            .then(data => {
+                if (data.catalog_medicines) {
+                    let html = '';
+                    data.catalog_medicines.forEach(m => {
+                        html += `<option value="${escapeHtml(m.name)}"></option>`;
+                    });
+                    datalist.innerHTML = html;
+                }
+            })
+            .catch(()=>{});
+    }
+
+    // Submit Reminder Modal
+    function submitReminderModal(sendEmailNow) {
+        const custName = (document.getElementById('manualCustomerName').value || document.getElementById('modalCustomerSearch').value || 'Valued Customer').trim();
+        const custEmail = document.getElementById('manualCustomerEmail').value.trim();
+
+        if (!custEmail) {
+            alert('Please provide customer email address to send the expiry notification.');
+            document.getElementById('manualCustomerEmail').focus();
+            return;
+        }
+
+        const checkedBoxes = document.querySelectorAll('.modal-med-cb:checked');
+        if (checkedBoxes.length === 0) {
+            alert('Please select at least one medicine to create the reminder.');
+            return;
+        }
+
+        const medicines = [];
+        checkedBoxes.forEach(cb => {
+            medicines.push({
+                medicine_name: cb.getAttribute('data-name'),
+                batch_name: cb.getAttribute('data-batch') || '',
+                expiry_date: cb.getAttribute('data-expiry') || '',
+            });
+        });
+
+        const sendBtn = document.getElementById('modalSendEmailBtn');
+        const saveBtn = document.getElementById('modalSaveOnlyBtn');
+
+        const originalText = sendBtn.innerHTML;
+        sendBtn.disabled = true;
+        saveBtn.disabled = true;
+        sendBtn.innerHTML = `<span>⌛</span> Sending Email...`;
+
+        // Get CSRF Token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch('{% url "create_and_send_customer_expiry_reminders" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+                customer_name: custName,
+                customer_email: custEmail,
+                medicines: medicines,
+                send_email_now: sendEmailNow,
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            sendBtn.disabled = false;
+            saveBtn.disabled = false;
+            sendBtn.innerHTML = originalText;
+
+            if (data.success) {
+                closeAddReminderModal();
+                showAlert(data.message || '✅ Expiry reminders created successfully!', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                alert('Error: ' + (data.error || 'Failed to create reminder'));
+            }
+        })
+        .catch(err => {
+            sendBtn.disabled = false;
+            saveBtn.disabled = false;
+            sendBtn.innerHTML = originalText;
+            alert('Server error: ' + err);
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+</script>
+{% endblock %}

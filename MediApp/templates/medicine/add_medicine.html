@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Medicine - Pharmacy Management{% endblock %}
+
+{% block page_title %}Add New Medicine{% endblock %}
+{% block page_subtitle %}Add medicine with batch information{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl">
+    <div class="card p-8">
+        <form method="post" id="medicineForm">
+            {% csrf_token %}
+            
+            <!-- Medicine Information -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Medicine Information
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Medicine Name *
+                        </label>
+                        {{ medicine_form.name }}
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Category
+                        </label>
+                        {{ medicine_form.category }}
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Price (₹) *
+                        </label>
+                        {{ medicine_form.price }}
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Supplier *
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="supplierSearch" 
+                                class="form-input" 
+                                placeholder="Search supplier..."
+                                autocomplete="off"
+                                aria-label="Search Supplier"
+                            >
+                            <input type="hidden" name="supplier" id="supplierId" required>
+                            <div id="supplierResults" class="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-48 overflow-y-auto hidden shadow-lg"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Description
+                        </label>
+                        {{ medicine_form.description }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Batch Information -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        Batch Information
+                    </h3>
+                    <button type="button" onclick="addBatchRow()" class="btn btn-secondary">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Batch
+                    </button>
+                </div>
+                
+                <div id="batchContainer">
+                    <!-- Initial batch row -->
+                    <div class="batch-row bg-gray-50 p-6 rounded-lg mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Batch Name *
+                                </label>
+                                <input 
+                                    type="text" 
+                                    name="batch_name[]" 
+                                    class="form-input" 
+                                    placeholder="Batch A"
+                                    required
+                                    aria-label="Batch Name"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Add Date *
+                                </label>
+                                <input 
+                                    type="date" 
+                                    name="add_date[]" 
+                                    class="form-input"
+                                    required
+                                    aria-label="Add Date"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Expiry Date *
+                                </label>
+                                <input 
+                                    type="date" 
+                                    name="expiry_date[]" 
+                                    class="form-input"
+                                    required
+                                    aria-label="Expiry Date"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Quantity *
+                                </label>
+                                <input 
+                                    type="number" 
+                                    name="quantity[]" 
+                                    class="form-input" 
+                                    placeholder="100"
+                                    min="0"
+                                    required
+                                    aria-label="Quantity"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Purchase Price (₹) *
+                                </label>
+                                <input 
+                                    type="number" 
+                                    name="purchase_price[]" 
+                                    class="form-input" 
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                    required
+                                    aria-label="Purchase Price"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="flex gap-4">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Add Medicine
+                </button>
+                <a href="{% url 'medicine_list' %}" class="btn bg-gray-500 text-white hover:bg-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let batchCount = 1;
+    
+    function addBatchRow() {
+        batchCount++;
+        const container = document.getElementById('batchContainer');
+        const newRow = document.createElement('div');
+        newRow.className = 'batch-row bg-gray-50 p-6 rounded-lg mb-4 relative';
+        newRow.innerHTML = `
+            <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Batch Name *</label>
+                    <input type="text" name="batch_name[]" class="form-input" placeholder="Batch ${String.fromCharCode(64 + batchCount)}" required aria-label="Batch Name">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Add Date *</label>
+                    <input type="date" name="add_date[]" class="form-input" required aria-label="Add Date">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Expiry Date *</label>
+                    <input type="date" name="expiry_date[]" class="form-input" required aria-label="Expiry Date">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity *</label>
+                    <input type="number" name="quantity[]" class="form-input" placeholder="100" min="0" required aria-label="Quantity">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Purchase Price (₹) *</label>
+                    <input type="number" name="purchase_price[]" class="form-input" placeholder="0.00" step="0.01" min="0" required aria-label="Purchase Price">
+                </div>
+            </div>
+        `;
+        container.appendChild(newRow);
+    }
+    
+    // Supplier search
+    const supplierSearch = document.getElementById('supplierSearch');
+    const supplierResults = document.getElementById('supplierResults');
+    const supplierId = document.getElementById('supplierId');
+    
+    let searchTimeout;
+    supplierSearch.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            supplierResults.classList.add('hidden');
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            fetch(`/api/search-suppliers/?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.suppliers.length > 0) {
+                        supplierResults.innerHTML = data.suppliers.map(s => `
+                            <div class="p-3 hover:bg-gray-100 cursor-pointer border-b" onclick="selectSupplier(${s.id}, '${s.name}')">
+                                <p class="font-semibold">${s.name}</p>
+                                <p class="text-sm text-gray-500">${s.location}</p>
+                            </div>
+                        `).join('');
+                        supplierResults.classList.remove('hidden');
+                    } else {
+                        supplierResults.innerHTML = '<div class="p-3 text-gray-500">No suppliers found</div>';
+                        supplierResults.classList.remove('hidden');
+                    }
+                });
+        }, 300);
+    });
+    
+    function selectSupplier(id, name) {
+        supplierId.value = id;
+        supplierSearch.value = name;
+        supplierResults.classList.add('hidden');
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!supplierSearch.contains(e.target) && !supplierResults.contains(e.target)) {
+            supplierResults.classList.add('hidden');
+        }
+    });
+    
+    // Form validation
+    document.getElementById('medicineForm').addEventListener('submit', function(e) {
+        if (!supplierId.value) {
+            e.preventDefault();
+            showAlert('Please select a supplier', 'error');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}Profit & Loss Report - Pharmacy Management{% endblock %}
+
+{% block page_title %}Profit & Loss Report{% endblock %}
+{% block page_subtitle %}Visualize your pharmacy's financial performance{% endblock %}
+
+{% block content %}
+
+<!-- Global Filter Section -->
+<div class="card p-6 mb-8">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                </svg>
+                Time Range Filter
+            </h3>
+            <p class="text-sm text-gray-500 mt-1">Select the time period to view the profit/loss data</p>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-3">
+            <select id="profitLossFilter" class="form-select" onchange="handleChartFilterChange('profitLoss')">
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month" selected>This Month</option>
+                <option value="year">This Year</option>
+                <option value="custom">Custom Range</option>
+            </select>
+            
+            <div id="profitLossCustom" class="hidden flex items-center gap-2">
+                <input type="date" id="profitLossStart" class="form-input">
+                <span class="text-gray-500">to</span>
+                <input type="date" id="profitLossEnd" class="form-input">
+            </div>
+            
+            <button onclick="loadProfitLoss()" class="btn btn-primary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Apply
+            </button>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="grid grid-cols-1 gap-8">
+    
+    <!-- Chart: Profit & Loss -->
+    <div class="card p-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Profit & Loss Over Time
+            </h3>
+            
+            <div id="profitLossLoading" class="hidden">
+                <svg class="animate-spin h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        </div>
+        
+        <div class="h-80 relative">
+            <canvas id="profitLossChart"></canvas>
+            <div id="profitLossNoData" class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg">
+                <div class="text-center">
+                    <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    <p class="mt-2 text-gray-500">No profit/loss data for this period</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+let profitLossChart = null;
+
+const chartColors = {
+    green: {
+        bg: 'rgba(16, 185, 129, 0.7)',
+        border: 'rgba(16, 185, 129, 1)',
+        bgLight: 'rgba(16, 185, 129, 0.1)'
+    },
+    purple: {
+        bg: 'rgba(168, 85, 247, 0.7)',
+        border: 'rgba(168, 85, 247, 1)',
+        bgLight: 'rgba(168, 85, 247, 0.1)'
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const monthAgo = new Date();
+    monthAgo.setDate(today.getDate() - 30);
+    const formatDate = (date) => date.toISOString().split('T')[0];
+    
+    document.getElementById('profitLossStart').value = formatDate(monthAgo);
+    document.getElementById('profitLossEnd').value = formatDate(today);
+    
+    loadProfitLoss();
+});
+
+function handleChartFilterChange(chartName) {
+    const filter = document.getElementById(`${chartName}Filter`).value;
+    const customDiv = document.getElementById(`${chartName}Custom`);
+    
+    if (filter === 'custom') {
+        customDiv.classList.remove('hidden');
+    } else {
+        customDiv.classList.add('hidden');
+        loadProfitLoss();
+    }
+}
+
+function getFilterParams(chartName) {
+    const filter = document.getElementById(`${chartName}Filter`).value;
+    let params = `filter=${filter}`;
+    
+    if (filter === 'custom') {
+        const start = document.getElementById(`${chartName}Start`).value;
+        const end = document.getElementById(`${chartName}End`).value;
+        if (start && end) {
+            params += `&start_date=${start}&end_date=${end}`;
+        } else {
+            return null;
+        }
+    }
+    return params;
+}
+
+function setLoading(chartName, loading) {
+    const spinner = document.getElementById(`${chartName}Loading`);
+    if (loading) {
+        spinner.classList.remove('hidden');
+    } else {
+        spinner.classList.add('hidden');
+    }
+}
+
+function setNoData(chartName, show) {
+    const noData = document.getElementById(`${chartName}NoData`);
+    if (show) {
+        noData.classList.remove('hidden');
+    } else {
+        noData.classList.add('hidden');
+    }
+}
+
+function loadProfitLoss() {
+    const params = getFilterParams('profitLoss');
+    if (!params) {
+        showAlert('Please select both start and end dates', 'warning');
+        return;
+    }
+    
+    setLoading('profitLoss', true);
+    setNoData('profitLoss', false);
+    
+    fetch(`/reports/api/profit-loss/?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            setLoading('profitLoss', false);
+            
+            if (!data.labels || data.labels.length === 0) {
+                setNoData('profitLoss', true);
+                if (profitLossChart) {
+                    profitLossChart.destroy();
+                    profitLossChart = null;
+                }
+                return;
+            }
+            
+            setNoData('profitLoss', false);
+            const ctx = document.getElementById('profitLossChart').getContext('2d');
+            
+            if (profitLossChart) {
+                profitLossChart.destroy();
+            }
+            
+            profitLossChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Revenue',
+                            data: data.revenue,
+                            backgroundColor: chartColors.green.bgLight,
+                            borderColor: chartColors.green.border,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Profit',
+                            data: data.profit,
+                            backgroundColor: chartColors.purple.bgLight,
+                            borderColor: chartColors.purple.border,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            setLoading('profitLoss', false);
+            console.error('Error loading profit/loss:', error);
+            showAlert('Failed to load profit/loss chart', 'error');
+        });
+}
+</script>
+{% endblock %}

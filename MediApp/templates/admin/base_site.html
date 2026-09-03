@@ -1,0 +1,75 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}PharmaCare Enterprise Admin{% endblock %}
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'admin/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'admin/css/custom_admin.css' %}">
+{% endblock %}
+
+{% block branding %}
+<div class="admin-top-brand-bar">
+    <div class="branding-left">
+        <a href="{% url 'admin:index' %}" class="brand-logo-wrap">
+            <div class="brand-icon-shield">
+                <i class="fa-solid fa-hospital"></i>
+            </div>
+            <div class="brand-text-group">
+                <span class="brand-title">PharmaCare <span class="brand-pro-badge">PRO</span></span>
+                <span class="brand-subtitle">Enterprise Healthcare Management Console</span>
+            </div>
+        </a>
+    </div>
+    <div class="header-actions">
+        <a href="/dashboard/" class="nav-shortcut-btn" target="_blank" title="Open Main Pharmacy Dashboard">
+            <i class="fa-solid fa-gauge-high"></i> <span>Live Dashboard</span> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px; opacity:0.8;"></i>
+        </a>
+        <button class="admin-sidebar-toggle" id="sidebarToggle" title="Toggle Navigation Sidebar">
+            <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block site_title %}PharmaCare Admin{% endblock %}
+{% block site_header %}PharmaCare Enterprise Admin{% endblock %}
+{% block index_title %}Pharmacy Operations Console{% endblock %}
+
+{% block extra_js %}
+    <script>
+        (function(){
+            // Sidebar collapse toggle
+            var btn = document.getElementById('sidebarToggle');
+            if(btn) {
+                btn.addEventListener('click', function(){
+                    document.body.classList.toggle('nav-collapsed');
+                    localStorage.setItem('pharmacare_admin_nav_collapsed', document.body.classList.contains('nav-collapsed'));
+                });
+                if(localStorage.getItem('pharmacare_admin_nav_collapsed') === 'true') {
+                    document.body.classList.add('nav-collapsed');
+                }
+            }
+
+            // Keyboard shortcut '/' to focus search input
+            document.addEventListener('keydown', function(e){
+                if(e.key === '/' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+                    e.preventDefault();
+                    var search = document.getElementById('searchbar') || document.querySelector('input[type="search"]') || document.querySelector('#nav-filter');
+                    if(search) { search.focus(); search.select(); }
+                }
+            });
+
+            // Auto-enhance action select counter
+            var actionSelect = document.querySelector('.actions select');
+            var actionCounter = document.querySelector('.actions .action-counter');
+            if(actionSelect && actionCounter) {
+                actionCounter.classList.add('enhanced-counter');
+            }
+        })();
+    </script>
+{% endblock %}

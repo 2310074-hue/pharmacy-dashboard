@@ -1,0 +1,1078 @@
+/* =============================================================================
+   PharmaCare Enterprise Admin - Master Accessible Theme
+   File: dashboard.css
+   
+   AUDIT & COLOR SYSTEM SUMMARY:
+   - Header: Dark Navy/Teal (#091e3a -> #0e7490) with Pure White text (#ffffff)
+   - Sidebar: Dark Navy/Teal (#091e3a -> #0f2e4e) with Light Gray/White text (#e5e7eb / #ffffff)
+   - Content Area: Light Slate (#f8fafc) with Dark Slate Text (#0f172a / #1f2937)
+   - Table Headers: Slate Gray (#0f2e4e) with White Text (#ffffff) or Crisp Slate (#f1f5f9 / #334155)
+   - Table Rows: Alternating White (#ffffff) and Soft Slate (#f8fafc) with Dark Text (#1f2937)
+   - Table Row Hover: Soft Cyan Tint (#f0fdfa) with Dark Text (#0f172a)
+   - Table Row Selected: Soft Blue (#e0f2fe) with Dark Slate Text (#0f172a) and Dark Blue Link (#0369a1)
+   - Links: Vibrant Teal/Blue (#0284c7), hover (#0369a1 with underline)
+   - Actions & Search: High-contrast inputs (#ffffff / #0f172a) and solid buttons (#0f172a / #0891b2)
+   ============================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ── 1. Global CSS Reset & Django Admin Dark-Mode Neutralization ─────────── */
+:root {
+    --primary: #0891b2 !important;
+    --secondary: #0e7490 !important;
+    --accent: #06b6d4 !important;
+    --body-bg: #f8fafc !important;
+    --body-fg: #0f172a !important;
+    --body-quiet-color: #64748b !important;
+    --body-loud-color: #000000 !important;
+    --header-color: #ffffff !important;
+    --header-bg: #091e3a !important;
+    --header-link-color: #67e8f9 !important;
+    --breadcrumbs-bg: #ffffff !important;
+    --breadcrumbs-link-fg: #0e7490 !important;
+    --breadcrumbs-fg: #475569 !important;
+    --link-fg: #0284c7 !important;
+    --link-hover-color: #0369a1 !important;
+    --link-selected-fg: #0369a1 !important;
+    --selected-row: #e0f2fe !important;
+    --selected-bg: #e0f2fe !important;
+    --button-bg: #0891b2 !important;
+    --button-hover-bg: #0e7490 !important;
+    --button-fg: #ffffff !important;
+    --default-button-bg: #0891b2 !important;
+    --default-button-hover-bg: #0e7490 !important;
+    --close-button-bg: #64748b !important;
+    --close-button-hover-bg: #334155 !important;
+    --delete-button-bg: #ef4444 !important;
+    --delete-button-hover-bg: #dc2626 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --body-bg: #f8fafc !important;
+        --body-fg: #0f172a !important;
+        --selected-row: #e0f2fe !important;
+        --selected-bg: #e0f2fe !important;
+    }
+}
+
+html, body {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── 2. Top Header & Branding Bar ─────────────────────────────────────────── */
+#header {
+    background: linear-gradient(135deg, #091e3a 0%, #0f2e4e 60%, #0891b2 100%) !important;
+    color: #ffffff !important;
+    padding: 12px 28px !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.admin-top-brand-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.branding-left {
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none !important;
+}
+
+.brand-icon-shield {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+    transition: transform 0.2s ease;
+}
+
+.brand-logo-wrap:hover .brand-icon-shield {
+    transform: scale(1.05);
+}
+
+.brand-text-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff !important;
+    line-height: 1.1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.brand-pro-badge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    background: rgba(6, 182, 212, 0.3);
+    border: 1px solid rgba(6, 182, 212, 0.6);
+    color: #67e8f9 !important;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+}
+
+.brand-subtitle {
+    font-size: 11.5px;
+    color: #cbd5e1 !important;
+    font-weight: 500;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-shortcut-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff !important;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+
+.nav-shortcut-btn:hover {
+    background: #06b6d4 !important;
+    border-color: #06b6d4 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+.admin-sidebar-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+#user-tools {
+    font-size: 13px;
+    color: #e2e8f0 !important;
+}
+
+#user-tools strong {
+    color: #ffffff !important;
+    font-weight: 700;
+}
+
+#user-tools a {
+    color: #a5f3fc !important;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: color 0.15s;
+}
+
+#user-tools a:hover {
+    color: #ffffff !important;
+    text-decoration: underline !important;
+}
+
+/* ── 3. Breadcrumbs Bar ───────────────────────────────────────────────────── */
+.breadcrumbs {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    margin: 16px 28px 8px !important;
+    padding: 10px 18px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    font-size: 13px !important;
+    color: #64748b !important;
+}
+
+.breadcrumbs a {
+    color: #0e7490 !important;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: color 0.15s;
+}
+
+.breadcrumbs a:hover {
+    color: #0891b2 !important;
+    text-decoration: underline !important;
+}
+
+/* ── 4. Main Layout ───────────────────────────────────────────────────────── */
+#main {
+    display: flex;
+    gap: 24px !important;
+    padding: 12px 28px 40px !important;
+    align-items: flex-start;
+}
+
+/* ── 5. Sidebar Navigation (Dark Navy/Teal with High-Contrast Text) ───────── */
+#nav-sidebar {
+    width: 260px !important;
+    flex: 0 0 260px;
+    background: linear-gradient(180deg, #091e3a 0%, #0f2e4e 100%) !important;
+    border: 1px solid #1e3a5f !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12) !important;
+    padding: 16px 14px !important;
+    box-sizing: border-box;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-collapsed #nav-sidebar {
+    width: 72px !important;
+    flex-basis: 72px !important;
+    padding: 10px !important;
+}
+
+#nav-sidebar #nav-filter {
+    background-color: #0b1f36 !important;
+    border: 1px solid #1e40af !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    font-size: 13px !important;
+    margin-bottom: 14px !important;
+    transition: all 0.2s;
+}
+
+#nav-sidebar #nav-filter::placeholder {
+    color: #94a3b8 !important;
+}
+
+#nav-sidebar #nav-filter:focus {
+    background-color: #0f294a !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+    outline: none;
+}
+
+#nav-sidebar .module {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-bottom: 16px !important;
+    padding: 0 !important;
+}
+
+#nav-sidebar .section,
+#nav-sidebar .module caption a {
+    background: rgba(56, 189, 248, 0.12) !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.25) !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    display: block;
+    margin-bottom: 6px !important;
+    text-decoration: none !important;
+}
+
+#nav-sidebar table {
+    width: 100%;
+}
+
+#nav-sidebar tr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+#nav-sidebar th {
+    padding: 0 !important;
+    flex: 1;
+}
+
+#nav-sidebar th a {
+    color: #e2e8f0 !important;
+    padding: 8px 10px !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    display: block;
+    text-decoration: none !important;
+    transition: all 0.15s ease;
+}
+
+#nav-sidebar th a:hover {
+    color: #ffffff !important;
+    background: rgba(6, 182, 212, 0.2) !important;
+    transform: translateX(3px);
+}
+
+#nav-sidebar .model-current th a,
+#nav-sidebar a[aria-current="page"] {
+    color: #ffffff !important;
+    background: linear-gradient(90deg, rgba(8, 145, 178, 0.45), rgba(6, 182, 212, 0.25)) !important;
+    font-weight: 700 !important;
+    border-left: 3px solid #38bdf8 !important;
+}
+
+#nav-sidebar td {
+    padding: 0 !important;
+}
+
+#nav-sidebar a.addlink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(16, 185, 129, 0.2) !important;
+    color: #34d399 !important;
+    font-size: 14px !important;
+    font-weight: 800;
+    text-decoration: none !important;
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    transition: all 0.15s;
+}
+
+#nav-sidebar a.addlink:hover {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    transform: scale(1.1);
+}
+
+/* ── 6. Content Area & Headings ───────────────────────────────────────────── */
+#content {
+    flex: 1;
+    min-width: 0;
+    color: #0f172a !important;
+}
+
+#content h1 {
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    margin: 0 0 16px 0 !important;
+    letter-spacing: -0.02em;
+}
+
+/* ── 7. Top Object Action Tools ───────────────────────────────────────────── */
+.object-tools {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.object-tools a,
+.object-tools a.addlink {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 9px 18px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3) !important;
+    border: none !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.object-tools a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(8, 145, 178, 0.45) !important;
+    color: #ffffff !important;
+}
+
+/* ── 8. Search Bar Toolbar ────────────────────────────────────────────────── */
+#toolbar {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 12px 18px !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+#changelist-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#changelist-search #searchbar {
+    flex: 1;
+    min-width: 260px;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 9px 14px !important;
+    font-size: 13.5px !important;
+    color: #0f172a !important;
+    transition: all 0.2s;
+}
+
+#changelist-search #searchbar:focus {
+    background-color: #ffffff !important;
+    border-color: #0891b2 !important;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15) !important;
+    outline: none;
+}
+
+#changelist-search input[type="submit"] {
+    background: linear-gradient(135deg, #0e7490, #0891b2) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 9px 20px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(8, 145, 178, 0.3) !important;
+    transition: all 0.2s;
+}
+
+#changelist-search input[type="submit"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(8, 145, 178, 0.4) !important;
+}
+
+/* ── 9. Bulk Action Toolbar (Globally Styled for All Model List Views) ────── */
+/* BEFORE: Small, cramped default select box with browser default arrow and misaligned Run button
+   AFTER: Sleek SaaS Action Container, custom SVG chevron dropdown, high-contrast borders, focus glow, and perfectly aligned Run button */
+.actions {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 10px 18px !important;
+    margin-bottom: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    flex-wrap: wrap;
+}
+
+.actions label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+    margin: 0 !important;
+}
+
+/* Global Action Select Dropdown */
+.actions select,
+.actions label select,
+#changelist-form .actions select {
+    height: 40px !important;
+    min-height: 40px !important;
+    min-width: 250px !important;
+    max-width: 420px !important;
+    background-color: #ffffff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230891b2' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 16px 16px !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 0 42px 0 14px !important;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    cursor: pointer !important;
+    outline: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.actions select:hover,
+.actions label select:hover {
+    border-color: #0891b2 !important;
+    box-shadow: 0 2px 6px rgba(8, 145, 178, 0.12) !important;
+}
+
+.actions select:focus,
+.actions label select:focus {
+    border-color: #0891b2 !important;
+    box-shadow: 0 0 0 3.5px rgba(8, 145, 178, 0.2) !important;
+}
+
+/* Global 'Run' Action Button */
+.actions .button,
+.actions button.button,
+#changelist-form .actions .button {
+    height: 40px !important;
+    min-height: 40px !important;
+    background: linear-gradient(135deg, #091e3a 0%, #0f2e4e 60%, #0e7490 100%) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 0 22px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2) !important;
+    transition: all 0.2s ease !important;
+}
+
+.actions .button:hover,
+.actions button.button:hover {
+    background: linear-gradient(135deg, #0f2e4e 0%, #0891b2 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 14px rgba(8, 145, 178, 0.35) !important;
+    color: #ffffff !important;
+}
+
+.actions .button:active {
+    transform: translateY(0) !important;
+}
+
+/* Selected Counter Badge ('0 of 10 selected') */
+.actions .action-counter,
+.actions span.all,
+.actions span.question,
+.actions span.clear {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    background: #e2e8f0 !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 14px !important;
+    border-radius: 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.actions .action-counter:before {
+    content: "✓";
+    font-weight: 800;
+    color: #0891b2;
+}
+
+/* ── 10. Table & Row Data (100% High Contrast & Never Dark-on-Dark) ───────── */
+#changelist {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+#changelist.filtered .changelist-form-container,
+.changelist-form-container {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    margin-right: 0 !important;
+    float: none !important;
+    box-sizing: border-box !important;
+}
+
+#changelist-form {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: block !important;
+    box-sizing: border-box !important;
+}
+
+.results {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    display: block !important;
+    margin-top: 12px !important;
+}
+
+#result_list {
+    width: 100% !important;
+    min-width: 100% !important;
+    border-collapse: collapse !important;
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+    display: table !important;
+}
+
+/* Table Header */
+#result_list thead th {
+    background-color: #f1f5f9 !important;
+    color: #334155 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 13px 16px !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+    text-align: left;
+}
+
+#result_list thead th a {
+    color: #334155 !important;
+    text-decoration: none !important;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#result_list thead th a:hover {
+    color: #0891b2 !important;
+}
+
+/* Table Rows & Cells (Explicit Background AND Text Color) */
+#result_list tbody tr {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    transition: background-color 0.15s ease;
+}
+
+#result_list tbody tr:nth-child(even) {
+    background-color: #f8fafc !important;
+    color: #1f2937 !important;
+}
+
+#result_list tbody tr:hover {
+    background-color: #f0fdfa !important;
+    color: #0f172a !important;
+}
+
+/* Selected Row (Checked Checkbox) */
+#result_list tbody tr.selected {
+    background-color: #e0f2fe !important;
+    color: #0f172a !important;
+    border-left: 3px solid #0284c7 !important;
+}
+
+#result_list tbody tr.selected:hover {
+    background-color: #bae6fd !important;
+    color: #0f172a !important;
+}
+
+#result_list tbody tr.selected td,
+#result_list tbody tr.selected th {
+    color: #0f172a !important;
+}
+
+#result_list td,
+#result_list th {
+    padding: 13px 16px !important;
+    font-size: 13.5px !important;
+    color: #1f2937 !important;
+    vertical-align: middle;
+}
+
+/* Links inside Table Rows (Customer names, Medicine titles, etc.) */
+#result_list th a,
+#result_list td a {
+    color: #0284c7 !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    transition: color 0.15s;
+}
+
+#result_list th a:hover,
+#result_list td a:hover {
+    color: #0369a1 !important;
+    text-decoration: underline !important;
+}
+
+#result_list tbody tr.selected th a,
+#result_list tbody tr.selected td a {
+    color: #0369a1 !important;
+}
+
+/* Table Checkboxes */
+#result_list input[type="checkbox"],
+.action-checkbox input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: #0891b2;
+    cursor: pointer;
+}
+
+/* Pagination / Counter Footer */
+.paginator {
+    background-color: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    padding: 12px 18px !important;
+    font-size: 13px !important;
+    color: #475569 !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.paginator a {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: #0f172a !important;
+    text-decoration: none !important;
+    font-weight: 600;
+}
+
+.paginator a:hover {
+    background-color: #ecfeff !important;
+    border-color: #0891b2 !important;
+    color: #0891b2 !important;
+}
+
+.paginator .this-page {
+    background-color: #0e7490 !important;
+    color: #ffffff !important;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+}
+
+/* ── 11. Right Filter Panel ───────────────────────────────────────────────── */
+#changelist-filter {
+    width: 240px;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    padding: 16px !important;
+    box-sizing: border-box;
+}
+
+#changelist-filter h2 {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #0e7490 !important;
+    border-bottom: 2px solid #ecfeff !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 12px !important;
+}
+
+#changelist-filter h3 {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin: 14px 0 6px !important;
+}
+
+#changelist-filter ul {
+    padding-left: 0 !important;
+    list-style: none !important;
+    margin-bottom: 10px !important;
+}
+
+#changelist-filter li {
+    margin-bottom: 4px;
+}
+
+#changelist-filter li a {
+    color: #475569 !important;
+    font-size: 13px !important;
+    text-decoration: none !important;
+    display: block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+
+#changelist-filter li a:hover {
+    background-color: #ecfeff !important;
+    color: #0e7490 !important;
+}
+
+#changelist-filter li.selected a {
+    background-color: #ecfeff !important;
+    color: #0e7490 !important;
+    font-weight: 700 !important;
+    border-left: 3px solid #0891b2 !important;
+}
+
+/* ── 12. Recent Actions Panel (Elevated Card Look) ─────────────────────────── */
+#content-related,
+.module#recent-actions-module {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03) !important;
+    padding: 18px !important;
+}
+
+#content-related h2,
+.module#recent-actions-module h2 {
+    color: #0e7490 !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    margin-bottom: 12px !important;
+    border-bottom: 2px solid #ecfeff !important;
+    padding-bottom: 6px !important;
+}
+
+#content-related ul.actionlist {
+    padding-left: 0 !important;
+    list-style: none !important;
+}
+
+#content-related ul.actionlist li {
+    padding: 9px 0 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    font-size: 13px !important;
+    color: #334155 !important;
+}
+
+#content-related ul.actionlist li a {
+    color: #0284c7 !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+}
+
+#content-related ul.actionlist li a:hover {
+    text-decoration: underline !important;
+}
+
+/* ── 13. Detail & Edit Form Cards (.changeform) ───────────────────────────── */
+.module,
+.changeform,
+.inline-group {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    margin-bottom: 24px !important;
+    overflow: hidden;
+}
+
+.module h2,
+.inline-group h2 {
+    background: linear-gradient(90deg, #f8fafc 0%, #f0fdfa 100%) !important;
+    color: #0e7490 !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    padding: 14px 20px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.form-row {
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.form-row label {
+    width: 180px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #334155 !important;
+}
+
+.form-row .help,
+.form-row .helptext {
+    font-size: 12px;
+    color: #64748b !important;
+    margin-top: 4px;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="url"],
+select,
+textarea {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 9px 12px !important;
+    font-size: 13.5px !important;
+    color: #0f172a !important;
+    box-sizing: border-box;
+    transition: all 0.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #0891b2 !important;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15) !important;
+    outline: none;
+}
+
+/* ── 14. Save Toolbar (.submit-row) ───────────────────────────────────────── */
+.submit-row {
+    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 16px 20px !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+.submit-row input[type="submit"] {
+    border-radius: 8px !important;
+    padding: 10px 22px !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    cursor: pointer;
+    border: none !important;
+    transition: all 0.2s;
+}
+
+.submit-row input[name="_save"],
+.submit-row .default {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(8, 145, 178, 0.35) !important;
+}
+
+.submit-row input[name="_save"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(8, 145, 178, 0.45) !important;
+}
+
+.submit-row input[name="_addanother"],
+.submit-row input[name="_continue"] {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+}
+
+.submit-row input[name="_addanother"]:hover,
+.submit-row input[name="_continue"]:hover {
+    background-color: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+}
+
+.submit-row a.deletelink {
+    background-color: #fef2f2 !important;
+    color: #ef4444 !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    padding: 9px 18px !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    margin-right: auto;
+    transition: all 0.15s;
+}
+
+.submit-row a.deletelink:hover {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+/* ── 15. Flash Messages List ──────────────────────────────────────────────── */
+.messagelist {
+    margin: 14px 28px !important;
+    padding: 0 !important;
+    list-style: none !important;
+}
+
+.messagelist li {
+    padding: 12px 18px !important;
+    border-radius: 8px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.messagelist li.success {
+    background-color: #ecfdf5 !important;
+    color: #065f46 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+.messagelist li.warning {
+    background-color: #fffbeb !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
+}
+
+.messagelist li.error {
+    background-color: #fef2f2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fecaca !important;
+}
+
+/* ── 16. Responsive Tweaks ────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    #main {
+        flex-direction: column;
+        padding: 12px 16px 32px !important;
+    }
+    #nav-sidebar {
+        width: 100% !important;
+        flex-basis: auto !important;
+    }
+    .breadcrumbs {
+        margin: 12px 16px 4px !important;
+    }
+    #changelist {
+        flex-direction: column;
+    }
+    #changelist-filter {
+        width: 100%;
+    }
+}

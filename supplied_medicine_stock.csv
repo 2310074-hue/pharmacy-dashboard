@@ -1,0 +1,31 @@
+Medicine Name,Description,Category,Supplier,Supplier Contact,Supplier Email,Price (Selling),Batch Name,Purchase Price,Quantity in Stock,Expiry Date,Is Expired,Total Medicine Stock,Low Stock Warning
+Amlodipine 5mg,Calcium channel blocker for hypertension and angina.,Antihypertensives,Dr. Reddy's,0000000000,unknown@supplier.com,8.0,AMLO-2027-001,4.0,80,2028-04-20,No,80,No
+Amoxicillin 500mg,Broad-spectrum antibiotic for bacterial infections including respiratory,Antibiotics,AMX-2027-001,0000000000,unknown@supplier.com,0.0,120,0,0,2027-07-22,No,0,Yes
+Aspirin 75mg,Antiplatelet agent for cardiovascular prevention.,Cardiovascular,Cipla,0000000000,unknown@supplier.com,5.0,ASP-2027-002,2.0,195,2028-10-15,No,195,No
+Atorvastatin 20mg,Statin for high cholesterol.,Cardiovascular,Dr. Reddy's,0000000000,unknown@supplier.com,16.0,ATOR-2027-001,8.0,101,2028-09-10,No,101,No
+Azithromycin 500mg,Antibiotic for respiratory infections,Antibiotics,AZM-2027-002,0000000000,unknown@supplier.com,0.0,85,0,0,2027-07-22,No,0,Yes
+Budesonide 200mcg,Corticosteroid inhaler for asthma prevention.,Bronchodilators,Cipla,0000000000,unknown@supplier.com,220.0,BUD-2027-002,150.0,0,2028-07-20,No,0,Yes
+Cetirizine 10mg,Antihistamine for allergies and cold symptoms. Non-drowsy.,Antihistamines,Glenmark,0000000000,unknown@supplier.com,5.0,CET-2027-001,2.0,301,2028-03-10,No,301,No
+Ciprofloxacin 500mg,Broad-spectrum antibiotic for urinary tract infections,Antibiotics,2027-09-20,0000000000,unknown@supplier.com,25.0,10,0,0,2027-07-22,No,0,Yes
+Clobetasol 0.05%,Topical corticosteroid for eczema and psoriasis.,Dermatologicals,Glenmark,0000000000,unknown@supplier.com,45.0,CLOB-2027-001,25.0,0,2028-06-15,No,0,Yes
+Diclofenac 50mg,NSAID for pain and inflammation in arthritis.,Analgesics,Dr. Reddy's,0000000000,unknown@supplier.com,8.0,DICL-2027-001,4.0,138,2028-02-28,No,138,No
+Doxycycline 100mg,Tetracycline antibiotic for bacterial infections,Antibiotics,DOX-2027-004,0000000000,unknown@supplier.com,0.0,95,0,0,2027-07-22,No,0,Yes
+Empagliflozin 25mg,SGLT2 inhibitor for type 2 diabetes.,Antidiabetics,Cipla,0000000000,unknown@supplier.com,85.0,EMPA-2027-005,50.0,0,2028-02-28,No,0,Yes
+Glimepiride 2mg,Sulfonylurea medication for type 2 diabetes.,Antidiabetics,Sun Pharma,0000000000,unknown@supplier.com,16.0,GLIM-2027-002,8.0,6,2027-12-20,No,6,Yes
+Ibuprofen 400mg,NSAID for pain relief,Antipyretics,IBU-2027-003,0000000000,unknown@supplier.com,0.0,180,0,0,2027-07-22,No,0,Yes
+Levocetirizine 5mg,Antihistamine for seasonal allergies and chronic urticaria.,Antihistamines,Sun Pharma,0000000000,unknown@supplier.com,7.0,LEVO-2027-002,3.0,172,2028-04-15,No,172,No
+Losartan 50mg,ARB for hypertension and diabetic nephropathy.,Antihypertensives,Sun Pharma,0000000000,unknown@supplier.com,12.0,LOS-2027-002,6.0,23,2028-06-10,No,23,Yes
+Metformin 500mg,First-line medication for type 2 diabetes. Reduces blood sugar levels.,Antidiabetics,Cipla,0000000000,unknown@supplier.com,10.0,MET-500-2027,5.0,84,2028-03-15,No,84,No
+Metronidazole 400mg,Antibiotic for anaerobic bacterial infections including dental infections.,Antibiotics,Sun Pharma,0000000000,unknown@supplier.com,15.0,MET-2027-006,8.0,48,2027-10-05,No,48,Yes
+Miconazole 2%,Antifungal cream for athlete's foot and ringworm.,Dermatologicals,Cipla,0000000000,unknown@supplier.com,28.0,MICO-2027-002,15.0,0,2028-07-20,No,0,Yes
+Omega-3 1000mg,Omega-3 supplement for heart health and inflammation.,Vitamins & Supplements,Dr. Reddy's,0000000000,unknown@supplier.com,20.0,OMEGA-2027-004,10.0,65,2028-09-10,No,65,No
+Omeprazole 20mg,Proton pump inhibitor for acid reflux and GERD.,Gastrointestinal,Cipla,0000000000,unknown@supplier.com,10.0,OMEP-2027-001,4.0,130,2028-03-20,No,130,No
+Pantoprazole 40mg,Proton pump inhibitor for GERD and esophagitis.,Gastrointestinal,Sun Pharma,0000000000,unknown@supplier.com,12.0,PANT-2027-002,6.0,101,2028-04-25,No,101,No
+Paracetamol 500mg,Widely used analgesic and antipyretic for fever and pain.,Antipyretics,Cipla,0000000000,unknown@supplier.com,6.0,PARA-2027-001,3.5,203,2027-11-30,No,203,No
+Paracetamol 650mg,Higher strength analgesic and antipyretic.,Antipyretics,Sun Pharma,0000000000,unknown@supplier.com,9.0,PARA-2027-002,5.0,143,2027-12-15,No,143,No
+Salbutamol 100mcg,Bronchodilator for asthma and COPD.,Bronchodilators,Glenmark,0000000000,unknown@supplier.com,120.0,SALB-2027-001,80.0,0,2028-06-10,No,0,Yes
+Telmisartan 40mg,ARB for hypertension with long-lasting effect.,Antihypertensives,Glenmark,0000000000,unknown@supplier.com,18.0,TEL-2027-003,10.0,6,2028-07-05,No,6,Yes
+Tramadol 50mg,Opioid analgesic for moderate to severe pain.,Analgesics,Sun Pharma,0000000000,unknown@supplier.com,25.0,TRAM-2027-002,15.0,0,2027-09-30,No,0,Yes
+Vitamin B12 1000mcg,Vitamin B12 supplement for nerve function and energy.,Vitamins & Supplements,Cipla,0000000000,unknown@supplier.com,12.0,VITB12-2027-002,5.0,179,2028-08-15,No,179,No
+Vitamin C 500mg,Vitamin C for immune health and antioxidant protection.,Vitamins & Supplements,Sun Pharma,0000000000,unknown@supplier.com,6.0,VITC-2027-003,2.0,401,2028-07-20,No,401,No
+Vitamin D3 2000IU,Vitamin D supplement for bone health and immunity.,Vitamins & Supplements,Glenmark,0000000000,unknown@supplier.com,8.0,VITD-2027-001,3.0,296,2028-12-31,No,296,No

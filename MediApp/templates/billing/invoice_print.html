@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice {{ invoice.invoice_number }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f6f6f6; color: #222; margin: 0; padding: 30px; }
+        .invoice { width: 820px; max-width: 100%; background: white; margin: auto; padding: 28px; border: 1px solid #d3dce6; }
+        .brand { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0891b2; padding-bottom: 16px; }
+        .brand h1 { margin: 0; font-size: 28px; color: #0891b2; }
+        .meta { font-size: 12px; color: #555; line-height: 1.75; text-align: right; }
+        .customer-grid { display: flex; justify-content: space-between; margin: 24px 0; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 14px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #eafaff; color: #0f172a; font-size: 12px; text-transform: uppercase; padding: 12px; border: 1px solid #ccd; text-align: left; }
+        td { padding: 12px; border: 1px solid #ccd; font-size: 12px; }
+        .totals { margin-top: 22px; width: 340px; margin-left: auto; }
+        .totals .row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #eee; font-size: 12px; }
+        .totals .grand { font-weight: 700; font-size: 18px; color: #0b7a77; }
+        .actions { margin-top: 24px; }
+        .actions button { background: #0891b2; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
+        @media print { body { background: white; padding: 0; } .invoice { border: none; width: auto; max-width: none; margin: 0; box-shadow: none; } .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="invoice">
+        <div class="brand">
+            <div>
+                <h1>{{ invoice.pharmacy_name }}</h1>
+                <div style="font-size:12px; color:#555; margin-top:8px;">{{ invoice.pharmacy_address }}</div>
+                <div style="font-size:12px; color:#555; margin-top:4px;">GSTIN: {{ invoice.pharmacy_gstin|default:'N/A' }}</div>
+                <div style="font-size:12px; color:#555; margin-top:4px;">Phone: {{ invoice.pharmacy_phone|default:'N/A' }}</div>
+            </div>
+            <div class="meta">
+                <div><strong>Invoice #</strong> {{ invoice.invoice_number }}</div>
+                <div><strong>Date:</strong> {{ invoice.invoice_date|date:'M d, Y' }} {{ invoice.invoice_date|time:'h:i A' }}</div>
+            </div>
+        </div>
+
+        <div class="customer-grid">
+            <div>
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#666;">Bill To</div>
+                <div style="margin-top:8px; font-weight:700;">{{ invoice.customer_name }}</div>
+                <div style="font-size:12px; color:#555;">{{ invoice.customer_phone }}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#666;">Payment</div>
+                <div style="margin-top:8px; font-weight:700;">{{ invoice.payment_method }}</div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Medicine</th>
+                    <th>Batch</th>
+                    <th>Expiry</th>
+                    <th style="text-align:right;">Qty</th>
+                    <th style="text-align:right;">Price</th>
+                    <th style="text-align:right;">GST %</th>
+                    <th style="text-align:right;">Line Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoice.invoice_items.all %}
+                <tr>
+                    <td>{{ item.medicine_name }}</td>
+                    <td>{{ item.batch_number }}</td>
+                    <td>{{ item.expiry_date|date:'M d, Y' }}</td>
+                    <td style="text-align:right;">{{ item.quantity }}</td>
+                    <td style="text-align:right;">₹{{ item.price|floatformat:2 }}</td>
+                    <td style="text-align:right;">{{ item.gst_percent|floatformat:2 }}%</td>
+                    <td style="text-align:right; font-weight:bold;">₹{{ item.line_total|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <div class="row"><span>Subtotal</span><span>₹{{ invoice.subtotal|floatformat:2 }}</span></div>
+            <div class="row"><span>CGST</span><span>₹{{ invoice.cgst|floatformat:2 }}</span></div>
+            <div class="row"><span>SGST</span><span>₹{{ invoice.sgst|floatformat:2 }}</span></div>
+            <div class="row"><span>GST Total</span><span>₹{{ invoice.gst_total|floatformat:2 }}</span></div>
+            <div class="row"><span>Discount</span><span>- ₹{{ invoice.discount|floatformat:2 }}</span></div>
+            <div class="row grand"><span>Final Amount</span><span>₹{{ invoice.final_amount|floatformat:2 }}</span></div>
+        </div>
+
+        <div class="actions no-print">
+            <button onclick="window.print()">Print</button>
+        </div>
+    </div>
+</body>
+</html>

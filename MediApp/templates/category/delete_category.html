@@ -1,0 +1,80 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Delete Category - Pharmacy Management{% endblock %}
+
+{% block page_title %}Delete Category{% endblock %}
+{% block page_subtitle %}This action cannot be undone{% endblock %}
+
+{% block content %}
+<div class="card max-w-lg mx-auto p-6">
+
+    <!-- Warning Banner -->
+    <div class="flex items-start gap-4 mb-6 p-4 rounded-xl" style="background:#fef2f2; border:1px solid #fecaca;">
+        <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center" style="background:#ef4444;">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        </div>
+        <div>
+            <p class="font-semibold text-red-800">You are about to delete a category</p>
+            <p class="text-sm text-red-600 mt-1">
+                This will permanently delete <strong>{{ category.name }}</strong>.
+                {% if category.medicines.count > 0 %}
+                This category has <strong>{{ category.medicines.count }} associated medicine(s)</strong> and cannot be deleted until they are reassigned.
+                {% else %}
+                This category has no associated medicines and can be safely deleted.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Category Info -->
+    <div class="bg-gray-50 rounded-xl p-4 mb-6 space-y-2">
+        <div class="flex justify-between text-sm">
+            <span class="text-gray-500 font-medium">Category Name</span>
+            <span class="font-semibold text-gray-800">{{ category.name }}</span>
+        </div>
+        {% if category.description %}
+        <div class="flex justify-between text-sm">
+            <span class="text-gray-500 font-medium">Description</span>
+            <span class="text-gray-700">{{ category.description }}</span>
+        </div>
+        {% endif %}
+        <div class="flex justify-between text-sm">
+            <span class="text-gray-500 font-medium">Medicines in category</span>
+            <span class="font-semibold {% if category.medicines.count > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                {{ category.medicines.count }}
+            </span>
+        </div>
+        <div class="flex justify-between text-sm">
+            <span class="text-gray-500 font-medium">Created</span>
+            <span class="text-gray-700">{{ category.created_at|date:"d M Y" }}</span>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    {% if category.medicines.count > 0 %}
+    <p class="text-sm text-red-600 font-medium mb-4 text-center">
+        &#10060; Cannot delete — reassign or remove the {{ category.medicines.count }} medicine(s) first.
+    </p>
+    <div class="flex justify-center">
+        <a href="{% url 'category_list' %}" class="btn btn-secondary">Go Back</a>
+    </div>
+    {% else %}
+    <form method="POST">
+        {% csrf_token %}
+        <div class="flex items-center gap-4">
+            <button type="submit" class="btn btn-danger flex-1 justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Yes, Delete Category
+            </button>
+            <a href="{% url 'category_list' %}" class="btn btn-secondary flex-1 justify-center">Cancel</a>
+        </div>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

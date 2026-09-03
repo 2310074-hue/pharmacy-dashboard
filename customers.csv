@@ -1,0 +1,26 @@
+id,first_name,last_name,email,phone,address,city,state,pincode,date_of_birth,gender,blood_group,allergies,chronic_conditions,total_purchases,total_spent,is_permanent
+1,Rajesh,Kumar,rajesh.kumar@gmail.com,9876543201,123 Main Street, Andheri East,Mumbai,Maharashtra,400093,1980-05-15,Male,B+,None,Diabetes, Hypertension,15,12500.00,TRUE
+2,Priya,Sharma,priya.sharma@yahoo.com,9876543202,456 Park Avenue, Connaught Place,Delhi,Delhi,110001,1990-08-22,Female,A+,Penicillin,Thyroid,10,8500.00,TRUE
+3,Amit,Patel,amit.patel@rediffmail.com,9876543203,789 Lake View, Indiranagar,Bangalore,Karnataka,560038,1975-11-10,Male,O+,None,Arthritis,20,22000.00,TRUE
+4,Sunita,Gupta,sunita.gupta@gmail.com,9876543204,321 Garden Road, T Nagar,Chennai,Tamil Nadu,600017,1988-03-05,Female,AB+,Sulfa,Asthma,8,4500.00,TRUE
+5,Vikram,Singh,vikram.singh@outlook.com,9876543205,654 Hill Top, Jubilee Hills,Hyderabad,Telangana,500033,1995-07-19,Male,B-,None,None,3,1200.00,FALSE
+6,Neha,Reddy,neha.reddy@gmail.com,9876543206,987 Green Valley, Banjara Hills,Hyderabad,Telangana,500034,1992-12-25,Female,A-,Dust,Allergies,5,2500.00,FALSE
+7,Rahul,Verma,rahul.verma@yahoo.com,9876543207,321 Palm Avenue, Kormangala,Bangalore,Karnataka,560034,1985-09-08,Male,O-,Penicillin,Hypertension,12,9800.00,TRUE
+8,Deepa,Nair,deepa.nair@gmail.com,9876543208,123 Lake Side, Adyar,Chennai,Tamil Nadu,600020,1993-04-12,Female,B+,None,Diabetes,7,5600.00,TRUE
+9,Suresh,Krishnan,suresh.krishnan@yahoo.com,9876543209,456 Temple Road, Alwarpet,Chennai,Tamil Nadu,600018,1978-06-30,Male,AB-,Sulfa,Heart Disease,18,18500.00,TRUE
+10,Meera,Joshi,meera.joshi@gmail.com,9876543210,789 Classic Towers, Bandra,Mumbai,Maharashtra,400050,1989-11-25,Female,A+,None,Thyroid,9,7200.00,TRUE
+11,Ankit,Shah,ankit.shah@outlook.com,9876543211,321 Gold Garden, Juhu,Mumbai,Maharashtra,400049,1991-02-14,Male,O+,Peanuts,Asthma,2,800.00,FALSE
+12,Kavya,Menon,kavya.menon@gmail.com,9876543212,654 Royal Palm, BKC,Mumbai,Maharashtra,400051,1986-07-08,Female,B-,None,None,4,1900.00,FALSE
+13,Arjun,Rao,arjun.rao@yahoo.com,9876543213,123 Hill View, Koramangala,Bangalore,Karnataka,560034,1983-09-20,Male,AB+,Dust,Diabetes,14,11500.00,TRUE
+14,Lakshmi,Venkatesh,lakshmi.v@gmail.com,9876543214,456 Waterfront, ECR,Chennai,Tamil Nadu,600119,1994-12-01,Female,A+,Penicillin,None,6,3200.00,FALSE
+15,Vijay,Shetty,vijay.shetty@outlook.com,9876543215,789 Green Park, Indiranagar,Bangalore,Karnataka,560038,1976-05-22,Male,O+,None,Hypertension,16,15200.00,TRUE
+16,Pooja,Deshmukh,pooja.deshmukh@gmail.com,9876543216,321 Star City, Hinjewadi,Pune,Maharashtra,411057,1990-03-18,Female,B+,None,Thyroid,11,8800.00,TRUE
+17,Ravi,Kulkarni,ravi.kulkarni@yahoo.com,9876543217,654 Silver Oak, Kharadi,Pune,Maharashtra,411014,1982-10-05,Male,A-,Sulfa,Arthritis,13,10500.00,TRUE
+18,Anjali,Sinha,anjali.sinha@gmail.com,9876543218,789 Lake Garden, Salt Lake,Kolkata,West Bengal,700064,1991-06-28,Female,O-,None,None,4,2100.00,FALSE
+19,Manoj,Tiwari,manoj.tiwari@outlook.com,9876543219,123 River View, Patna,Patna,Bihar,800001,1987-04-15,Male,AB+,Penicillin,Diabetes,19,19200.00,TRUE
+20,Swapna,Nair,swapna.nair@gmail.com,9876543220,456 Seaside, Thiruvananthapuram,Thiruvananthapuram,Kerala,695001,1993-09-12,Female,B+,None,Allergies,5,2800.00,TRUE
+21,Ganesh,Iyer,ganesh.iyer@yahoo.com,9876543221,789 Temple View, Mylapore,Chennai,Tamil Nadu,600004,1979-12-01,Male,O+,None,Hypertension,17,16500.00,TRUE
+22,Shilpa,Reddy,shilpa.reddy@gmail.com,9876543222,321 Cyber Hills, Gachibowli,Hyderabad,Telangana,500032,1988-07-25,Female,A+,Dust,Asthma,8,4900.00,TRUE
+23,Kiran,Kumar,kiran.kumar@outlook.com,9876543223,654 Tech Park, Electronic City,Bangalore,Karnataka,560100,1992-11-10,Male,B-,None,None,3,1500.00,FALSE
+24,Radhika,Mishra,radhika.mishra@gmail.com,9876543224,789 Garden Estate, Jaipur,Jaipur,Rajasthan,302001,1985-03-30,Female,AB-,Sulfa,Thyroid,12,9500.00,TRUE
+25,Sachin,Tendulkar,sachin.tendulkar@yahoo.com,9876543225,123 Sports Complex, Pune,Pune,Maharashtra,411001,1973-04-24,Male,O+,None,None,6,3800.00,FALSE

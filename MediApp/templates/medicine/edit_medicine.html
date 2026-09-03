@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% block title %}Edit Medicine - Pharmacy Management{% endblock %}
+{% block page_title %}Edit Medicine{% endblock %}
+{% block page_subtitle %}Update medicine details and manage batches{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+
+  <!-- LEFT SIDE: Medicine Form -->
+  <div class="card p-6 sm:p-8">
+    <h3 class="text-lg font-semibold text-gray-800 mb-5 flex items-center gap-2">
+      <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414
+                 a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      </svg>
+      Medicine Information
+    </h3>
+
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Name *</label>
+        {{ form.name }}
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+        {{ form.category }}
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Price (₹) *</label>
+          {{ form.price }}
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Supplier *</label>
+          {{ form.supplier }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+        {{ form.description }}
+      </div>
+
+      <div class="flex flex-wrap gap-3 mt-6">
+        <button type="submit" class="btn btn-primary flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Update Medicine
+        </button>
+        <a href="{% url 'medicine_list' %}"
+           class="btn bg-gray-500 text-white hover:bg-gray-600 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- RIGHT SIDE: Batch Management -->
+  <div class="card p-6 sm:p-8">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+        <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        Batches
+      </h3>
+      <button onclick="openAddBatchModal()" class="btn btn-primary text-sm">
+        + Add Batch
+      </button>
+    </div>
+
+    <div id="batch-list" class="grid gap-4 sm:gap-6 overflow-y-auto max-h-96">
+        {% if medicine.batches.all %}
+            {% for batch in medicine.batches.all %}
+            <div class="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
+                
+                <!-- Header: Batch Name -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    <p class="text-lg sm:text-xl font-semibold text-gray-800">{{ batch.batch_name }}</p>
+                </div>
+
+                <!-- Status Tag -->
+                {% if batch.is_expired %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-red-100 text-red-700 rounded-full">
+                    Expired
+                </span>
+                {% elif batch.days_to_expiry <= 10 %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-orange-100 text-orange-800 rounded-full">
+                    Expiring Soon
+                </span>
+                {% endif %}
+                </div>
+
+                <!-- Batch Details -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-700 mb-3">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 3h18v18H3zM4 4h16v16H4z"/>
+                    </svg>
+                    <span>Qty: <span class="font-medium">{{ batch.quantity }}</span></span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 4h10M5 11h14M5 19h14M5 15h14"/>
+                    </svg>
+                    <span>Added: <span class="font-medium">{{ batch.add_date|date:"M d, Y" }}</span></span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>Expires: <span class="font-medium">{{ batch.expiry_date|date:"M d, Y" }}</span></span>
+                </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
+                <button onclick="openEditBatchModal('{{ batch.id }}')"
+                    class="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15.232 5.232l3.536 3.536m-2.036-1.5L6 18l-2 4 4-2 10.732-10.732z"/>
+                    </svg>
+                    <span>Edit</span>
+                </button>
+
+                <button onclick="deleteBatch('{{ batch.id }}')"
+                    class="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm font-medium transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    <span>Delete</span>
+                </button>
+                </div>
+
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-gray-500 text-center py-6 text-sm sm:text-base">No batches available.</p>
+        {% endif %}
+    </div>
+
+
+  </div>
+</div>
+
+<!-- MODAL: Add/Edit Batch -->
+<div id="batch-modal"
+     class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+  <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-lg shadow-xl relative">
+    <button onclick="closeBatchModal()"
+            class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+
+    <h3 id="batch-modal-title" class="text-xl font-semibold text-gray-800 mb-4">Add Batch</h3>
+
+    <form id="batch-form" class="space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="batch_id" id="batch-id" />
+      <input type="hidden" name="medicine_id" value="{{ medicine.id }}" />
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Batch Name *</label>
+        <input type="text" name="batch_name" id="batch-name" class="form-input w-full" required />
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Add Date *</label>
+          <input type="date" name="add_date" id="batch-add-date" class="form-input w-full" required />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Expiry Date *</label>
+          <input type="date" name="expiry_date" id="batch-expiry-date" class="form-input w-full" required />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity *</label>
+          <input type="number" name="quantity" id="batch-quantity" min="1" class="form-input w-full" required />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Purchase Price (₹) *</label>
+          <input type="number" name="purchase_price" id="batch-purchase-price" step="0.01" min="0" class="form-input w-full" required />
+        </div>
+      </div>
+
+      <div class="mt-6 flex flex-wrap justify-end gap-3">
+        <button type="button" onclick="closeBatchModal()" class="btn bg-gray-500 text-white hover:bg-gray-600">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+function openAddBatchModal() {
+  document.getElementById('batch-modal-title').innerText = 'Add Batch';
+  document.getElementById('batch-form').reset();
+  document.getElementById('batch-id').value = '';
+  document.getElementById('batch-modal').classList.remove('hidden');
+}
+
+function openEditBatchModal(batchId) {
+  fetch(`/medicine/batch/${batchId}/`)
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('batch-modal-title').innerText = 'Edit Batch';
+      document.getElementById('batch-id').value = data.id;
+      document.getElementById('batch-name').value = data.batch_name;
+      document.getElementById('batch-add-date').value = data.add_date;
+      document.getElementById('batch-expiry-date').value = data.expiry_date;
+      document.getElementById('batch-quantity').value = data.quantity;
+      document.getElementById('batch-purchase-price').value = data.purchase_price;
+      document.getElementById('batch-modal').classList.remove('hidden');
+    });
+}
+
+function closeBatchModal() {
+  document.getElementById('batch-modal').classList.add('hidden');
+}
+
+document.getElementById('batch-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  fetch('/medicine/batch/save/', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) location.reload();
+    else alert(data.error || 'Error saving batch');
+  });
+});
+
+function deleteBatch(batchId) {
+  if (!confirm('Are you sure you want to delete this batch?')) return;
+  fetch(`/medicine/batch/${batchId}/delete/`, {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'}
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) location.reload();
+    else alert('Error deleting batch');
+  });
+}
+</script>
+{% endblock %}

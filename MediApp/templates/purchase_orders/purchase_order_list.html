@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Purchase Orders - PharmaCare{% endblock %}
+{% block page_title %}Purchase Orders{% endblock %}
+{% block page_subtitle %}Supplier order planning and stock replenishment{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">Purchase Orders</h2>
+            <p class="text-sm text-gray-500">Owner-scoped purchase requests and received stock</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'purchase_order_add' %}" class="btn btn-primary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Create Purchase Order
+            </a>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Supplier</th>
+                    <th>Status</th>
+                    <th>Order Date</th>
+                    <th>Expected Date</th>
+                    <th>Received Date</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for po in purchase_orders %}
+                <tr>
+                    <td class="font-bold text-cyan-700">{{ po.order_number }}</td>
+                    <td>
+                        {% if po.supplier %}
+                            <div class="font-semibold">{{ po.supplier.name }}</div>
+                            <div class="text-xs text-gray-500">{{ po.supplier.location }}</div>
+                        {% else %}
+                            <span class="text-gray-500">No supplier</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if po.status == 'Received' %}
+                        <span class="px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">Received</span>
+                        {% elif po.status == 'Cancelled' %}
+                        <span class="px-3 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">Cancelled</span>
+                        {% else %}
+                        <span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-bold">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ po.order_date|date:'M d, Y' }}</td>
+                    <td>{{ po.expected_date|default:'-' }}</td>
+                    <td>{{ po.received_date|default:'-' }}</td>
+                    <td>₹{{ po.total_amount|floatformat:2 }}</td>
+                    <td>
+                        {% if po.status != 'Received' %}
+                        <form method="post" action="{% url 'purchase_order_receive' po.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success text-xs px-3 py-2">Receive</button>
+                        </form>
+                        {% else %}
+                        <span class="text-xs text-gray-500">Completed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-8 text-gray-500">No purchase orders have been created yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoice History & Billing - PharmaCare{% endblock %}
+{% block page_title %}Invoice History{% endblock %}
+{% block page_subtitle %}Search, view, and print bills for all pharmacy sales{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Top KPI Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Invoices Card -->
+        <div class="card p-5 bg-gradient-to-br from-cyan-50 to-white border-l-4 border-cyan-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-cyan-700">Total Invoices</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1">{{ total_invoices_count }}</h3>
+                    <p class="text-xs text-gray-500 mt-1">All-time: {{ all_time_invoices_count }} bills</p>
+                </div>
+                <div class="w-12 h-12 bg-cyan-100 text-cyan-600 rounded-xl flex items-center justify-center text-2xl">
+                    🧾
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Invoices Card -->
+        <div class="card p-5 bg-gradient-to-br from-emerald-50 to-white border-l-4 border-emerald-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Today's Bills</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1">{{ today_invoices_count }}</h3>
+                    <p class="text-xs text-emerald-600 font-semibold mt-1">Generated today</p>
+                </div>
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl">
+                    ⚡
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Billed Revenue Card -->
+        <div class="card p-5 bg-gradient-to-br from-indigo-50 to-white border-l-4 border-indigo-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-indigo-700">Total Billed</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1">₹{{ total_billed_amount|floatformat:2 }}</h3>
+                    <p class="text-xs text-gray-500 mt-1">Filtered scope</p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-2xl">
+                    💰
+                </div>
+            </div>
+        </div>
+
+        <!-- Total GST Collected Card -->
+        <div class="card p-5 bg-gradient-to-br from-amber-50 to-white border-l-4 border-amber-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-amber-700">GST Collected</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1">₹{{ total_gst_amount|floatformat:2 }}</h3>
+                    <p class="text-xs text-amber-600 font-semibold mt-1">Tax breakdown included</p>
+                </div>
+                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-2xl">
+                    🏛️
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Billing Register Card -->
+    <div class="card p-6">
+        <!-- Header & Action Row -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <span>🧾 Billing Register</span>
+                    <span class="text-xs px-2.5 py-1 bg-cyan-100 text-cyan-800 font-bold rounded-full">{{ total_invoices_count }} Records</span>
+                </h2>
+                <p class="text-sm text-gray-500 mt-0.5">Complete record of every pharmacy sale with instant print-ready bills</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'sales_list' %}" class="btn btn-primary flex items-center gap-1.5 shadow-sm">
+                    <span>🛒</span> Create New Sale / POS
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter Tabs & Search Bar -->
+        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 space-y-4">
+            <!-- Filter Pills -->
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-bold text-gray-500 uppercase mr-1">Period:</span>
+                <a href="?filter=all{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {% if filter_type == 'all' or not filter_type %}bg-cyan-600 text-white shadow-sm{% else %}bg-white text-gray-700 hover:bg-gray-100 border border-gray-200{% endif %}">
+                    All Bills
+                </a>
+                <a href="?filter=today{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {% if filter_type == 'today' %}bg-cyan-600 text-white shadow-sm{% else %}bg-white text-gray-700 hover:bg-gray-100 border border-gray-200{% endif %}">
+                    Today
+                </a>
+                <a href="?filter=week{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {% if filter_type == 'week' %}bg-cyan-600 text-white shadow-sm{% else %}bg-white text-gray-700 hover:bg-gray-100 border border-gray-200{% endif %}">
+                    Last 7 Days
+                </a>
+                <a href="?filter=month{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {% if filter_type == 'month' %}bg-cyan-600 text-white shadow-sm{% else %}bg-white text-gray-700 hover:bg-gray-100 border border-gray-200{% endif %}">
+                    This Month
+                </a>
+                <a href="?filter=year{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {% if filter_type == 'year' %}bg-cyan-600 text-white shadow-sm{% else %}bg-white text-gray-700 hover:bg-gray-100 border border-gray-200{% endif %}">
+                    This Year
+                </a>
+            </div>
+
+            <!-- Search Form -->
+            <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 pt-2 border-t border-gray-200">
+                <input type="hidden" name="filter" value="{{ filter_type }}">
+                <div class="lg:col-span-3">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Search Bills / Customer / Medicine</label>
+                    <input type="text" name="q" value="{{ search_query }}" class="form-input text-sm" placeholder="Invoice #, customer name, phone, medicine name, batch...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">From Date</label>
+                    <input type="date" name="start_date" value="{{ start_date }}" class="form-input text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">To Date</label>
+                    <input type="date" name="end_date" value="{{ end_date }}" class="form-input text-sm">
+                </div>
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="btn btn-secondary w-full text-sm font-bold flex items-center justify-center gap-1.5">
+                        <span>🔍</span> Filter
+                    </button>
+                    {% if search_query or start_date or end_date or filter_type != 'all' %}
+                    <a href="{% url 'invoice_history' %}" class="btn btn-outline text-sm font-semibold px-3" title="Reset Filters">
+                        ✕
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Invoices Table -->
+        <div class="overflow-x-auto rounded-xl border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Invoice #</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date & Time</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Customer</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Items</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Payment</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Subtotal</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">GST (5%)</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Discount</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Total Bill</th>
+                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100 text-sm">
+                    {% for invoice in invoices %}
+                    <tr class="hover:bg-cyan-50/40 transition-colors">
+                        <td class="px-4 py-3 font-mono font-bold text-cyan-700 whitespace-nowrap">
+                            <a href="{% url 'invoice_detail' invoice.id %}" class="hover:underline flex items-center gap-1.5">
+                                <span>📄</span> {{ invoice.invoice_number }}
+                            </a>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="font-semibold text-gray-800">{{ invoice.invoice_date|date:'M d, Y' }}</span><br>
+                            <span class="text-xs text-gray-500">{{ invoice.invoice_date|time:'h:i A' }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if invoice.customer %}
+                            <span class="font-bold text-gray-900">{{ invoice.customer_name }}</span>
+                            {% if invoice.customer_phone %}
+                            <br><span class="text-xs text-gray-500 font-mono">📞 {{ invoice.customer_phone }}</span>
+                            {% endif %}
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-600">Walk-in Customer</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                {{ invoice.invoice_items.count }} item{{ invoice.invoice_items.count|pluralize }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {% if invoice.payment_method == 'UPI' %}bg-purple-100 text-purple-800{% elif invoice.payment_method == 'Card' %}bg-blue-100 text-blue-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ invoice.payment_method|default:'Cash' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-right text-gray-600 font-mono whitespace-nowrap">₹{{ invoice.subtotal|floatformat:2 }}</td>
+                        <td class="px-4 py-3 text-right text-amber-700 font-mono whitespace-nowrap">₹{{ invoice.gst_total|floatformat:2 }}</td>
+                        <td class="px-4 py-3 text-right text-rose-600 font-mono whitespace-nowrap">
+                            {% if invoice.discount and invoice.discount > 0 %}
+                            -₹{{ invoice.discount|floatformat:2 }}
+                            {% else %}
+                            ₹0.00
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-right font-bold font-mono text-emerald-700 text-base whitespace-nowrap">₹{{ invoice.final_amount|floatformat:2 }}</td>
+                        <td class="px-4 py-3 text-center whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <a href="{% url 'invoice_detail' invoice.id %}" class="btn btn-sm btn-outline py-1 px-2.5 text-xs font-bold text-cyan-700 hover:bg-cyan-50" title="View Full Bill">
+                                    👁️ View
+                                </a>
+                                <a href="{% url 'invoice_print' invoice.id %}" class="btn btn-sm btn-primary py-1 px-2.5 text-xs font-bold flex items-center gap-1 shadow-sm" target="_blank" title="Print Invoice">
+                                    🖨️ Print
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center py-12 text-gray-500 bg-gray-50">
+                            <div class="text-4xl mb-2">🧾</div>
+                            <p class="font-bold text-gray-700">No invoices found matching your criteria</p>
+                            <p class="text-xs text-gray-400 mt-1">Try adjusting your search query or date filters</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        {% if is_paginated %}
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-200">
+            <div class="text-xs text-gray-600">
+                Showing page <strong class="text-gray-900">{{ page_obj.number }}</strong> of <strong class="text-gray-900">{{ paginator.num_pages }}</strong> 
+                (Total <strong class="text-cyan-700">{{ total_invoices_count }}</strong> invoices)
+            </div>
+            
+            <div class="flex items-center gap-1">
+                {% if page_obj.has_previous %}
+                <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="btn btn-sm btn-outline py-1 px-2.5 text-xs" title="First Page">
+                    « First
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="btn btn-sm btn-outline py-1 px-2.5 text-xs">
+                    ‹ Prev
+                </a>
+                {% endif %}
+
+                <span class="px-3 py-1 bg-cyan-600 text-white rounded-md text-xs font-bold">
+                    Page {{ page_obj.number }}
+                </span>
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="btn btn-sm btn-outline py-1 px-2.5 text-xs">
+                    Next ›
+                </a>
+                <a href="?page={{ paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="btn btn-sm btn-outline py-1 px-2.5 text-xs" title="Last Page">
+                    Last »
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

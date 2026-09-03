@@ -1,0 +1,6 @@
+Dear {{ customer_name }},
+
+Your medicine {{ medicine_name }} will expire on {{ expiry_date }}.
+Please renew or replace it soon.
+
+— PharmaCare Team

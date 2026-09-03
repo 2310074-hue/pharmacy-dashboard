@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+      body{background:#071218;color:#e6f7f7;font-family:Poppins,Helvetica,Arial,sans-serif;margin:0;padding:24px}
+      .card{max-width:680px;margin:0 auto;background:linear-gradient(180deg,#0f1f21,#122427);border-radius:12px;padding:28px;box-shadow:0 12px 30px rgba(0,0,0,0.6);border:1px solid rgba(0,173,181,0.06)}
+      h1{color:#00d1d6;margin:0 0 8px;font-size:20px}
+      p{color:#d7f2f3;line-height:1.45;font-size:15px}
+      .btn{display:inline-block;padding:10px 14px;background:linear-gradient(90deg,#00adb5,#007b83);color:#021217;border-radius:8px;text-decoration:none;font-weight:700;margin-top:12px}
+      .muted{color:#9fb6b8;font-size:13px}
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Medicine Expiry Reminder</h1>
+      <p>Dear {{ customer_name }},</p>
+      <p>Your medicine <strong>{{ medicine_name }}</strong> will expire on <strong>{{ expiry_date }}</strong>.</p>
+      <p>Please renew or replace it soon.</p>
+      <p class="muted">— PharmaCare Team</p>
+    </div>
+  </body>
+</html>

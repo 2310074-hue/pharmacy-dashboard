@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales - Pharmacy Management{% endblock %}
+
+{% block page_title %}Sales{% endblock %}
+{% block page_subtitle %}Track and manage all pharmacy sales{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Total Sales</p>
+                <h3 class="text-4xl font-bold mt-2">{{ total_sales_count }}</h3>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl p-6 shadow-lg">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Today's Sales</p>
+                <h3 class="text-4xl font-bold mt-2">{{ today_sales_count }}</h3>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- New: Total Discount Card -->
+    <div class="bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl p-6 shadow-lg">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-white text-opacity-80 text-sm font-medium">Total Discount Given</p>
+                <h3 class="text-4xl font-bold mt-2">₹{{ total_discount|floatformat:2 }}</h3>
+            </div>
+            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTERS & ACTIONS WRAPPER -->
+<div id="filterBox" class="bg-white shadow rounded-md p-4 my-4 transition-all duration-300 overflow-hidden">
+
+    <!-- === TOP ROW === -->
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+
+        <!-- FORM WRAPPER -->
+        <form method="get" class="flex flex-col w-full gap-4">
+
+            <!-- Search + Dropdown Row -->
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-4 w-full">
+
+                <!-- SEARCH INPUT -->
+                <div class="relative w-full md:w-72">
+                    <input
+                        type="text"
+                        name="search"
+                        id="searchInput"
+                        value="{{ search_query }}"
+                        oninput="handleSearchInput()"
+                        placeholder="Search by sale ID or customer..."
+                        aria-label="Search"
+                        class="form-input w-full pl-10 pr-10"
+                    >
+
+                    <!-- Search icon -->
+                    <svg class="w-5 h-5 absolute left-3 top-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+
+                    <!-- Clear search X button -->
+                    {% if search_query %}
+                    <button
+                        type="button"
+                        onclick="clearSearch()"
+                        class="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                    >
+                        ✕
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- FILTER DROPDOWN -->
+                <select
+                    name="filter"
+                    id="filterSelect"
+                    class="form-select w-full md:w-40"
+                    onchange="onFilterChange()"
+                >
+                    <option value="all"   {% if filter_type == 'all' %}selected{% endif %}>All Time</option>
+                    <option value="today" {% if filter_type == 'today' %}selected{% endif %}>Today</option>
+                    <option value="month" {% if filter_type == 'month' %}selected{% endif %}>This Month</option>
+                    <option value="custom" {% if filter_type == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
+
+            </div>
+
+            <!-- === BOTTOM ROW: CUSTOM DATE FILTER === -->
+            <div id="customFilterBox"
+                 class="grid grid-cols-1 sm:grid-cols-3 gap-4 transition-all duration-300 overflow-hidden"
+                 style="
+                     max-height: {% if filter_type == 'custom' %}200px{% else %}0{% endif %};
+                     opacity: {% if filter_type == 'custom' %}1{% else %}0{% endif %};
+                 "
+            >
+                <!-- FROM DATE -->
+                <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="form-input">
+
+                <!-- TO DATE -->
+                <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="form-input">
+
+                <!-- APPLY BTN -->
+                <button type="submit" class="btn btn-secondary">Apply</button>
+            </div>
+
+        </form>
+
+        <!-- CREATE SALE BUTTON -->
+        <a href="{% url 'add_sale' %}" class="btn btn-primary whitespace-nowrap flex-shrink-0">
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Sale
+        </a>
+
+    </div>
+</div>
+
+
+
+<!-- Sales Table -->
+<div class="table-container">
+    <div class="overflow-x-auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Sale ID</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Subtotal</th>
+                    <th>Discount</th>
+                    <th>Final Amount</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Created By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                <tr id="sale-row-{{ sale.id }}">
+                    <td class="font-mono font-semibold text-cyan-600">#{{ sale.id }}</td>
+                    <td>
+                        {% if sale.customer %}
+                        <div>
+                            <p class="font-medium">{{ sale.customer.name }}</p>
+                            <p class="text-xs text-gray-500">{{ sale.customer.contact_number }}</p>
+                        </div>
+                        {% else %}
+                        <span class="text-gray-500 italic">Walk-in Customer</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button onclick="toggleItems({{ sale.id }})" class="text-cyan-600 hover:text-cyan-700 font-medium flex items-center gap-1">
+                            {{ sale.items.count }} item{{ sale.items.count|pluralize }}
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div id="items-{{ sale.id }}" class="max-h-0 overflow-hidden opacity-0 mt-2 space-y-1 transition-all duration-500 ease-in-out">
+
+                            {% for item in sale.items.all %}
+                            <div class="text-sm bg-gray-50 p-2 rounded">
+                                <span class="font-medium">{{ item.medicine.name }}</span> 
+                                ({{ item.batch.batch_name }}) × {{ item.quantity }} = ₹{{ item.subtotal }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <!-- Subtotal (total_price + discount) -->
+                    <td class="text-gray-600">
+                        {% with subtotal=sale.total_price|add:sale.discount %}
+                        ₹{{ subtotal|floatformat:2 }}
+                        {% endwith %}
+                    </td>
+                    <!-- Discount Column -->
+                    <td>
+                        {% if sale.discount > 0 %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                            - ₹{{ sale.discount|floatformat:2 }}
+                        </span>
+                        {% else %}
+                        <span class="text-gray-400 text-sm">No discount</span>
+                        {% endif %}
+                    </td>
+                    <!-- Final Amount -->
+                    <td class="font-bold text-green-600 text-lg">₹{{ sale.total_price|floatformat:2 }}</td>
+                    <!-- Payment -->
+                    <td>
+                        <span class="px-2 py-1 bg-gray-100 rounded text-sm font-medium">{{ sale.payment_method }}</span>
+                    </td>
+                    <!-- Status -->
+                    <td>
+                        {% if sale.status == 'Completed' %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Completed</span>
+                        {% else %}
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">Refunded</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div>
+                            <p class="font-medium">{{ sale.date|date:"M d, Y" }}</p>
+                            <p class="text-xs text-gray-500">{{ sale.date|date:"h:i A" }}</p>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="text-sm">{{ sale.created_by.get_full_name|default:sale.created_by.username }}</span>
+                    </td>
+                    <td class="flex items-center gap-2">
+                        <!-- Print Bill Button -->
+                        {% if sale.invoice %}
+                        <a href="{% url 'invoice_print' sale.invoice.id %}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium" title="Print Invoice / Bill">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                        </a>
+                        {% endif %}
+
+                        <!-- Refund Button -->
+                        {% if sale.status == 'Completed' %}
+                        <form action="{% url 'refund_sale' sale.id %}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to refund this sale and restore inventory?');">
+                            {% csrf_token %}
+                            <button type="submit" class="text-orange-600 hover:text-orange-800 font-medium" title="Refund Sale">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                </svg>
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        <!-- Delete Button -->
+                        <button 
+                            onclick="confirmDelete({{ sale.id }})" 
+                            class="text-red-600 hover:text-red-800 font-medium"
+                            title="Delete Sale"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+
+                    </td>
+
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center py-12">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <p class="text-lg font-medium text-gray-500">No sales found</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination Toolbar -->
+{% if sales.has_other_pages %}
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 px-2">
+    <p class="text-xs font-semibold text-gray-500">
+        Showing <span class="font-bold text-gray-800">{{ sales.start_index }}</span> to <span class="font-bold text-gray-800">{{ sales.end_index }}</span> of <span class="font-bold text-gray-800">{{ total_sales_count }}</span> sales
+    </p>
+
+    <div class="flex items-center gap-1.5 flex-wrap">
+        {% if sales.has_previous %}
+        <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition shadow-xs">
+            « First
+        </a>
+        <a href="?page={{ sales.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition shadow-xs">
+            ‹ Prev
+        </a>
+        {% endif %}
+
+        <span class="px-3 py-1.5 text-xs font-bold rounded-lg bg-cyan-600 text-white shadow-xs">
+            Page {{ sales.number }} of {{ sales.paginator.num_pages }}
+        </span>
+
+        {% if sales.has_next %}
+        <a href="?page={{ sales.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition shadow-xs">
+            Next ›
+        </a>
+        <a href="?page={{ sales.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition shadow-xs">
+            Last »
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<script>
+function onFilterChange() {
+    const select = document.getElementById("filterSelect");
+    const box = document.getElementById("customFilterBox");
+
+    if (select.value === "custom") {
+        box.style.maxHeight = "200px";
+        box.style.opacity = "1";
+    } else {
+        box.style.maxHeight = "0";
+        box.style.opacity = "0";
+        document.getElementById("searchInput").form.submit();
+    }
+}
+
+function handleSearchInput() {
+    const input = document.getElementById("searchInput");
+
+    clearTimeout(window.salesSearchTimer);
+
+    window.salesSearchTimer = setTimeout(() => {
+        input.form.submit();
+    }, 400);
+}
+
+function clearSearch() {
+    const input = document.getElementById("searchInput");
+    input.value = "";
+    input.form.submit();
+}
+
+function confirmDelete(saleId) {
+    if (confirm(`Are you sure you want to delete Sale #${saleId}?`)) {
+        window.location.href = `/sales/${saleId}/delete/`;
+    }
+}
+
+
+function toggleItems(saleId) {
+    const container = document.getElementById(`items-${saleId}`);
+    
+    if (!container) return;
+
+    // Toggle expanded/collapsed state
+    if (container.classList.contains("max-h-0")) {
+        // EXPAND
+        container.classList.remove("max-h-0", "opacity-0");
+        container.classList.add("max-h-[500px]", "opacity-100");
+    } else {
+        // COLLAPSE
+        container.classList.add("max-h-0", "opacity-0");
+        container.classList.remove("max-h-[500px]", "opacity-100");
+    }
+}  
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Customers - Pharmacy Management{% endblock %}
+{% block page_title %}Customers{% endblock %}
+{% block page_subtitle %}Manage customer information and contact details{% endblock %}
+
+{% block content %}
+
+<!-- 🔍 Search & Add -->
+<div class="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+  <!-- Search Form -->
+  <form method="get" class="relative w-full sm:max-w-md">
+    <!-- Search Icon -->
+    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none"
+      stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+
+    <!-- Search Input -->
+    <input type="text" name="search" value="{{ search_query }}" id="searchInput" class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg
+             focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+      placeholder="Search customers..." aria-label="Search Customers" oninput="handleSearchInput()">
+
+    <!-- Clear Button -->
+    {% if search_query %}
+    <button type="button" onclick="clearSearch()"
+      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+      aria-label="Clear Search">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+    {% endif %}
+  </form>
+
+  <div class="flex items-center gap-3 w-full sm:w-auto">
+    <!-- Send Due Reminders Button -->
+    <button onclick="sendDueReminders()" id="sendDueRemindersBtn"
+      class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 active:bg-sky-800 rounded-lg shadow transition flex items-center justify-center gap-2 w-full sm:w-auto">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      <span>Send Due Reminders</span>
+    </button>
+
+    <!-- Add Customer Button -->
+    <button onclick="openAddCustomerModal()"
+      class="btn btn-primary w-full sm:w-auto flex items-center justify-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Customer
+    </button>
+  </div>
+</div>
+
+<!-- 🧍 Customer Cards Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  {% for customer in customers %}
+  <div
+    class="bg-white/90 border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all duration-300 flex flex-col">
+
+    <!-- 🧑 Avatar & Info -->
+    <div class="flex items-center gap-4 mb-5">
+      <div
+        class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-xl shadow-inner">
+        {{ customer.name.0|upper }}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <h3 class="text-lg font-semibold text-gray-800 truncate">{{ customer.name }}</h3>
+          {% if customer.is_permanent %}
+          <span
+            style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;">
+            ⭐ Permanent
+          </span>
+          {% endif %}
+        </div>
+        <p class="text-xs text-gray-500 mt-0.5">Customer ID: #{{ customer.id }}</p>
+      </div>
+    </div>
+
+    <!-- 📧 Contact Info -->
+    <div class="space-y-3 text-sm text-gray-700 mb-5 flex-grow">
+      <div class="flex items-start gap-2">
+        <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <span class="break-all">{{ customer.email }}</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+        </svg>
+        <span>{{ customer.contact_number }}</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span class="text-xs sm:text-sm text-gray-600">Joined {{ customer.created_at|date:"M d, Y" }}</span>
+      </div>
+    </div>
+
+    <!-- ⚙️ Action Buttons -->
+    <div class="flex flex-wrap gap-3 mt-auto">
+      <a href="{% url 'edit_customer' customer.id %}"
+        class="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-sm font-medium rounded-lg transition duration-150">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15.232 5.232l3.536 3.536m-2.036-1.5L6 18l-2 4 4-2 10.732-10.732z" />
+        </svg>
+        <span>Edit & View</span>
+      </a>
+
+      <button onclick="confirmDelete({{ customer.id }}, '{{ customer.name }}')"
+        class="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 text-white bg-red-600 hover:bg-red-700 active:bg-red-800 text-sm font-medium rounded-lg transition duration-150">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        <span>Delete</span>
+      </button>
+    </div>
+
+  </div>
+  {% empty %}
+  <div class="col-span-full text-center py-12">
+    <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+    <p class="text-lg font-medium text-gray-500">No customers found</p>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination Toolbar -->
+{% if customers.has_other_pages %}
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 px-2">
+  <p class="text-xs font-semibold text-gray-500">
+    Showing <span class="font-bold text-gray-800">{{ customers.start_index }}</span> to <span
+      class="font-bold text-gray-800">{{ customers.end_index }}</span> of <span class="font-bold text-gray-800">{{
+      total_count }}</span> customers
+  </p>
+
+  <div class="flex items-center gap-1.5 flex-wrap">
+    {% if customers.has_previous %}
+    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}"
+      class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition shadow-xs">
+      « First
+    </a>
+    <a href="?page={{ customers.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+      class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition shadow-xs">
+      ‹ Prev
+    </a>
+    {% endif %}
+
+    <span class="px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-xs">
+      Page {{ customers.number }} of {{ customers.paginator.num_pages }}
+    </span>
+
+    {% if customers.has_next %}
+    <a href="?page={{ customers.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+      class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition shadow-xs">
+      Next ›
+    </a>
+    <a href="?page={{ customers.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}"
+      class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition shadow-xs">
+      Last »
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+
+
+<!-- ➕ Add Customer Modal -->
+<div id="addCustomerModal" class="modal">
+  <div class="modal-content max-w-md w-full">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-bold text-gray-800">Add New Customer</h3>
+      <button onclick="closeAddCustomerModal()" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <form action="{% url 'add_customer' %}" method="POST" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Customer Name *</label>
+        <input type="text" name="name" class="form-input w-full" placeholder="John Doe" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+        <input type="email" name="email" class="form-input w-full" placeholder="customer@email.com" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Contact Number *</label>
+        <input type="tel" name="contact_number" class="form-input w-full" placeholder="1234567890" required>
+      </div>
+
+      <div class="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <input type="checkbox" name="is_permanent" id="isPermanentCheck" class="w-4 h-4 accent-amber-500" value="on">
+        <label for="isPermanentCheck" class="text-sm font-semibold text-amber-800 cursor-pointer">
+          ⭐ Mark as Permanent Member
+          <span class="block text-xs font-normal text-amber-600 mt-0.5">Permanent members receive stock availability
+            email notifications.</span>
+        </label>
+      </div>
+
+      <div class="flex gap-4 mt-6">
+        <button type="submit" class="btn btn-primary flex-1">Add Customer</button>
+        <button type="button" onclick="closeAddCustomerModal()"
+          class="btn bg-gray-500 text-white hover:bg-gray-600 flex-1">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ⚙️ Scripts -->
+<script>
+  function openAddCustomerModal() {
+    document.getElementById('addCustomerModal').classList.add('active');
+  }
+  function closeAddCustomerModal() {
+    document.getElementById('addCustomerModal').classList.remove('active');
+  }
+  document.getElementById('addCustomerModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeAddCustomerModal();
+  });
+
+  function confirmDelete(id, name) {
+    if (confirm(`Are you sure you want to delete customer "${name}"?`)) {
+      window.location.href = `/customer/${id}/delete/`;
+    }
+  }
+
+  function handleSearchInput() {
+    const input = document.getElementById('searchInput');
+    clearTimeout(window.searchTimer);
+    window.searchTimer = setTimeout(() => input.form.submit(), 400);
+  }
+
+  function clearSearch() {
+    const input = document.getElementById('searchInput');
+    input.value = '';
+    input.form.submit();
+  }
+
+  async function sendDueReminders() {
+    if (!confirm("Send email reminders to all customers with due medicine schedules now?")) return;
+    const btn = document.getElementById('sendDueRemindersBtn');
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span> Processing...`;
+
+    try {
+      const res = await fetch("{% url 'send_due_reminders' %}?format=json", {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`✅ ${data.message}`);
+      } else {
+        alert(`❌ Error: ${data.error || 'Failed to dispatch due reminders.'}`);
+      }
+    } catch (err) {
+      alert(`❌ Request error: ${err.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  }
+</script>
+
+{% endblock %}
