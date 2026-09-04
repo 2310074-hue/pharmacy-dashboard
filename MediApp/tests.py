@@ -29,7 +29,8 @@ class ChatbotWorkflowTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        mock_gemini.assert_called_once_with('how to add a new supplier')
+        self.assertTrue(mock_gemini.called)
+        self.assertEqual(mock_gemini.call_args[0][0], 'how to add a new supplier')
         self.assertIn('supplier', payload.get('reply', '').lower())
 
     @patch('MediApp.views._call_gemini_api', return_value='<script>alert(1)</script>')

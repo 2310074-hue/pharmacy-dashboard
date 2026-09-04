@@ -2412,8 +2412,9 @@ def delete_category(request, id):
 
 
 # =============================================================================
-# MediBot - Gemini AI + Live Database Pharmacy Chatbot API
+# MediBot - AI Pharmacy Assistant Engine (Rebuilt from Scratch)
 # =============================================================================
+import difflib
 import html
 import json
 import logging
@@ -2423,54 +2424,415 @@ import urllib.request
 from datetime import timedelta
 from decimal import Decimal
 from django.conf import settings as django_settings
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 logger = logging.getLogger(__name__)
 
+# Medical Guidance & Indications Dictionary for Pharmacy Queries
+MEDIBOT_MEDICAL_KNOWLEDGE = {
+    'paracetamol': {
+        'generic_name': 'Paracetamol (Acetaminophen / APAP)',
+        'drug_class': 'Analgesic & Antipyretic (Non-opioid pain reliever & fever reducer)',
+        'uses': 'Relief of mild-to-moderate pain such as headaches, migraines, dental pain, toothaches, body aches, muscle aches, post-immunization pyrexia, backaches, osteoarthritis pain, and fever reduction.',
+        'side_effects': 'Generally well-tolerated at therapeutic doses.\n• **Common/Mild:** Mild nausea, dyspepsia, skin rash or allergic reactions.\n• **Severe / Overdose Risks (Disadvantages):** Severe acute liver failure / hepatotoxicity (liver necrosis) is the primary disadvantage if exceeded beyond 4000mg/day or combined with alcohol. Long-term high doses can also increase risk of renal impairment or thrombocytopenia.',
+        'dosage': '• **Adults & Adolescents (>50kg):** 500mg to 1000mg orally every 4 to 6 hours as needed.\n• **Maximum Daily Limit:** 4000mg (4 grams) in 24 hours.\n• **Dosing Interval:** Never take doses closer than 4 hours apart.\n• **Children:** 10–15 mg/kg per dose every 4–6 hours (max 60 mg/kg/day under pediatric supervision).',
+        'pregnancy': 'Considered the safest first-line analgesic and antipyretic during all trimesters of pregnancy and while breastfeeding when taken at the lowest effective dose for the shortest duration necessary. Always consult an obstetrician.',
+        'precautions': '• Avoid consuming alcohol as it significantly elevates liver toxicity risks.\n• Check labels on cough/cold combination products to prevent accidental paracetamol overdose.\n• Use with caution in patients with chronic liver disease, severe renal impairment, or chronic malnutrition.\n• **Drug Interactions:** May interact with Warfarin (prolonged regular use increases INR/bleeding risk), Isoniazid, and Carbamazepine.',
+    },
+    'azithromycin': {
+        'generic_name': 'Azithromycin (Azithral / Zithromax)',
+        'drug_class': 'Macrolide Antibiotic',
+        'uses': 'Treatment of mild-to-moderate bacterial infections including upper and lower respiratory tract infections (community-acquired pneumonia, acute bronchitis, tonsillitis, pharyngitis, sinusitis), skin/soft-tissue infections, ear infections (otitis media), and certain sexually transmitted infections (Chlamydia, Gonorrhea).',
+        'side_effects': '• **Common (Disadvantages):** Gastrointestinal upset (diarrhea, nausea, abdominal pain/cramping, vomiting), flatulence, headache, dizziness, altered taste.\n• **Severe / Rare Risks:** QT interval prolongation (cardiac arrhythmia), cholestatic jaundice / hepatic dysfunction, severe Clostridium difficile-associated diarrhea (pseudomembranous colitis), allergic angioedema or Stevens-Johnson syndrome.',
+        'dosage': '• **Standard Adult Regimen:** 500mg once daily as a single dose on Day 1, followed by 250mg once daily on Days 2–5 (total 1.5g course); OR 500mg once daily for 3 consecutive days depending on indication.\n• Take with or without food (taking with food reduces GI discomfort). Swallow tablets whole with a glass of water.',
+        'pregnancy': 'Category B. Generally considered acceptable during pregnancy and lactation when clearly indicated and prescribed by a doctor, with no established evidence of teratogenicity in clinical studies.',
+        'precautions': '• Complete the full prescribed course even if symptoms improve early to prevent bacterial resistance.\n• Avoid co-administration with aluminium- and magnesium-containing antacids (space by at least 2 hours).\n• Caution in patients with known cardiac rhythm disorders (QT prolongation, bradycardia) or severe liver impairment.\n• **Interactions:** Anticoagulants (Warfarin), Digoxin, Colchicine, and Cyclosporine.',
+    },
+    'amoxicillin': {
+        'generic_name': 'Amoxicillin (Mox / Amoxil)',
+        'drug_class': 'Broad-Spectrum Aminopenicillin Antibiotic',
+        'uses': 'Treatment of susceptible bacterial infections including acute otitis media (ear infection), streptococcal pharyngitis (strep throat), pneumonia, bronchitis, sinusitis, urinary tract infections (UTIs), skin infections, and as part of combination therapy for Helicobacter pylori eradication in peptic ulcers.',
+        'side_effects': '• **Common (Disadvantages):** Diarrhea, nausea, vomiting, mild skin rash, oral or vaginal candidiasis (thrush).\n• **Severe Risks:** Severe hypersensitivity / anaphylaxis in penicillin-allergic patients, severe pseudomembranous colitis (C. difficile diarrhea), interstitial nephritis, elevated liver enzymes.',
+        'dosage': '• **Standard Adult Dosage:** 250mg to 500mg every 8 hours (three times daily) OR 500mg to 875mg every 12 hours (twice daily) for 7 to 10 days depending on infection severity.\n• **Administration:** Can be taken with or without meals; taking with food helps prevent stomach upset.',
+        'pregnancy': 'Category B. Widely regarded as safe and commonly prescribed during pregnancy and breastfeeding for susceptible bacterial infections under physician supervision.',
+        'precautions': '• **Strict Contraindication:** Known allergy/hypersensitivity to penicillins or beta-lactam antibiotics.\n• Always complete the full course to prevent recurrence and antibiotic resistance.\n• **Interactions:** Methotrexate (increased toxicity), Allopurinol (increased rash incidence), Oral Contraceptives (may reduce efficacy), and Probenecid.',
+    },
+    'cetirizine': {
+        'generic_name': 'Cetirizine (Cetzine / Okacet / Zyrtec)',
+        'drug_class': 'Second-Generation Antihistamine (H1 Receptor Antagonist)',
+        'uses': 'Relief of allergy symptoms associated with seasonal and perennial allergic rhinitis (sneezing, rhinorrhea, nasal congestion, itchy/watery eyes) and treatment of chronic idiopathic urticaria (itchy hives and skin rashes).',
+        'side_effects': '• **Common (Disadvantages):** Mild drowsiness/sedation, dry mouth, fatigue, dizziness, headache, gastrointestinal discomfort.\n• **Rare:** Tachycardia, urinary retention, allergic bronchospasm.',
+        'dosage': '• **Adults & Children >12 years:** 5mg to 10mg once daily, preferably in the evening/bedtime.\n• **Elderly & Renal Impairment:** 5mg once daily recommended.',
+        'pregnancy': 'Category B. Generally safe when prescribed by a doctor, but non-drug measures or first-line alternatives are preferred where appropriate.',
+        'precautions': '• Avoid driving, operating heavy machinery, or drinking alcohol while taking cetirizine due to potential additive sedative effects.\n• Caution in patients with prostatic hypertrophy or severe renal impairment.',
+    },
+    'amlodipine': {
+        'generic_name': 'Amlodipine (Amlong / Norvasc)',
+        'drug_class': 'Dihydropyridine Calcium Channel Blocker (CCB)',
+        'uses': 'Management of essential hypertension (high blood pressure) and treatment of chronic stable angina pectoris and vasospastic (Prinzmetal\'s) angina.',
+        'side_effects': '• **Common (Disadvantages):** Peripheral edema (swelling of ankles/feet), flushing, dizziness, palpitations, fatigue, headache, nausea.\n• **Severe/Rare:** Excessive hypotension (low BP), gingival hyperplasia, bradycardia/tachycardia.',
+        'dosage': '• **Initial Adult Dose:** 5mg once daily orally, which may be increased to a maximum of 10mg once daily after 1–2 weeks based on clinical response.\n• Can be taken morning or evening, with or without food.',
+        'pregnancy': 'Category C. Use only if potential benefit justifies potential risk to the fetus; consult a cardiologist / obstetrician.',
+        'precautions': '• Do not abruptly discontinue taking amlodipine without medical supervision.\n• Caution in patients with severe aortic stenosis or advanced heart failure.\n• Avoid excessive grapefruit juice as it may increase amlodipine blood concentrations.',
+    },
+    'metformin': {
+        'generic_name': 'Metformin Hydrochloride (Glycomet / Glucophage)',
+        'drug_class': 'Biguanide Oral Hypoglycemic / Antidiabetic Agent',
+        'uses': 'First-line pharmacological management of Type 2 Diabetes Mellitus to lower blood glucose and improve insulin sensitivity. Also used off-label in Polycystic Ovary Syndrome (PCOS).',
+        'side_effects': '• **Common (Disadvantages):** Gastrointestinal disturbances (metallic taste, nausea, abdominal bloating, diarrhea, flatulence, anorexia), long-term Vitamin B12 deficiency.\n• **Severe/Rare:** Lactic acidosis (rare but life-threatening emergency, particularly in renal/hepatic impairment).',
+        'dosage': '• **Initial Adult Dose:** 500mg orally once or twice daily with meals, gradually titrated to 850mg–1000mg twice daily (maximum 2000mg–2550mg/day).\n• **Administration:** Always take with or immediately after meals to minimize gastrointestinal adverse effects.',
+        'pregnancy': 'Category B. Frequently utilized in gestational diabetes under specialist guidance.',
+        'precautions': '• **Contraindications:** Severe renal impairment (eGFR < 30 mL/min), acute metabolic acidosis, severe hypoxia, congestive heart failure.\n• Temporarily discontinue prior to iodinated radiocontrast procedures.',
+    },
+    'pantoprazole': {
+        'generic_name': 'Pantoprazole (Pantocid / Pantodac / Pan 40 / Protonix)',
+        'drug_class': 'Proton Pump Inhibitor (PPI)',
+        'uses': 'Treatment and symptomatic relief of Gastroesophageal Reflux Disease (GERD), erosive esophagitis, gastric and duodenal ulcers, Zollinger-Ellison syndrome, and prevention of NSAID-induced ulcers.',
+        'side_effects': '• **Common (Disadvantages):** Headache, diarrhea, nausea, abdominal pain, constipation, flatulence, dizziness.\n• **Long-Term Risks:** Hypomagnesemia, Vitamin B12 malabsorption, increased risk of bone fractures (osteoporosis), Clostridium difficile infection, interstitial nephritis.',
+        'dosage': '• **Standard Dose:** 40mg once daily in the morning, 30 to 60 minutes before breakfast.\n• Swallow tablet whole; do not crush, chew, or split delayed-release tablets.',
+        'pregnancy': 'Category B. Generally acceptable during pregnancy when clinically warranted under medical supervision.',
+        'precautions': '• Long-term continuous use (>1 year) requires periodic monitoring of bone density, magnesium, and B12 levels.\n• May reduce absorption of drugs requiring acidic gastric pH (e.g. Ketoconazole, Iron supplements).',
+    },
+    'ibuprofen': {
+        'generic_name': 'Ibuprofen (Brufen / Advil / Motrin)',
+        'drug_class': 'Non-Steroidal Anti-Inflammatory Drug (NSAID)',
+        'uses': 'Relief of mild-to-moderate pain, acute inflammation, joint swelling in rheumatoid arthritis, osteoarthritis, dysmenorrhea (menstrual cramps), dental pain, and fever reduction.',
+        'side_effects': '• **Common (Disadvantages):** Dyspepsia, heartburn, epigastric pain, nausea, gastrointestinal ulceration/bleeding, fluid retention, headache.\n• **Severe Risks:** GI bleeding/perforation, cardiovascular events (myocardial infarction/stroke with chronic high doses), acute renal dysfunction, bronchospasm in aspirin-sensitive asthmatics.',
+        'dosage': '• **Adults:** 200mg to 400mg every 4 to 6 hours as needed with or after food. Maximum OTC limit: 1200mg/day; Prescription max: 2400mg/day under supervision.\n• Always take with food or milk to minimize gastric mucosal irritation.',
+        'pregnancy': 'Category C (1st/2nd trimester); Category D / Contraindicated in 3rd trimester (causes premature closure of fetal ductus arteriosus and oligohydramnios). Avoid in pregnancy.',
+        'precautions': '• Avoid in patients with active peptic ulcer disease, severe heart failure, or history of NSAID-induced asthma.\n• Caution with antihypertensive medications and anticoagulants.',
+    },
+    'omeprazole': {
+        'generic_name': 'Omeprazole (Omez / Prilosec)',
+        'drug_class': 'Proton Pump Inhibitor (PPI)',
+        'uses': 'Treatment of heartburn, acid reflux, GERD, gastric and duodenal ulcers, and H. pylori eradication therapy.',
+        'side_effects': 'Headache, diarrhea, stomach pain, flatulence, nausea, Vitamin B12 deficiency on long-term use.',
+        'dosage': '20mg to 40mg once daily in the morning before meals for 4 to 8 weeks.',
+        'pregnancy': 'Category C. Consult a doctor before use during pregnancy.',
+        'precautions': 'Do not chew or crush capsules. Take 30–60 mins prior to a meal.',
+    },
+    'telmisartan': {
+        'generic_name': 'Telmisartan (Telma / Micardis)',
+        'drug_class': 'Angiotensin II Receptor Blocker (ARB)',
+        'uses': 'Treatment of essential hypertension (high blood pressure) and reduction of cardiovascular risk in vulnerable adults.',
+        'side_effects': 'Dizziness, upper respiratory tract infection, back pain, sinus congestion, hyperkalemia (high potassium).',
+        'dosage': '40mg once daily, can be increased to 80mg once daily if needed.',
+        'pregnancy': 'Strictly CONTRAINDICATED in 2nd and 3rd trimesters of pregnancy due to risk of fetal harm.',
+        'precautions': 'Monitor serum potassium and renal function periodically. Avoid potassium supplements unless advised.',
+    },
+    'atorvastatin': {
+        'generic_name': 'Atorvastatin (Atorva / Lipitor)',
+        'drug_class': 'HMG-CoA Reductase Inhibitor (Statin)',
+        'uses': 'Lowering LDL cholesterol, total cholesterol, and triglycerides, while raising HDL; prevention of cardiovascular disease.',
+        'side_effects': 'Myalgia (muscle pain), headache, mild GI upset, elevated liver enzymes, rare risk of rhabdomyolysis.',
+        'dosage': '10mg to 80mg once daily taken in the evening or bedtime.',
+        'pregnancy': 'CONTRAINDICATED in pregnancy and lactation (Category X).',
+        'precautions': 'Report unexplained muscle pain or weakness immediately. Avoid grapefruit juice.',
+    },
+    'ciprofloxacin': {
+        'generic_name': 'Ciprofloxacin (Cifran / Cipro)',
+        'drug_class': 'Fluoroquinolone Antibiotic',
+        'uses': 'Treatment of bacterial infections including complicated urinary tract infections (UTIs), infectious diarrhea, bone/joint infections, and respiratory infections.',
+        'side_effects': 'Nausea, diarrhea, tendonitis / tendon rupture risk (especially Achilles tendon), QT prolongation, CNS stimulation.',
+        'dosage': '250mg to 750mg every 12 hours depending on infection severity.',
+        'pregnancy': 'Category C. Avoid unless no safer alternative is available.',
+        'precautions': 'Drink plenty of water. Avoid taking with dairy, calcium, or antacids (space by 2 hours).',
+    }
+}
 
-def _build_pharmacy_db_context(user_msg=''):
+# Common Brand Names to Generic Drug Mapping
+MEDIBOT_BRAND_ALIASES = {
+    'dolo': 'Paracetamol',
+    'crocin': 'Paracetamol',
+    'calpol': 'Paracetamol',
+    'mox': 'Amoxicillin',
+    'azithral': 'Azithromycin',
+    'amlong': 'Amlodipine',
+    'omez': 'Omeprazole',
+    'pantocid': 'Pantoprazole',
+    'pantodac': 'Pantoprazole',
+    'glycomet': 'Metformin',
+    'voveran': 'Diclofenac',
+    'brufen': 'Ibuprofen',
+    'asthalin': 'Salbutamol',
+    'cetzine': 'Cetirizine',
+    'okacet': 'Cetirizine',
+    'budecort': 'Budesonide',
+    'telma': 'Telmisartan',
+    'metrogyl': 'Metronidazole',
+    'pan 40': 'Pantoprazole',
+    'pan-40': 'Pantoprazole',
+    'pan d': 'Pantoprazole',
+}
+
+
+def _clean_user_prompt(text):
+    """Normalize and clean user query string for intent matching."""
+    if not text:
+        return ""
+    q = text.strip().lower()
+
+    # Split common concatenated phrases
+    replacements = [
+        (r'\bwhatis\b', 'what is'),
+        (r'\bwhatare\b', 'what are'),
+        (r'\bhowmuch\b', 'how much'),
+        (r'\bhowmany\b', 'how many'),
+        (r'\bstockof\b', 'stock of'),
+        (r'\bpriceof\b', 'price of'),
+        (r'\bcostof\b', 'cost of'),
+        (r'\bexpiryof\b', 'expiry of'),
+        (r'\bexpireof\b', 'expiry of'),
+        (r'\bexpiringin\b', 'expiring in'),
+        (r'\bcheckstock\b', 'check stock'),
+        (r'\bdoyouhave\b', 'do you have'),
+        (r'\bavailablestock\b', 'available stock'),
+        (r'\btotalstock\b', 'total stock'),
+        (r'\blowstock\b', 'low stock'),
+    ]
+    for pat, rep in replacements:
+        q = re.sub(pat, rep, q, flags=re.IGNORECASE)
+
+    q = re.sub(r'[^\w\s\-\.%]', ' ', q)
+    return re.sub(r'\s+', ' ', q).strip()
+
+
+def _classify_query_intent(prompt, session=None):
     """
-    Build a real-time snapshot of the pharmacy database so Gemini AI has full
-    situational awareness of medicines, current stock, prices, expiry dates, and sales.
+    Classify user query into:
+    - MEDICAL_INFO (sub_aspect: SIDE_EFFECTS, PREGNANCY, DOSAGE, PRECAUTIONS, USES, GENERAL_MEDICAL)
+    - CUSTOMER_INFO
+    - DEMAND_FORECAST
+    - PROFIT_MARGIN
+    - PATIENT_REFILL
+    - STOCK
+    - PRICE
+    - EXPIRY
+    - SALES_REVENUE
+    - SUPPLIERS
+    - CATEGORIES
+    - HELP
+    - STOCK_PRICE_DETAIL
+    - GENERAL_QUERY
+    """
+    raw = (prompt or '').strip().lower()
+    clean = _clean_user_prompt(raw)
+
+    # Contextual memory resolution (e.g. "iska price", "iski expiry", "it", "this medicine")
+    session_med_key = session.get('medibot_last_med_key') if session else None
+    has_pronoun_ref = bool(re.search(r'\b(iska|iski|isko|it|its|this medicine|this drug|this item|inka|inki)\b', clean, flags=re.IGNORECASE))
+
+    # 1. Match medicine keyword if mentioned
+    matched_med_key = None
+    for k in MEDIBOT_MEDICAL_KNOWLEDGE.keys():
+        if re.search(r'\b' + re.escape(k) + r'\b', clean, flags=re.IGNORECASE):
+            matched_med_key = k
+            break
+    if not matched_med_key:
+        for brand_k, gen_v in MEDIBOT_BRAND_ALIASES.items():
+            if re.search(r'\b' + re.escape(brand_k) + r'\b', clean, flags=re.IGNORECASE):
+                matched_med_key = gen_v.lower()
+                break
+
+    if not matched_med_key and has_pronoun_ref and session_med_key:
+        matched_med_key = session_med_key
+
+    # 2. Check for specific medical sub-aspects FIRST
+    is_side_effects = bool(re.search(r'\b(disadvantage|disadvantages|side effect|side effects|adverse effect|adverse effects|adverse reaction|adverse reactions|harm|harmful|danger|dangers|risk|risks|toxicity|toxic|overdose|negative effect|negative effects|drawback|drawbacks|complications|problem|problems)\b', clean, flags=re.IGNORECASE))
+    
+    is_pregnancy = bool(re.search(r'\b(pregnancy|pregnant|safe in pregnancy|safe during pregnancy|safe for pregnant|breastfeeding|lactation|nursing|baby|infant|fetus|trimester)\b', clean, flags=re.IGNORECASE))
+    
+    is_dosage = bool(re.search(r'\b(dosage|dose|doses|how much to take|how to take|how many tablets|how many pills|how many times|daily limit|maximum dose|max dose|when to take|before food|after food|frequency|administration)\b', clean, flags=re.IGNORECASE))
+    
+    is_precautions = bool(re.search(r'\b(precaution|precautions|warning|warnings|contraindication|contraindications|interaction|interactions|mix with|with alcohol|who should not take|avoid with|safety warning)\b', clean, flags=re.IGNORECASE))
+    
+    is_uses = bool(re.search(r'\b(use of|uses of|use|uses|used for|what is it for|what is it used for|why use|why take|benefit|benefits|indication|indications|prescribed for|treat|treatment|cure|action of|purpose of)\b', clean, flags=re.IGNORECASE))
+    
+    is_general_medical = bool(re.search(r'\b(what is|what are|tell me about|information about|info about|about|how does|how it works)\s+[a-zA-Z0-9]', clean, flags=re.IGNORECASE)) and not bool(re.search(r'\b(stock|price|cost|expiry|sales|profit|margin)\b', clean, flags=re.IGNORECASE))
+
+    if is_side_effects:
+        return {'intent': 'MEDICAL_INFO', 'sub_aspect': 'SIDE_EFFECTS', 'med_key': matched_med_key}
+    if is_pregnancy:
+        return {'intent': 'MEDICAL_INFO', 'sub_aspect': 'PREGNANCY', 'med_key': matched_med_key}
+    if is_dosage:
+        return {'intent': 'MEDICAL_INFO', 'sub_aspect': 'DOSAGE', 'med_key': matched_med_key}
+    if is_precautions:
+        return {'intent': 'MEDICAL_INFO', 'sub_aspect': 'PRECAUTIONS', 'med_key': matched_med_key}
+    if is_uses:
+        return {'intent': 'MEDICAL_INFO', 'sub_aspect': 'USES', 'med_key': matched_med_key}
+    if is_general_medical and matched_med_key:
+        return {'intent': 'MEDICAL_INFO', 'sub_aspect': 'GENERAL_MEDICAL', 'med_key': matched_med_key}
+
+    # 3. Check for Profit & Margin Analytics
+    is_profit_query = bool(re.search(r'\b(profit|margin|margins|munafa|kamai|profitable|profitability|markup|gain|gains|highest profit|most profitable|gross profit)\b', clean, flags=re.IGNORECASE))
+    if is_profit_query:
+        return {'intent': 'PROFIT_MARGIN', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    # 4. Check for Patient Refill Alerts
+    is_refill_query = bool(re.search(r'\b(refill|refills|repeat patient|repeat customer|dawai khatam|course khatam|due refill|refill alert|refill reminder|refill prediction|chronic patient|refill due)\b', clean, flags=re.IGNORECASE))
+    if is_refill_query:
+        return {'intent': 'PATIENT_REFILL', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    # 5. Check for Customer inquiries
+    is_customer_query = bool(re.search(r'\b(customer|customers|client|clients|patient|patients|buyer|buyers|who bought|purchase history|spent by|customer details|customer info|phone number|mobile number|contact number|kis customer|sabse bada customer|sabse zyada kharidi|sabse jyaada kharidi|sabse jyada kharidi|kharidari|highest buyer|top buyer|top spending)\b', clean, flags=re.IGNORECASE)) or ('customer' in clean and any(w in clean for w in ['kharid', 'kharidi', 'kharidari', 'spent', 'spending', 'bada', 'zyada', 'jyaada', 'jyada']))
+    if is_customer_query:
+        return {'intent': 'CUSTOMER_INFO', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    # 6. Check for Demand Forecasting & Sales Velocity
+    is_demand_query = bool(re.search(r'\b(demand|forecast|forecasting|prediction|predict|fast moving|fast selling|slow moving|top selling|velocity|run out|kab khatam hoga|kab khatam|reorder prediction|reorder recommendation|consumption rate|stock life)\b', clean, flags=re.IGNORECASE))
+    if is_demand_query:
+        return {'intent': 'DEMAND_FORECAST', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    # 7. Check for inventory queries
+    if any(w in clean for w in ['stock of', 'available stock', 'how many', 'in stock', 'low stock', 'out of stock', 'units remaining', 'inventory count', 'check stock', 'show stock', 'total stock']) or (clean.startswith('stock') and not any(w in clean for w in ['price', 'expiry', 'use', 'side effect', 'demand', 'forecast', 'profit', 'margin'])):
+        return {'intent': 'STOCK', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    if any(w in clean for w in ['price of', 'cost of', 'rate of', 'how much is', 'selling price', 'mrp of', 'charges of', 'pricing of']) or (clean.startswith('price') and not any(w in clean for w in ['stock', 'expiry', 'use', 'side effect', 'demand', 'forecast', 'profit', 'margin'])):
+        return {'intent': 'PRICE', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    if any(w in clean for w in ['expiring soon', 'expiry date', 'expiry of', 'when does it expire', 'shelf life', 'expired batches', 'expiring in', 'validity']) or (clean.startswith('expiry') or clean.startswith('expire')):
+        return {'intent': 'EXPIRY', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    if any(w in clean for w in ['today sales', 'todays sales', 'today\'s sales', 'revenue this month', 'monthly revenue', 'daily sales', 'sales summary', 'total revenue', 'invoices today']):
+        return {'intent': 'SALES_REVENUE', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    if any(w in clean for w in ['supplier', 'suppliers', 'vendor', 'distributor']):
+        return {'intent': 'SUPPLIERS', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    if any(w in clean for w in ['category', 'categories', 'medicine type']):
+        return {'intent': 'CATEGORIES', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    if any(w in clean for w in ['help', 'command', 'commands', 'hello', 'hi', 'hey']):
+        return {'intent': 'HELP', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    if matched_med_key:
+        return {'intent': 'STOCK_PRICE_DETAIL', 'sub_aspect': None, 'med_key': matched_med_key}
+
+    return {'intent': 'GENERAL_QUERY', 'sub_aspect': None, 'med_key': None}
+
+
+def _format_medical_info_reply(med_data, sub_aspect, raw_prompt=""):
+    """Format a detailed clinical response tailored specifically to the asked sub-aspect."""
+    name = med_data['generic_name']
+    drug_class = med_data['drug_class']
+    disclaimer = "\n\n⚠️ *Safety Disclaimer: This clinical summary is for informational guidance only. Always consult a licensed doctor or pharmacist before taking, changing, or stopping any medication.*"
+
+    if sub_aspect == 'SIDE_EFFECTS':
+        return (
+            f"### ⚠️ Side Effects & Disadvantages: {name}\n\n"
+            f"• **Drug Class:** {drug_class}\n\n"
+            f"**Disadvantages & Adverse Effects:**\n"
+            f"{med_data['side_effects']}\n\n"
+            f"**Important Precautions:**\n"
+            f"{med_data['precautions']}"
+            f"{disclaimer}"
+        )
+    elif sub_aspect == 'USES':
+        return (
+            f"### 💊 Medical Uses & Indications: {name}\n\n"
+            f"• **Drug Class:** {drug_class}\n\n"
+            f"**Therapeutic Uses:**\n"
+            f"{med_data['uses']}\n\n"
+            f"**Standard Dosage Guidance:**\n"
+            f"{med_data['dosage']}"
+            f"{disclaimer}"
+        )
+    elif sub_aspect == 'DOSAGE':
+        return (
+            f"### 📋 Dosage & Administration Guidelines: {name}\n\n"
+            f"• **Drug Class:** {drug_class}\n\n"
+            f"**Dosage Instructions:**\n"
+            f"{med_data['dosage']}\n\n"
+            f"**Safety Precautions:**\n"
+            f"{med_data['precautions']}"
+            f"{disclaimer}"
+        )
+    elif sub_aspect == 'PREGNANCY':
+        return (
+            f"### 🤰 Pregnancy & Lactation Safety: {name}\n\n"
+            f"• **Drug Class:** {drug_class}\n\n"
+            f"**Pregnancy & Breastfeeding Guidance:**\n"
+            f"{med_data['pregnancy']}\n\n"
+            f"**Clinical Recommendations:**\n"
+            f"• Always use the minimum effective dose for the shortest duration necessary under direct obstetric supervision.\n"
+            f"• Consult your healthcare provider prior to taking any medication while pregnant or nursing."
+            f"{disclaimer}"
+        )
+    elif sub_aspect == 'PRECAUTIONS':
+        return (
+            f"### 🛡️ Warnings, Precautions & Interactions: {name}\n\n"
+            f"• **Drug Class:** {drug_class}\n\n"
+            f"**Precautions & Contraindications:**\n"
+            f"{med_data['precautions']}\n\n"
+            f"**Potential Side Effects:**\n"
+            f"{med_data['side_effects']}"
+            f"{disclaimer}"
+        )
+    else:  # GENERAL_MEDICAL
+        return (
+            f"### ℹ️ Medical Information: {name}\n\n"
+            f"• **Drug Class:** {drug_class}\n\n"
+            f"**Therapeutic Uses:**\n{med_data['uses']}\n\n"
+            f"**Dosage Guidelines:**\n{med_data['dosage']}\n\n"
+            f"**Side Effects & Disadvantages:**\n{med_data['side_effects']}\n\n"
+            f"**Pregnancy Safety:**\n{med_data['pregnancy']}"
+            f"{disclaimer}"
+        )
+
+
+def _build_medibot_context(request, prompt=""):
+    """
+    Build live inventory and sales context snapshot strictly isolated
+    to the logged-in user's tenant scope (or all for admin).
     """
     try:
         today = timezone.now().date()
-        meds = Medicine.objects.select_related('category', 'supplier').prefetch_related('batches').all()
+        if request and getattr(request, 'user', None) and request.user.is_authenticated:
+            meds = owner_scope_queryset(
+                request,
+                Medicine.objects.select_related('category', 'supplier').prefetch_related('batches'),
+                'created_by'
+            )
+            sales = owner_scope_sales(request)
+            suppliers_qs = owner_scope_queryset(request, Supplier.objects.all(), 'created_by')
+            categories_qs = owner_scope_queryset(request, Category.objects.all(), 'created_by')
+        else:
+            meds = Medicine.objects.select_related('category', 'supplier').prefetch_related('batches').all()
+            sales = Sale.objects.all()
+            suppliers_qs = Supplier.objects.all()
+            categories_qs = Category.objects.all()
+
         total_meds_count = meds.count()
 
         # Low stock items (< 50 or below threshold)
         low_stock_items = [m for m in meds if m.is_low_stock]
-        low_stock_summary = [f"{m.name} ({m.total_quantity} left)" for m in low_stock_items[:10]]
+        low_stock_summary = [f"{m.name} ({m.total_quantity} units left)" for m in low_stock_items[:10]]
 
-        # Expiring batches in next 30 days
+        # Batches expiring in next 30 days
         exp_batches = Batch.objects.filter(
+            medicine__in=meds,
             expiry_date__gte=today,
             expiry_date__lte=today + timedelta(days=30),
             quantity__gt=0
         ).select_related('medicine').order_by('expiry_date')
         exp_summary = [f"{b.medicine.name} (Batch: {b.batch_name}, Qty: {b.quantity}, Exp: {b.expiry_date})" for b in exp_batches[:10]]
 
-        # Already expired batches with remaining stock
+        # Expired batches with stock
         expired_batches = Batch.objects.filter(
+            medicine__in=meds,
             expiry_date__lt=today,
             quantity__gt=0
         ).select_related('medicine')
         expired_summary = [f"{b.medicine.name} (Batch: {b.batch_name}, Qty: {b.quantity}, Exp: {b.expiry_date})" for b in expired_batches[:8]]
 
-        # Sales overview (today and general)
-        today_sales = Sale.objects.filter(date__date=today, status='Completed')
+        # Sales overview
+        today_sales = sales.filter(date__date=today, status='Completed')
         today_sales_count = today_sales.count()
         today_revenue = sum((s.total_price for s in today_sales), Decimal('0.00'))
 
-        # Categories list
-        categories = list(Category.objects.values_list('name', flat=True))
-
-        # Suppliers list
-        suppliers = list(Supplier.objects.values_list('name', flat=True))
-
-        # Build full medicine catalog list
+        # Catalog overview
         catalog_lines = []
         for m in meds:
             batches_info = [f"{b.batch_name}(qty:{b.quantity}, exp:{b.expiry_date})" for b in m.batches.all()]
@@ -2481,33 +2843,194 @@ def _build_pharmacy_db_context(user_msg=''):
                 f"- {m.name} | Category: {cat_name} | Price: Rs.{m.price} | Total Stock: {m.total_quantity} units | Batches: [{b_str}] | Supplier: {sup_name}"
             )
 
-        context_parts = [
+        context_lines = [
             f"TODAY'S DATE: {today}",
-            f"TOTAL UNIQUE MEDICINES: {total_meds_count}",
+            f"TOTAL REGISTERED MEDICINES: {total_meds_count}",
             f"LOW STOCK COUNT: {len(low_stock_items)} items" + (f" -> {', '.join(low_stock_summary)}" if low_stock_summary else " (None)"),
             f"EXPIRING WITHIN 30 DAYS: {exp_batches.count()} batches" + (f" -> {', '.join(exp_summary)}" if exp_summary else " (None)"),
-            f"EXPIRED BATCHES (WITH REMAINING STOCK): {expired_batches.count()} batches" + (f" -> {', '.join(expired_summary)}" if expired_summary else " (None)"),
-            f"CATEGORIES: {', '.join(categories) if categories else 'None'}",
-            f"SUPPLIERS: {', '.join(suppliers) if suppliers else 'None'}",
-            f"TODAY'S COMPLETED SALES: {today_sales_count} bills, Total Revenue: Rs.{today_revenue}",
+            f"EXPIRED BATCHES (WITH STOCK): {expired_batches.count()} batches" + (f" -> {', '.join(expired_summary)}" if expired_summary else " (None)"),
+            f"CATEGORIES: {', '.join(list(categories_qs.values_list('name', flat=True))) or 'None'}",
+            f"SUPPLIERS: {', '.join(list(suppliers_qs.values_list('name', flat=True))) or 'None'}",
+            f"TODAY'S COMPLETED SALES: {today_sales_count} bills, Total Revenue: Rs.{today_revenue:.2f}",
             "\nLIVE MEDICINE INVENTORY CATALOG:",
-            "\n".join(catalog_lines)
+            "\n".join(catalog_lines) if catalog_lines else "No medicines currently registered in inventory."
         ]
-
-        return "\n".join(context_parts)
+        return "\n".join(context_lines)
     except Exception as exc:
-        logger.warning("Error building pharmacy DB context for chatbot: %s", exc)
+        logger.warning("Error building MediBot context: %s", exc)
         return "LIVE DATABASE UNAVAILABLE"
 
 
-def _format_bot_markdown(text):
+def _fuzzy_match_medicines(clean_query, request=None):
     """
-    Format markdown text from Gemini into safe, styled HTML for the chat window.
+    Find medicines in the user's database matching brand aliases,
+    tokens, and typo-tolerant n-grams with SequenceMatcher.
     """
+    if request and getattr(request, 'user', None) and request.user.is_authenticated:
+        meds_qs = owner_scope_queryset(
+            request,
+            Medicine.objects.select_related('category', 'supplier').prefetch_related('batches'),
+            'created_by'
+        )
+    else:
+        meds_qs = Medicine.objects.select_related('category', 'supplier').prefetch_related('batches').all()
+
+    all_meds = list(meds_qs)
+    if not all_meds:
+        return []
+
+    expanded_query = clean_query
+    for brand_k, generic_v in MEDIBOT_BRAND_ALIASES.items():
+        if re.search(r'\b' + re.escape(brand_k) + r'\b', clean_query, flags=re.IGNORECASE):
+            expanded_query += f" {generic_v.lower()}"
+
+    STOP_WORDS = {
+        'what', 'is', 'the', 'of', 'and', 'for', 'in', 'a', 'an', 'to', 'how', 'much',
+        'many', 'do', 'we', 'have', 'you', 'there', 'check', 'show', 'tell', 'me', 'any',
+        'please', 'can', 'find', 'search', 'get', 'give', 'detail', 'details', 'info',
+        'information', 'record', 'records', 'medicine', 'medicines', 'tablet', 'tablets',
+        'syrup', 'syrups', 'capsule', 'capsules', 'mg', 'mcg', 'gm', 'g', 'iu', '%',
+        'stock', 'price', 'cost', 'rate', 'expiry', 'expir', 'expired', 'expiring',
+        'available', 'availability', 'quantity', 'units', 'batch', 'batches'
+    }
+
+    raw_tokens = expanded_query.split()
+    tokens = [t for t in raw_tokens if t not in STOP_WORDS and len(t) >= 2]
+
+    candidates = list(tokens)
+    for i in range(len(raw_tokens) - 1):
+        candidates.append(f"{raw_tokens[i]} {raw_tokens[i+1]}")
+    for i in range(len(raw_tokens) - 2):
+        candidates.append(f"{raw_tokens[i]} {raw_tokens[i+1]} {raw_tokens[i+2]}")
+
+    matched_scores = {}
+    for med in all_meds:
+        med_lower = med.name.lower()
+        med_base = med_lower.split()[0]
+
+        if med_base in expanded_query or med_lower in expanded_query:
+            matched_scores[med.id] = (1.0, med)
+            continue
+
+        best_score = 0.0
+        for cand in candidates:
+            r1 = difflib.SequenceMatcher(None, cand, med_base).ratio()
+            r2 = difflib.SequenceMatcher(None, cand, med_lower).ratio()
+            best_score = max(best_score, r1, r2)
+
+        if best_score >= 0.65:
+            matched_scores[med.id] = (best_score, med)
+
+    sorted_matches = sorted(matched_scores.values(), key=lambda x: x[0], reverse=True)
+    return [m[1] for m in sorted_matches]
+
+
+def _fuzzy_match_customers(clean_query, request=None):
+    """
+    Find customers matching name tokens, phone numbers, or emails
+    scoped to the logged-in pharmacy tenant.
+    """
+    if request and getattr(request, 'user', None) and request.user.is_authenticated:
+        custs = owner_scope_queryset(request, Customer.objects.all(), 'created_by')
+    else:
+        custs = Customer.objects.all()
+
+    # 1. Phone number match
+    phone_match = re.search(r'\b\d{7,15}\b', clean_query)
+    if phone_match:
+        phone_results = list(custs.filter(contact_number__icontains=phone_match.group(0)))
+        if phone_results:
+            return phone_results
+
+    # 2. Clean query
+    clean_name = re.sub(
+        r'\b(customer|customers|client|clients|patient|patients|buyer|buyers|details|detail|info|information|history|purchase|purchases|orders|order|spent|spending|of|for|about|tell|me|show|check|find|who|is|the|give|ka|ki|ke|ko|se|me|mein|par|pe|batao|bataiye|dikhao|dikhaye|chahiye|do|de\s+do|karo|karein|hai|hain|kya|records|record|mobile|phone|contact|number|sabse|zyada|jyaada|jyada|bada|bade|highest|top|best|most|kharidi|kharidari|kharida|khareeda|khareedari|shopping|ne|kis|kisne)\b',
+        ' ',
+        clean_query,
+        flags=re.IGNORECASE
+    )
+    clean_name = re.sub(r'[^\w\s]', ' ', clean_name)
+    clean_name = re.sub(r'\s+', ' ', clean_name).strip()
+
+    if not clean_name or len(clean_name) < 2:
+        return []
+
+    # Direct icontains match
+    direct = list(custs.filter(name__icontains=clean_name))
+    if direct:
+        return direct
+
+    # Token match (e.g. if multi-word name, check if any token matches)
+    tokens = [t for t in clean_name.split() if len(t) >= 3]
+    for t in tokens:
+        t_matches = list(custs.filter(name__icontains=t))
+        if t_matches:
+            return t_matches
+
+    # SequenceMatcher fuzzy match
+    matched = []
+    for c in custs:
+        c_lower = c.name.lower()
+        if clean_name in c_lower or c_lower in clean_name:
+            matched.append((1.0, c))
+            continue
+        ratio = difflib.SequenceMatcher(None, clean_name, c_lower).ratio()
+        if ratio >= 0.6:
+            matched.append((ratio, c))
+
+    matched.sort(key=lambda x: x[0], reverse=True)
+    return [m[1] for m in matched]
+
+
+def _fuzzy_match_suppliers(clean_query, request=None):
+    """Find suppliers matching name tokens scoped to user."""
+    if request and getattr(request, 'user', None) and request.user.is_authenticated:
+        sups = owner_scope_queryset(request, Supplier.objects.all(), 'created_by')
+    else:
+        sups = Supplier.objects.all()
+
+    clean_name = re.sub(r'\b(supplier|suppliers|vendor|vendors|distributor|details|detail|info|information|contact|phone|ka|ki|ke|batao|do|dikhao|records)\b', ' ', clean_query, flags=re.IGNORECASE)
+    clean_name = re.sub(r'\s+', ' ', clean_name).strip()
+    if not clean_name or len(clean_name) < 2:
+        return []
+    return list(sups.filter(name__icontains=clean_name))
+
+
+def _format_customer_card(customers, scoped_sales):
+    """Format structured, beautiful customer card with purchase history and action buttons."""
+    import urllib.parse
+    lines = []
+    for c in customers[:3]:
+        c_sales = scoped_sales.filter(customer=c, status='Completed').order_by('-date')
+        total_spent = sum((s.total_price for s in c_sales), Decimal('0.00'))
+        total_orders = c_sales.count()
+        last_sale = c_sales.first()
+        if last_sale and last_sale.items.exists():
+            items_str = ", ".join([f"{it.medicine.name} (x{it.quantity})" for it in last_sale.items.all()[:3]])
+            last_order_str = f"{last_sale.date.strftime('%Y-%m-%d')} — {items_str} (Rs.{last_sale.total_price})"
+        else:
+            last_order_str = "No recent purchases"
+        membership_badge = "⭐ Permanent Member" if c.is_permanent else "Standard Customer"
+        wa_msg = f"Hello {c.name}, greeting from PharmaCare Pharmacy! How can we assist you with your medicine prescription today?"
+        wa_btn = f"[[WA:{c.contact_number}|{wa_msg}|WhatsApp {c.name.split()[0]}]]"
+        lines.append(
+            f"### 👤 Customer: {c.name}\n"
+            f"• **Contact Number:** `{c.contact_number}`\n"
+            f"• **Email:** {c.email or 'N/A'}\n"
+            f"• **Membership Status:** {membership_badge}\n"
+            f"• **Total Completed Orders:** **{total_orders} bills**\n"
+            f"• **Lifetime Spending:** **Rs.{total_spent:.2f}**\n"
+            f"• **Last Purchase:** {last_order_str}\n"
+            f"• **Quick Action:** {wa_btn}"
+        )
+    return "\n\n".join(lines)
+
+
+def _format_markdown_to_html(text):
+    """Format markdown text into clean, styled HTML for the chat window with action buttons."""
     if not text:
         return ""
 
-    # Escape HTML to prevent injection
     out = html.escape(text.strip())
 
     # Headers (###, ##, #)
@@ -2530,11 +3053,30 @@ def _format_bot_markdown(text):
     # Bold **text** -> <strong>text</strong>
     out = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', out)
 
-    # Italic *text* or _text_ -> <em>text</em>
-    out = re.sub(r'(?<!\*)\*([^\*\n]+)\*(?!\*)', r'<em>\1</em>', out)
+    # Inline code `code`
+    out = re.sub(r'`([^`]+)`', r'<code style="background:rgba(8,145,178,0.12); color:#0891b2; padding:1px 5px; border-radius:4px; font-size:12px; font-family:monospace;">\1</code>', out)
 
-    # Horizontal rules
-    out = re.sub(r'(?m)^---+$', r'<hr style="border:none; border-top:1px solid #e2e8f0; margin:8px 0;">', out)
+    # Action tags [[WA:phone|text|label]], [[PO:med_id|label]], [[LINK:url|label]]
+    def _render_wa(m):
+        phone, msg, label = m.group(1), m.group(2), m.group(3)
+        clean_phone = re.sub(r'[^\d]', '', phone)
+        if len(clean_phone) == 10:
+            clean_phone = '91' + clean_phone
+        import urllib.parse
+        encoded = urllib.parse.quote(html.unescape(msg))
+        return f'<a href="https://wa.me/{clean_phone}?text={encoded}" target="_blank" class="medibot-action-btn wa-btn" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; background:#25D366; color:#ffffff; border-radius:6px; font-size:11.5px; font-weight:600; text-decoration:none; margin:3px 4px 3px 0; box-shadow:0 1px 3px rgba(37,211,102,0.3);">📲 {label}</a>'
+
+    def _render_po(m):
+        med_id, label = m.group(1), m.group(2)
+        return f'<a href="/purchase-orders/create/?medicine={med_id}" class="medibot-action-btn po-btn" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; background:#0891b2; color:#ffffff; border-radius:6px; font-size:11.5px; font-weight:600; text-decoration:none; margin:3px 4px 3px 0; box-shadow:0 1px 3px rgba(8,145,178,0.3);">📥 {label}</a>'
+
+    def _render_link(m):
+        url, label = m.group(1), m.group(2)
+        return f'<a href="{url}" class="medibot-action-btn link-btn" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; background:#0284c7; color:#ffffff; border-radius:6px; font-size:11.5px; font-weight:600; text-decoration:none; margin:3px 4px 3px 0;">{label}</a>'
+
+    out = re.sub(r'\[\[WA:([^|]+)\|([^|]+)\|([^\]]+)\]\]', _render_wa, out)
+    out = re.sub(r'\[\[PO:([^|]+)\|([^\]]+)\]\]', _render_po, out)
+    out = re.sub(r'\[\[LINK:([^|]+)\|([^\]]+)\]\]', _render_link, out)
 
     # Bullet points (* or -)
     out = re.sub(
@@ -2543,7 +3085,7 @@ def _format_bot_markdown(text):
         out
     )
 
-    # Numbered lists (1. , 2. )
+    # Numbered lists
     out = re.sub(
         r'(?m)^(\d+)\.\s+(.*?)$',
         r'<div style="display:flex; align-items:flex-start; margin-left:4px; margin-bottom:3px;"><span style="font-weight:600; color:#0891b2; margin-right:6px;">\1.</span><span>\2</span></div>',
@@ -2552,15 +3094,13 @@ def _format_bot_markdown(text):
 
     # Paragraph breaks & linebreaks
     out = out.replace('\n\n', '<div style="height:6px;"></div>').replace('\n', '<br>')
-
     return out
 
 
-def _call_gemini_api(prompt, db_context="", audio_b64=None, audio_mime=None):
+def _call_gemini_api(prompt, context_str=None, intent_info=None, request=None):
     """
-    Call Gemini Generative Language API with live database context and model fallbacks.
-    Supports both text prompts and raw audio recordings (WebM/WAV/OGG).
-    Returns None immediately if API key is not configured or invalid to ensure zero server latency.
+    Call Gemini Generative Language API securely with intent-specific system framing.
+    Returns response text string or None on failure/timeout.
     """
     import os
     api_key = (
@@ -2569,164 +3109,50 @@ def _call_gemini_api(prompt, db_context="", audio_b64=None, audio_mime=None):
         ''
     ).strip()
 
-    # If key is missing or invalid format, return None instantly to prevent socket hangs
-    if not api_key or not api_key.startswith('AIzaSy'):
+    if not api_key:
         return None
 
-    if not db_context and prompt:
-        db_context = _build_pharmacy_db_context(prompt)
+    if intent_info is None:
+        intent_info = _classify_query_intent(prompt)
 
-    configured_model = getattr(django_settings, 'GEMINI_MODEL', 'gemini-1.5-flash-latest') or 'gemini-1.5-flash-latest'
+    if context_str is None:
+        context_str = _build_medibot_context(request, prompt) if intent_info.get('intent') != 'MEDICAL_INFO' else ""
 
-    system_instruction_text = (
-        "You are MediBot, the intelligent AI Pharmacy Assistant in the PharmaCare Pharmacy Dashboard.\n\n"
-        "=== LIVE PHARMACY DATABASE & INVENTORY ===\n"
-        f"{db_context}\n"
-        "==========================================\n\n"
-        "YOUR INSTRUCTIONS:\n"
-        "1. Strictly English Language: Always respond and communicate in clear, fluent, professional ENGLISH. All inventory figures, medical explanations, and summaries must be entirely in English.\n"
-        "2. Live Website Inventory & Stock: When the user asks about medicine stock, prices, categories, batches, suppliers, expiry dates, or sales on this pharmacy website, ALWAYS check the LIVE PHARMACY DATABASE above and provide exact numbers.\n"
-        "3. Generic & Brand Recognition: If the user asks for a brand name (like Dolo 650, Crocin, Calpol, etc.), check if the generic salt (e.g. Paracetamol) or equivalent is in the database and mention it clearly with current stock and price.\n"
-        "4. General Medical Knowledge: When asked what a medicine is used for, dosage guidelines, indications, contraindications, side effects, precautions, or general health questions, answer accurately, clearly, and concisely in English.\n"
-        "5. Safety Disclaimer: Whenever discussing clinical use, dosage, or medical conditions, provide a polite safety reminder to consult a qualified doctor or pharmacist.\n"
-        "6. Formatting: Use clean markdown with headings, bold text, and bullet points for great readability."
-    )
+    configured_model = getattr(django_settings, 'GEMINI_MODEL', 'gemini-flash-lite-latest') or 'gemini-flash-lite-latest'
+    intent = intent_info.get('intent') if intent_info else 'GENERAL_QUERY'
+    sub_aspect = intent_info.get('sub_aspect') if intent_info else None
 
-    is_audio = bool(audio_b64)
-    if is_audio:
-        clean_b64 = audio_b64.split(',', 1)[1] if ',' in audio_b64 else audio_b64
-        mime_clean = (audio_mime or 'audio/wav').split(';')[0].strip()
-        parts = [
-            {
-                'inlineData': {
-                    'mimeType': mime_clean,
-                    'data': clean_b64
-                }
-            },
-            {
-                'text': (
-                    "You are MediBot, the intelligent AI Pharmacy Assistant in the PharmaCare Pharmacy Dashboard.\n"
-                    f"=== LIVE PHARMACY DATABASE & MEDICINES ===\n{db_context}\n==========================================\n\n"
-                    "YOUR INSTRUCTIONS FOR THIS AUDIO QUERY:\n"
-                    "1. Listen carefully to the user's speech in this audio recording (supports English, Hindi, Hinglish, and various accents).\n"
-                    "2. Transcribe exactly what the user is asking. If they mention any medicine (e.g. Paracetamol, Amoxicillin, Azithromycin, Cetirizine, Metformin, Dolo, Crocin, Ibuprofen, Pantoprazole, etc.), transcribe the exact medicine name.\n"
-                    "3. Answer their question completely, accurately, and professionally in ENGLISH:\n"
-                    "   - If they ask about medicine stock, prices, expiry, or suppliers: look up the LIVE PHARMACY DATABASE above and give the exact figures.\n"
-                    "   - If they ask about medicine usage, dosage, side effects: explain clearly with safety reminders.\n"
-                    "   - If they ask any general pharmacy, medical, or store question: answer helpfully and intelligently.\n"
-                    "4. You MUST respond with a valid JSON object containing exactly two keys:\n"
-                    "   - 'user_query': The transcribed question in English.\n"
-                    "   - 'reply': Your formatted markdown answer in English."
-                )
-            }
-        ]
-        generation_cfg = {
-            'temperature': 0.2,
-            'maxOutputTokens': 1000,
-            'responseMimeType': 'application/json'
-        }
+    # Intent-specific prompt framing
+    if intent == 'MEDICAL_INFO':
+        system_instruction_text = (
+            "You are MediBot, an expert clinical pharmacy assistant for PharmaCare.\n"
+            f"The user is asking a medical/clinical question regarding: '{prompt}'.\n"
+            f"Identified aspect: {sub_aspect or 'clinical information'}.\n\n"
+            "CRITICAL INSTRUCTIONS:\n"
+            "1. Focus STRICTLY on pharmaceutical and clinical guidance (uses, indications, side effects, disadvantages, dosage guidelines, safety in pregnancy/breastfeeding, contraindications, and drug interactions).\n"
+            "2. DO NOT output pharmacy stock quantities, unit counts, warehouse batches, or supplier names for medical questions.\n"
+            "3. Answer thoroughly, directly, and politely using clean markdown headings and bullet points.\n"
+            "4. Always conclude with a medical safety disclaimer: '⚠️ *Safety Disclaimer: This clinical summary is for informational guidance only. Always consult a licensed physician or pharmacist for medical advice.*'"
+        )
+    elif intent in ['STOCK', 'PRICE', 'EXPIRY', 'SALES_REVENUE', 'SUPPLIERS', 'CATEGORIES', 'STOCK_PRICE_DETAIL']:
+        system_instruction_text = (
+            "You are MediBot, a pharmacy inventory assistant for PharmaCare.\n"
+            "Answer the user's question accurately using the live pharmacy database context provided below.\n\n"
+            "=== LIVE PHARMACY DATABASE CONTEXT ===\n"
+            f"{context_str}\n"
+            "======================================\n\n"
+            "INSTRUCTIONS:\n"
+            "1. Use the exact numbers (units, prices, batches, expiry dates, revenue) from the context.\n"
+            "2. Format response cleanly with markdown highlights and bullet points."
+        )
     else:
-        parts = [{'text': prompt}]
-        generation_cfg = {
-            'temperature': 0.2,
-            'maxOutputTokens': 800,
-        }
-
-    payload = {
-        'systemInstruction': {
-            'parts': [{'text': system_instruction_text}]
-        },
-        'contents': [
-            {'role': 'user', 'parts': parts}
-        ],
-        'generationConfig': generation_cfg,
-    }
-
-    payload_bytes = json.dumps(payload).encode('utf-8')
-
-    model_name = configured_model or 'gemini-1.5-flash-latest'
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
-    req = urllib.request.Request(
-        url,
-        data=payload_bytes,
-        headers={
-            'Content-Type': 'application/json',
-            'x-goog-api-key': api_key
-        },
-        method='POST'
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=3.0) as response:
-            res_json = json.loads(response.read().decode('utf-8'))
-            candidates = res_json.get('candidates') or []
-            if candidates:
-                parts = candidates[0].get('content', {}).get('parts', []) or []
-                reply_text = ''.join(p.get('text', '') for p in parts if isinstance(p, dict)).strip()
-                if reply_text:
-                    if is_audio:
-                        try:
-                            audio_res = json.loads(reply_text)
-                            if isinstance(audio_res, list) and audio_res:
-                                audio_res = audio_res[0]
-                            u_query = audio_res.get('user_query', '')
-                            bot_reply = audio_res.get('reply', '')
-                            return (bot_reply, u_query)
-                        except Exception:
-                            return (reply_text, '')
-                    return (reply_text, '')
-    except Exception as exc:
-        logger.warning("Gemini request note: %s", exc)
-        return None
-
-    return None
-
-
-def _stream_local_response(text):
-    """
-    Ultra-fast, smooth word-by-word streaming generator (like ChatGPT) for local database responses.
-    Streams without socket blocking or network latency.
-    """
-    import time
-    words = re.split(r'(\s+)', text)
-    for word in words:
-        if word:
-            yield f"data: {json.dumps({'chunk': word})}\n\n"
-            time.sleep(0.012)
-    yield f"data: {json.dumps({'done': True})}\n\n"
-
-
-def _stream_gemini_sse(prompt, db_context=""):
-    """
-    Generator that streams tokens via Server-Sent Events (SSE) in real-time.
-    Provides instant, zero-delay responses with ChatGPT-style streaming.
-    """
-    import os
-    api_key = (
-        getattr(django_settings, 'GEMINI_API_KEY', '') or
-        os.environ.get('GEMINI_API_KEY', '') or
-        ''
-    ).strip()
-
-    # If API key is missing or not a valid Google AI key, stream local response instantly
-    if not api_key or not api_key.startswith('AIzaSy'):
-        fallback = _fallback_database_reply(prompt)
-        yield from _stream_local_response(fallback)
-        return
-
-    system_instruction_text = (
-        "You are MediBot, the intelligent AI Pharmacy Assistant in the PharmaCare Pharmacy Dashboard.\n\n"
-        "=== LIVE PHARMACY DATABASE & INVENTORY ===\n"
-        f"{db_context}\n"
-        "==========================================\n\n"
-        "YOUR INSTRUCTIONS:\n"
-        "1. Strictly English Language: Always respond and communicate in clear, fluent, professional ENGLISH. All inventory figures, medical explanations, and summaries must be entirely in English.\n"
-        "2. Live Website Inventory & Stock: When the user asks about medicine stock, prices, categories, batches, suppliers, expiry dates, or sales on this pharmacy website, ALWAYS check the LIVE PHARMACY DATABASE above and provide exact numbers.\n"
-        "3. Generic & Brand Recognition: If the user asks for a brand name (like Dolo 650, Crocin, Calpol, etc.), check if the generic salt (e.g. Paracetamol) or equivalent is in the database and mention it clearly with current stock and price.\n"
-        "4. General Medical Knowledge: When asked what a medicine is used for, dosage guidelines, indications, contraindications, side effects, precautions, or general health questions, answer accurately, clearly, and concisely in English.\n"
-        "5. Safety Disclaimer: Whenever discussing clinical use, dosage, or medical conditions, provide a polite safety reminder to consult a qualified doctor or pharmacist.\n"
-        "6. Formatting: Use clean markdown with headings, bold text, and bullet points for great readability."
-    )
+        system_instruction_text = (
+            "You are MediBot, a helpful pharmacy and health assistant for PharmaCare.\n"
+            "Respond politely and concisely to the user's message using markdown formatting.\n\n"
+            "=== PHARMACY CONTEXT ===\n"
+            f"{context_str}\n"
+            "========================"
+        )
 
     payload = {
         'systemInstruction': {
@@ -2737,13 +3163,12 @@ def _stream_gemini_sse(prompt, db_context=""):
         ],
         'generationConfig': {
             'temperature': 0.2,
-            'maxOutputTokens': 1000,
+            'maxOutputTokens': 800,
         },
     }
 
     payload_bytes = json.dumps(payload).encode('utf-8')
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse"
-
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{configured_model}:generateContent"
     req = urllib.request.Request(
         url,
         data=payload_bytes,
@@ -2754,237 +3179,510 @@ def _stream_gemini_sse(prompt, db_context=""):
         method='POST'
     )
 
-    sent_any = False
     try:
-        with urllib.request.urlopen(req, timeout=2.5) as response:
-            for line in response:
-                line_str = line.decode('utf-8', errors='ignore').strip()
-                if line_str.startswith('data:'):
-                    raw_data = line_str[5:].strip()
-                    if not raw_data:
-                        continue
-                    try:
-                        data_json = json.loads(raw_data)
-                        candidates = data_json.get('candidates') or []
-                        if candidates:
-                            parts = candidates[0].get('content', {}).get('parts', []) or []
-                            for p in parts:
-                                chunk_text = p.get('text', '')
-                                if chunk_text:
-                                    sent_any = True
-                                    yield f"data: {json.dumps({'chunk': chunk_text})}\n\n"
-                    except Exception:
-                        continue
+        with urllib.request.urlopen(req, timeout=2.0) as response:
+            res_json = json.loads(response.read().decode('utf-8'))
+            candidates = res_json.get('candidates') or []
+            if candidates:
+                parts = candidates[0].get('content', {}).get('parts', []) or []
+                reply_text = ''.join(p.get('text', '') for p in parts if isinstance(p, dict)).strip()
+                if reply_text:
+                    return reply_text
     except Exception as exc:
-        logger.warning("Gemini streaming note: %s", exc)
-        if not sent_any:
-            fallback = _fallback_database_reply(prompt)
-            yield from _stream_local_response(fallback)
-            return
+        logger.warning("Gemini AI API note: %s", exc)
+        return None
 
-    yield f"data: {json.dumps({'done': True})}\n\n"
+    return None
 
 
-import difflib
+_call_gemini_ai = _call_gemini_api
 
 
-def _preprocess_user_query(raw_prompt):
+def _medibot_local_engine(prompt, request=None):
     """
-    Clean, normalize, and separate run-together words and dosage expressions in user query.
-    """
-    if not raw_prompt:
-        return ""
-    q = raw_prompt.strip().lower()
-
-    # Common run-together word splitting (e.g. 'whatis' -> 'what is', 'stockof' -> 'stock of')
-    replacements = [
-        (r'\bwhatis\b', 'what is'),
-        (r'\bwhatare\b', 'what are'),
-        (r'\bhowmuch\b', 'how much'),
-        (r'\bhowmany\b', 'how many'),
-        (r'\bstockof\b', 'stock of'),
-        (r'\bpriceof\b', 'price of'),
-        (r'\bcostof\b', 'cost of'),
-        (r'\bexpiryof\b', 'expiry of'),
-        (r'\bexpireof\b', 'expiry of'),
-        (r'\bexpiringin\b', 'expiring in'),
-        (r'\bshowme\b', 'show me'),
-        (r'\btellme\b', 'tell me'),
-        (r'\bcheckthe\b', 'check the'),
-        (r'\bcheckstock\b', 'check stock'),
-        (r'\bdoyouhave\b', 'do you have'),
-        (r'\bisthere\b', 'is there'),
-        (r'\bavailablestock\b', 'available stock'),
-        (r'\btotalstock\b', 'total stock'),
-        (r'\blowstock\b', 'low stock'),
-    ]
-    for pattern, repl in replacements:
-        q = re.sub(pattern, repl, q, flags=re.IGNORECASE)
-
-    # Normalize punctuation but keep alphanumeric and hyphens/percentages
-    q = re.sub(r'[^\w\s\-\.%]', ' ', q)
-    # Collapse multiple spaces
-    q = re.sub(r'\s+', ' ', q).strip()
-    return q
-
-
-def _find_fuzzy_medicine_matches(clean_query):
-    """
-    Intelligent multi-strategy fuzzy matching that finds database medicines matching
-    user tokens, n-grams, salt names, or brand aliases even with typos and misspellings.
-    """
-    all_meds = list(
-        Medicine.objects.select_related('category', 'supplier')
-        .prefetch_related('batches')
-        .all()
-    )
-    if not all_meds:
-        return []
-
-    # Common brand / synonym mapping
-    BRAND_MAP = {
-        'dolo': 'Paracetamol',
-        'crocin': 'Paracetamol',
-        'calpol': 'Paracetamol',
-        'mox': 'Amoxicillin',
-        'azithral': 'Azithromycin',
-        'amlong': 'Amlodipine',
-        'omez': 'Omeprazole',
-        'pantocid': 'Pantoprazole',
-        'pantodac': 'Pantoprazole',
-        'glycomet': 'Metformin',
-        'voveran': 'Diclofenac',
-        'brufen': 'Ibuprofen',
-        'asthalin': 'Salbutamol',
-        'cetzine': 'Cetirizine',
-        'okacet': 'Cetirizine',
-        'budecort': 'Budesonide',
-        'telma': 'Telmisartan',
-        'metrogyl': 'Metronidazole',
-    }
-
-    # Check if query contains any brand alias and expand search terms
-    expanded_query = clean_query
-    for brand_k, generic_v in BRAND_MAP.items():
-        if re.search(r'\b' + re.escape(brand_k) + r'\b', clean_query, flags=re.IGNORECASE):
-            expanded_query += f" {generic_v.lower()}"
-
-    # Extract clean tokens without common conversational stop words
-    STOP_WORDS = {
-        'what', 'is', 'the', 'of', 'and', 'for', 'in', 'a', 'an', 'to', 'how', 'much',
-        'many', 'do', 'we', 'have', 'you', 'there', 'check', 'show', 'tell', 'me', 'any',
-        'please', 'can', 'find', 'search', 'get', 'give', 'detail', 'details', 'info',
-        'information', 'record', 'records', 'medicine', 'medicines', 'tablet', 'tablets',
-        'syrup', 'syrups', 'capsule', 'capsules', 'mg', 'mcg', 'gm', 'g', 'iu', '%',
-        'stock', 'price', 'cost', 'rate', 'expiry', 'expir', 'expired', 'expiring',
-        'available', 'availability', 'quantity', 'units', 'batch', 'batches'
-    }
-
-    raw_tokens = expanded_query.split()
-    tokens = [t for t in raw_tokens if t not in STOP_WORDS and len(t) >= 2]
-
-    # Generate 1-word, 2-word, and 3-word candidate n-grams from query
-    candidates_to_match = list(tokens)
-    for i in range(len(raw_tokens) - 1):
-        bigram = f"{raw_tokens[i]} {raw_tokens[i+1]}"
-        candidates_to_match.append(bigram)
-    for i in range(len(raw_tokens) - 2):
-        trigram = f"{raw_tokens[i]} {raw_tokens[i+1]} {raw_tokens[i+2]}"
-        candidates_to_match.append(trigram)
-
-    matched_med_scores = {}  # med_id -> (score, med_obj)
-
-    for med in all_meds:
-        med_full_lower = med.name.lower()
-        # base name e.g. "paracetamol" from "Paracetamol 650mg"
-        med_base_lower = med_full_lower.split()[0]
-
-        # 1. Exact substring match (score = 1.0)
-        if med_base_lower in expanded_query or med_full_lower in expanded_query:
-            matched_med_scores[med.id] = (1.0, med)
-            continue
-
-        # 2. Token / N-Gram fuzzy comparison using difflib.SequenceMatcher
-        best_ratio = 0.0
-        for cand in candidates_to_match:
-            r1 = difflib.SequenceMatcher(None, cand, med_base_lower).ratio()
-            r2 = difflib.SequenceMatcher(None, cand, med_full_lower).ratio()
-            best_ratio = max(best_ratio, r1, r2)
-
-        # Threshold: 0.70 provides high tolerance for typos (e.g. 'paracetmol'->0.95, 'azithromicin'->0.92, 'cetrizine'->0.95, 'amoxicilin'->0.95)
-        if best_ratio >= 0.70:
-            matched_med_scores[med.id] = (best_ratio, med)
-
-    # Sort matches by highest similarity score first
-    sorted_matches = sorted(matched_med_scores.values(), key=lambda x: x[0], reverse=True)
-    return [m[1] for m in sorted_matches]
-
-
-def _fallback_database_reply(prompt):
-    """
-    Intelligent offline / rule-based fast engine with fuzzy matching, typo tolerance,
-    brand aliases, intent-aware parsing, stock/price lookup, expiry tracker, and medical info.
+    High-reliability, instant offline database & medical engine with precise
+    intent classification, clinical knowledge base, stock/pricing lookups, expiry alerts, and sales summaries.
     """
     raw_query = (prompt or '').strip()
-    clean_query = _preprocess_user_query(raw_query)
+    clean_query = _clean_user_prompt(raw_query)
     today = timezone.now().date()
 
     if not clean_query:
-        return "👋 How can I help you today? You can ask about medicine stock, prices, expiry dates, or sales."
+        return "👋 Hi! How can I help you today? You can ask about medicine stock, prices, expiry alerts, today's sales, or clinical medicine info."
 
-    # Medical Guidance / Indications knowledge base
-    MEDICAL_INFO = {
-        'paracetamol': 'Paracetamol (Acetaminophen) is a widely used analgesic (pain reliever) and antipyretic (fever reducer) used for headache, fever, body aches, and mild-to-moderate pain.',
-        'amoxicillin': 'Amoxicillin is a broad-spectrum penicillin antibiotic used to treat bacterial infections such as ear, throat, chest, respiratory, and urinary tract infections.',
-        'azithromycin': 'Azithromycin is a macrolide antibiotic used to treat respiratory tract infections, ear infections, skin infections, and certain sexually transmitted infections.',
-        'metformin': 'Metformin is a first-line oral antidiabetic medication used to manage type 2 diabetes by improving insulin sensitivity and lowering blood sugar levels.',
-        'cetirizine': 'Cetirizine is a non-drowsy antihistamine used to relieve allergy symptoms such as sneezing, runny nose, itchy watery eyes, and hives.',
-        'levocetirizine': 'Levocetirizine is an advanced antihistamine providing rapid relief from seasonal allergic rhinitis, chronic urticaria, and nasal allergy congestion.',
-        'pantoprazole': 'Pantoprazole is a proton pump inhibitor (PPI) that reduces stomach acid production, treating acid reflux (GERD), heartburn, and peptic ulcers.',
-        'omeprazole': 'Omeprazole is a proton pump inhibitor (PPI) used for acid reflux, GERD, heartburn, and stomach ulcer prevention.',
-        'amlodipine': 'Amlodipine is a calcium channel blocker used to lower high blood pressure (hypertension) and prevent angina (chest pain).',
-        'telmisartan': 'Telmisartan is an angiotensin II receptor blocker (ARB) used to control hypertension and reduce cardiovascular risk.',
-        'atorvastatin': 'Atorvastatin is a statin medication used to lower low-density lipoprotein (LDL) bad cholesterol and triglycerides, reducing cardiovascular risk.',
-        'ibuprofen': 'Ibuprofen is a non-steroidal anti-inflammatory drug (NSAID) used to relieve pain, inflammation, swelling, and fever.',
-        'diclofenac': 'Diclofenac is a potent NSAID used to reduce pain and inflammation associated with arthritis, musculoskeletal injuries, and dental pain.',
-        'salbutamol': 'Salbutamol (Albuterol) is a fast-acting bronchodilator inhaler used for the quick relief of asthma symptoms, bronchospasm, and COPD.',
-        'budesonide': 'Budesonide is an inhaled corticosteroid used to manage and prevent chronic asthma symptoms and airway inflammation.',
-        'ciprofloxacin': 'Ciprofloxacin is a fluoroquinolone antibiotic used to treat severe bacterial infections including urinary tract, bone, and gastrointestinal infections.',
-        'doxycycline': 'Doxycycline is a tetracycline antibiotic effective against bacterial infections, acne, respiratory infections, and tick-borne diseases.',
-    }
+    session = getattr(request, 'session', None) if request else None
+    session_med_key = session.get('medibot_last_med_key') if session else None
+    if session_med_key and bool(re.search(r'\b(iska|iski|isko|it|its|this medicine|this drug|this item|inka|inki)\b', clean_query, flags=re.IGNORECASE)):
+        clean_query = f"{clean_query} {session_med_key}"
 
-    # Detect User Intents flexibly across anywhere in query
-    is_stock_intent = bool(re.search(r'\b(stock|quantity|qty|available|availability|units|inventory|balance|how many|in stock)\b', clean_query, flags=re.IGNORECASE))
-    is_price_intent = bool(re.search(r'\b(price|prices|cost|rate|rates|mrp|how much|amount|charges|pricing)\b', clean_query, flags=re.IGNORECASE))
-    is_expiry_intent = bool(re.search(r'\b(expir\w*|shelf|validity|batch|batches)\b', clean_query, flags=re.IGNORECASE))
-    is_medical_intent = bool(re.search(r'\b(used for|uses of|uses|indication|indications|side effect|side effects|how to take|dosage|prescribed for|work|treatment|treat)\b', clean_query, flags=re.IGNORECASE)) or (
-        bool(re.search(r'\b(what is|what are)\b', clean_query, flags=re.IGNORECASE)) and not (is_stock_intent or is_price_intent or is_expiry_intent)
-    )
+    # Classify intent and sub-aspect
+    intent_data = _classify_query_intent(clean_query, session=session)
+    intent = intent_data['intent']
+    sub_aspect = intent_data['sub_aspect']
+    med_key = intent_data['med_key']
 
-    # 1. Non-medicine general inventory intents
-    # Check for general low stock list (when no specific medicine is requested)
-    if any(w in clean_query for w in ['low stock', 'out of stock', 'shortage', 'reorder', 'restock']):
-        low_meds = [m for m in Medicine.objects.all() if m.is_low_stock]
-        if not low_meds:
-            return "✅ **Good news!** There are currently no medicines in low stock."
-        lines = [f"• **{m.name}**: {m.total_quantity} units remaining (Price: Rs.{m.price})" for m in low_meds[:12]]
-        return f"⚠️ **Low Stock Alert ({len(low_meds)} items need attention):**\n\n" + "\n".join(lines)
+    # 1. MEDICAL_INFO INTENT -> Never return inventory cards!
+    if intent == 'MEDICAL_INFO':
+        target_med_key = med_key
+        if not target_med_key:
+            # Try fuzzy match against medical knowledge keys
+            for k in MEDIBOT_MEDICAL_KNOWLEDGE.keys():
+                if k in clean_query:
+                    target_med_key = k
+                    break
+        if not target_med_key:
+            # Check brand aliases
+            for b_k, g_v in MEDIBOT_BRAND_ALIASES.items():
+                if b_k in clean_query:
+                    target_med_key = g_v.lower()
+                    break
 
-    # Check for general expiry list (when query is asking for expiring batches broadly)
-    if ('expir' in clean_query or 'expired' in clean_query or 'expiring' in clean_query) and not any(w in clean_query for w in ['of', 'about', 'for', 'medicine']):
+        if target_med_key and target_med_key in MEDIBOT_MEDICAL_KNOWLEDGE:
+            med_info = MEDIBOT_MEDICAL_KNOWLEDGE[target_med_key]
+            return _format_medical_info_reply(med_info, sub_aspect, raw_query)
+
+        # If medicine not in hardcoded medical knowledge dictionary, provide general medical guidance
+        return (
+            f"### ℹ️ Medical Information Inquiry: '{raw_query}'\n\n"
+            f"• MediBot recognizes this as a clinical/medical question.\n"
+            f"• When taking prescription or over-the-counter medications, always adhere strictly to the dosage and frequency prescribed by your doctor.\n"
+            f"• Be aware of potential adverse reactions, contraindications with pre-existing conditions, and drug interactions.\n\n"
+            f"⚠️ *Safety Disclaimer: Always consult a licensed doctor or pharmacist for personalized clinical guidance and verified prescription advice.*"
+        )
+
+    # Scoped database queries
+    if request and getattr(request, 'user', None) and request.user.is_authenticated:
+        scoped_meds = owner_scope_queryset(request, Medicine.objects.select_related('category', 'supplier').prefetch_related('batches'), 'created_by')
+        scoped_sales = owner_scope_sales(request)
+        scoped_suppliers = owner_scope_queryset(request, Supplier.objects.all(), 'created_by')
+        scoped_categories = owner_scope_queryset(request, Category.objects.all(), 'created_by')
+        scoped_customers = owner_scope_queryset(request, Customer.objects.all(), 'created_by')
+    else:
+        scoped_meds = Medicine.objects.select_related('category', 'supplier').prefetch_related('batches').all()
+        scoped_sales = Sale.objects.all()
+        scoped_suppliers = Supplier.objects.all()
+        scoped_categories = Category.objects.all()
+        scoped_customers = Customer.objects.all()
+
+    # 2. CUSTOMER_INFO INTENT
+    if intent == 'CUSTOMER_INFO':
+        # Check if ranking / highest buyer query (in English or Hinglish)
+        is_top_spending_query = bool(re.search(
+            r'\b(sabse\s+(zyada|jyaada|jyada|bada|bade)\s+(kharid|kharidi|kharidari|khareeda|khareedari|spending|spent|orders|shopping|customer|customers|buyer|buyers)|highest\s+(spending|buyer|buyers|purchases|orders)|top\s+(spending|customers|customer|buyers|buyer)|best\s+(customer|customers)|max\s+spending|maximum\s+spending|highest\s+buyer)\b',
+            clean_query,
+            flags=re.IGNORECASE
+        )) or ('sabse' in clean_query and any(w in clean_query for w in ['kharid', 'kharidi', 'kharidari', 'khareeda', 'shopping', 'spent', 'zyada', 'jyaada', 'jyada', 'bada', 'bade'])) or (clean_query.startswith('customer') and any(w in clean_query for w in ['sabse', 'highest', 'top', 'best', 'kharid', 'spending', 'spent']))
+
+        if is_top_spending_query:
+            cust_spending = []
+            for c in scoped_customers:
+                c_sales = scoped_sales.filter(customer=c, status='Completed')
+                spent = sum((s.total_price for s in c_sales), Decimal('0.00'))
+                order_count = c_sales.count()
+                if order_count > 0:
+                    cust_spending.append({
+                        'customer': c,
+                        'total_spent': spent,
+                        'order_count': order_count,
+                    })
+
+            if cust_spending:
+                cust_spending.sort(key=lambda x: (x['total_spent'], x['order_count']), reverse=True)
+                lines = []
+                for idx, item in enumerate(cust_spending[:5], 1):
+                    c = item['customer']
+                    wa_msg = f"Hello {c.name}, greeting from PharmaCare! Thank you for being our valued customer. How can we assist you with your health and medicine needs today?"
+                    wa_btn = f"[[WA:{c.contact_number}|{wa_msg}|WhatsApp {c.name.split()[0]}]]"
+                    badge = "⭐ Top Spender" if idx == 1 else f"#{idx} Buyer"
+                    lines.append(
+                        f"• **{idx}. {c.name}** (`{c.contact_number}`) — Total Spent: **Rs.{item['total_spent']:.2f}** ({item['order_count']} bills) | {badge} {wa_btn}"
+                    )
+                return (
+                    f"🏆 **Top Spending Customers (Highest Buyers):**\n\n" +
+                    "\n".join(lines) +
+                    "\n\n💡 *Tip: Click WhatsApp buttons to directly message top customers.*"
+                )
+            else:
+                return "👤 **Customer Spending:** Abhi tak kisi registered customer ke completed orders record nahi hue hain."
+
+        matched_customers = _fuzzy_match_customers(raw_query, request=request)
+        if matched_customers:
+            return _format_customer_card(matched_customers, scoped_sales)
+
+        # General customer list
+        if any(w in clean_query for w in ['top', 'list', 'all', 'spending', 'highest', 'best', 'loyal', 'registered', 'customers']):
+            cust_list = list(scoped_customers[:6])
+            if not cust_list:
+                return "👤 No customers are currently registered in your pharmacy account."
+            lines = []
+            for c in cust_list:
+                c_sales = scoped_sales.filter(customer=c, status='Completed')
+                spent = sum((s.total_price for s in c_sales), Decimal('0.00'))
+                lines.append(f"• **{c.name}** (Phone: `{c.contact_number}`) — Orders: **{c_sales.count()}**, Total Spent: **Rs.{spent:.2f}**")
+            total_cust_count = len(scoped_customers) if isinstance(scoped_customers, list) else scoped_customers.count()
+            return f"👤 **Registered Customers ({total_cust_count} total):**\n\n" + "\n".join(lines)
+
+        return f"👤 I could not find customer records matching **'{raw_query}'**. Try searching by customer name (e.g. *'Customer Rahul'*) or phone number (*'Customer 9876543210'*)."
+
+    # 3. DEMAND_FORECAST INTENT
+    if intent == 'DEMAND_FORECAST':
+        start_30d = today - timedelta(days=30)
+        sales_30d = scoped_sales.filter(date__date__gte=start_30d, date__date__lte=today, status='Completed')
+        items_30d = SaleItem.objects.filter(sale__in=sales_30d)
+
+        matching_meds = _fuzzy_match_medicines(clean_query, request=request)
+        if matching_meds:
+            lines = []
+            for med in matching_meds[:3]:
+                med_items = items_30d.filter(medicine=med)
+                units_sold = med_items.aggregate(t=Sum('quantity'))['t'] or 0
+                daily_velocity = float(units_sold) / 30.0
+                curr_stock = med.total_quantity
+
+                if daily_velocity > 0:
+                    days_left = int(curr_stock / daily_velocity)
+                    runout_date = today + timedelta(days=days_left)
+                    if daily_velocity >= 5:
+                        demand_badge = "🔥 High Demand (Fast-Moving)"
+                    elif daily_velocity >= 1:
+                        demand_badge = "🟢 Moderate Demand"
+                    else:
+                        demand_badge = "🟡 Low Demand (Slow-Moving)"
+
+                    reorder_target = int(daily_velocity * 30)
+                    reorder_qty = max(0, reorder_target - curr_stock)
+                    if reorder_qty > 0:
+                        reorder_tip = f"Recommended reorder of **{reorder_qty} units** to maintain a 30-day stock buffer."
+                    else:
+                        reorder_tip = "Current stock is healthy and sufficient for the next 30 days."
+
+                    lines.append(
+                        f"### 📈 Demand Forecast: {med.name}\n"
+                        f"• **Current Available Stock:** **{curr_stock} units**\n"
+                        f"• **30-Day Sales Volume:** **{units_sold} units** sold\n"
+                        f"• **Daily Velocity:** **~{daily_velocity:.1f} units/day**\n"
+                        f"• **Demand Level:** {demand_badge}\n"
+                        f"• **Estimated Stock Runway:** **~{days_left} days** (Est. stock-out: {runout_date.strftime('%Y-%m-%d')})\n"
+                        f"• **Reorder Recommendation:** {reorder_tip}"
+                    )
+                else:
+                    lines.append(
+                        f"### 📈 Demand Forecast: {med.name}\n"
+                        f"• **Current Available Stock:** **{curr_stock} units**\n"
+                        f"• **30-Day Sales Volume:** **0 units** (No sales in past 30 days)\n"
+                        f"• **Demand Level:** ⚪ Dormant / Zero Demand\n"
+                        f"• **Reorder Recommendation:** Current stock is sufficient; no immediate reorder needed."
+                    )
+            return "\n\n".join(lines)
+
+        # General demand forecast leaderboard
+        top_items = items_30d.values('medicine__name', 'medicine__id').annotate(total_qty=Sum('quantity')).order_by('-total_qty')[:5]
+        if top_items:
+            lines = []
+            for item in top_items:
+                med_obj = scoped_meds.filter(id=item['medicine__id']).first() if hasattr(scoped_meds, 'filter') else next((m for m in scoped_meds if m.id == item['medicine__id']), None)
+                curr_stock = med_obj.total_quantity if med_obj else 0
+                units = item['total_qty'] or 0
+                vel = float(units) / 30.0
+                days_left = int(curr_stock / vel) if vel > 0 else 999
+                urgency = " ⚠️ Low Runway!" if days_left <= 10 else ""
+                lines.append(f"• **{item['medicine__name']}**: Sold **{units} units** (~{vel:.1f}/day) | Stock: **{curr_stock}** (~{days_left} days left){urgency}")
+            return (
+                f"📈 **Top Fast-Moving Medicines (30-Day Demand Forecast):**\n\n"
+                + "\n".join(lines) +
+                "\n\n💡 *Tip: Ask 'demand forecast of [medicine name]' for detailed stock run-out projections and reorder calculations.*"
+            )
+
+        return "📈 **Demand Forecasting:** No sales recorded in the past 30 days to generate forecast predictions. As sales happen, MediBot will automatically predict demand velocities and stock-out timelines."
+
+    # 4. PROFIT_MARGIN INTENT
+    if intent == 'PROFIT_MARGIN':
+        matching_meds = _fuzzy_match_medicines(clean_query, request=request)
+        if matching_meds:
+            lines = []
+            for med in matching_meds[:3]:
+                batches = med.batches.filter(quantity__gt=0)
+                if not batches.exists():
+                    batches = med.batches.all()
+
+                batches_with_cost = [b for b in batches if b.purchase_price and b.purchase_price > 0]
+                if batches_with_cost:
+                    latest_b = sorted(batches_with_cost, key=lambda b: b.id, reverse=True)[0]
+                    cost_price = latest_b.purchase_price
+                else:
+                    cost_price = Decimal('0.00')
+
+                selling_price = med.price or Decimal('0.00')
+                gross_profit = selling_price - cost_price if cost_price > 0 else Decimal('0.00')
+                margin_pct = ((gross_profit / selling_price) * Decimal('100.0')) if (selling_price > 0 and cost_price > 0) else Decimal('0.0')
+
+                start_30d = today - timedelta(days=30)
+                sales_30d = scoped_sales.filter(date__date__gte=start_30d, date__date__lte=today, status='Completed')
+                med_items = SaleItem.objects.filter(sale__in=sales_30d, medicine=med)
+                total_units_sold = med_items.aggregate(t=Sum('quantity'))['t'] or 0
+                med_30d_rev = sum((it.price * it.quantity for it in med_items), Decimal('0.00'))
+                med_30d_profit = sum(((it.price - (it.batch.purchase_price if it.batch and it.batch.purchase_price > 0 else cost_price)) * it.quantity for it in med_items), Decimal('0.00')) if cost_price > 0 else Decimal('0.00')
+
+                if margin_pct >= 40:
+                    badge = "💎 Ultra-High Margin"
+                elif margin_pct >= 25:
+                    badge = "🟢 High Margin"
+                elif margin_pct >= 10:
+                    badge = "🟡 Moderate Margin"
+                else:
+                    badge = "⚪ Low Margin / Standard"
+
+                po_btn = f"[[PO:{med.id}|Order {med.name}]]"
+                cost_display = f"Rs.{cost_price:.2f}" if cost_price > 0 else "N/A (No batch cost)"
+                profit_display = f"Rs.{gross_profit:.2f}" if cost_price > 0 else "N/A"
+                margin_display = f"{margin_pct:.1f}%" if cost_price > 0 else "N/A"
+
+                lines.append(
+                    f"### 💵 Profit & Margin Analysis: {med.name}\n"
+                    f"• **Selling Price (MRP):** **Rs.{selling_price:.2f}**\n"
+                    f"• **Estimated Cost Price:** **{cost_display}**\n"
+                    f"• **Gross Profit / Unit:** **{profit_display}** ({badge})\n"
+                    f"• **Profit Margin:** **{margin_display}**\n"
+                    f"• **30-Day Sales Volume:** **{total_units_sold} units** (Revenue: Rs.{med_30d_rev:.2f})\n"
+                    f"• **30-Day Gross Profit Earned:** **Rs.{med_30d_profit:.2f}**\n"
+                    f"• **Restock Action:** {po_btn}"
+                )
+            return "\n\n".join(lines)
+
+        # General profit ranking / leaderboard across all medicines
+        start_30d = today - timedelta(days=30)
+        sales_30d = scoped_sales.filter(date__date__gte=start_30d, date__date__lte=today, status='Completed')
+        items_30d = list(SaleItem.objects.filter(sale__in=sales_30d).select_related('medicine', 'batch'))
+
+        med_profit_rank = []
+        for med in scoped_meds:
+            batches = med.batches.filter(purchase_price__gt=0)
+            if batches.exists():
+                latest_b = batches.order_by('-id').first()
+                cost = latest_b.purchase_price
+                selling = med.price or Decimal('0.00')
+                unit_profit = selling - cost
+                margin = (unit_profit / selling * 100) if selling > 0 else Decimal('0.0')
+
+                m_items = [it for it in items_30d if it.medicine_id == med.id]
+                units_sold = sum((it.quantity for it in m_items), 0)
+                tot_profit = sum(((it.price - (it.batch.purchase_price if it.batch and it.batch.purchase_price > 0 else cost)) * it.quantity for it in m_items), Decimal('0.00'))
+
+                med_profit_rank.append({
+                    'med': med,
+                    'cost': cost,
+                    'selling': selling,
+                    'unit_profit': unit_profit,
+                    'margin': margin,
+                    'units_sold': units_sold,
+                    'tot_profit': tot_profit
+                })
+
+        if med_profit_rank:
+            med_profit_rank.sort(key=lambda x: (x['tot_profit'], x['margin']), reverse=True)
+            lines = []
+            for item in med_profit_rank[:5]:
+                m = item['med']
+                po_btn = f"[[PO:{m.id}|Reorder]]"
+                lines.append(
+                    f"• **{m.name}**: Margin: **{item['margin']:.1f}%** (Profit: **Rs.{item['unit_profit']:.2f}/unit**) | 30d Profit: **Rs.{item['tot_profit']:.2f}** {po_btn}"
+                )
+            return (
+                "💵 **Top High-Margin & Profitable Medicines:**\n\n" +
+                "\n".join(lines) +
+                "\n\n💡 *Tip: Ask 'profit of [medicine name]' for individual unit economics and reorder shortcuts.*"
+            )
+
+        return "💵 **Profit Analytics:** Please record batch purchase prices in your inventory to calculate profit margins and net earnings."
+
+    # 5. PATIENT_REFILL INTENT
+    if intent == 'PATIENT_REFILL':
+        matched_custs = _fuzzy_match_customers(raw_query, request=request)
+        if matched_custs:
+            lines = []
+            for c in matched_custs[:2]:
+                c_sales = scoped_sales.filter(customer=c, status='Completed').order_by('-date')[:5]
+                refill_items = []
+                for sale in c_sales:
+                    sale_date = sale.date.date()
+                    for it in sale.items.select_related('medicine').all():
+                        if not it.medicine:
+                            continue
+                        days_supply = 30 if it.quantity >= 20 else max(7, it.quantity)
+                        due_date = sale_date + timedelta(days=days_supply)
+                        days_diff = (due_date - today).days
+                        refill_items.append({
+                            'medicine': it.medicine,
+                            'last_date': sale_date,
+                            'qty': it.quantity,
+                            'due_date': due_date,
+                            'days_diff': days_diff
+                        })
+
+                if refill_items:
+                    refill_lines = []
+                    for r in refill_items[:3]:
+                        if r['days_diff'] < 0:
+                            status_str = f"⚠️ Overdue by {abs(r['days_diff'])} days ({r['due_date'].strftime('%d %b')})"
+                        elif r['days_diff'] <= 7:
+                            status_str = f"🔔 Due in {r['days_diff']} days ({r['due_date'].strftime('%d %b')})"
+                        else:
+                            status_str = f"🟢 Supply active ({r['days_diff']} days remaining)"
+
+                        wa_msg = f"Hello {c.name}, greeting from PharmaCare. Your refill for {r['medicine'].name} was due around {r['due_date'].strftime('%d %b')}. Would you like us to prepare your prescription?"
+                        wa_btn = f"[[WA:{c.contact_number}|{wa_msg}|Refill WhatsApp]]"
+                        refill_lines.append(f"  - **{r['medicine'].name}** (Qty: {r['qty']}) — {status_str} {wa_btn}")
+
+                    lines.append(
+                        f"### 🔔 Patient Refill Status: {c.name}\n"
+                        f"• **Contact Number:** `{c.contact_number}`\n"
+                        f"• **Refill Projections:**\n" + "\n".join(refill_lines)
+                    )
+                else:
+                    lines.append(f"### 🔔 Patient Refill Status: {c.name}\n• No prescription purchases found for refill tracking.")
+            return "\n\n".join(lines)
+
+        # General refill prediction across regular patients
+        start_60d = today - timedelta(days=60)
+        recent_sales = scoped_sales.filter(date__date__gte=start_60d, status='Completed', customer__isnull=False).select_related('customer').prefetch_related('items__medicine').order_by('-date')
+
+        refill_alerts = []
+        seen_pairs = set()
+        for sale in recent_sales:
+            c = sale.customer
+            if not c or not c.contact_number:
+                continue
+            sale_date = sale.date.date()
+            for it in sale.items.all():
+                if not it.medicine:
+                    continue
+                pair_key = (c.id, it.medicine.id)
+                if pair_key in seen_pairs:
+                    continue
+                seen_pairs.add(pair_key)
+
+                days_supply = 30 if it.quantity >= 20 else max(7, it.quantity)
+                due_date = sale_date + timedelta(days=days_supply)
+                days_diff = (due_date - today).days
+
+                if -14 <= days_diff <= 7:
+                    refill_alerts.append({
+                        'customer': c,
+                        'medicine': it.medicine,
+                        'due_date': due_date,
+                        'days_diff': days_diff,
+                        'qty': it.quantity
+                    })
+
+        if refill_alerts:
+            refill_alerts.sort(key=lambda x: x['days_diff'])
+            lines = []
+            for r in refill_alerts[:6]:
+                c = r['customer']
+                m = r['medicine']
+                if r['days_diff'] < 0:
+                    badge = f"⚠️ Overdue ({abs(r['days_diff'])}d ago)"
+                elif r['days_diff'] == 0:
+                    badge = "🔔 Due Today"
+                else:
+                    badge = f"⏰ Due in {r['days_diff']}d"
+
+                wa_msg = f"Hello {c.name}, greeting from PharmaCare. Your refill for {m.name} is scheduled for {r['due_date'].strftime('%d %b')}. Let us know if you need home delivery or pharmacy pickup!"
+                wa_btn = f"[[WA:{c.contact_number}|{wa_msg}|WhatsApp {c.name.split()[0]}]]"
+                lines.append(f"• **{c.name}** (`{c.contact_number}`) — **{m.name}** | {badge} {wa_btn}")
+
+            return (
+                f"🔔 **Patient Prescription Refill Alerts ({len(refill_alerts)} patients due):**\n\n" +
+                "\n".join(lines) +
+                "\n\n💡 *Tip: Click WhatsApp buttons to directly send instant prescription refill reminders to patients.*"
+            )
+
+        return "✅ **No Patient Refills Due:** All chronic and regular patients have active medication supplies for the next 7 days."
+
+    # 6. STOCK INTENT
+    if intent == 'STOCK':
+        if any(w in clean_query for w in ['low stock', 'out of stock', 'shortage', 'reorder', 'restock']):
+            low_meds = [m for m in scoped_meds if m.is_low_stock]
+            if not low_meds:
+                return "✅ **Good news!** There are currently no medicines in low stock in your inventory."
+            lines = [f"• **{m.name}**: {m.total_quantity} units remaining (Price: Rs.{m.price})" for m in low_meds[:12]]
+            return f"⚠️ **Low Stock Alert ({len(low_meds)} items need attention):**\n\n" + "\n".join(lines)
+
+        matching_meds = _fuzzy_match_medicines(clean_query, request=request)
+        if matching_meds:
+            lines = []
+            for m in matching_meds[:5]:
+                batches = m.batches.filter(quantity__gt=0).order_by('expiry_date')
+                b_info = ', '.join([f"`{b.batch_name}` (Qty: {b.quantity}, Exp: {b.expiry_date})" for b in batches]) if batches.exists() else "No active batches in stock"
+                stock_badge = "🟢 In Stock" if m.total_quantity >= 50 else ("🟠 Low Stock" if m.total_quantity > 0 else "🔴 Out of Stock")
+                lines.append(
+                    f"### 📦 {m.name} — Stock Details\n"
+                    f"• **Total Available Stock:** **{m.total_quantity} units** ({stock_badge})\n"
+                    f"• **Selling Price:** Rs.{m.price}\n"
+                    f"• **Category:** {m.category.name if m.category else 'General'}\n"
+                    f"• **Active Batches:** {b_info}"
+                )
+            return "\n\n".join(lines)
+        return f"📦 I could not find stock records matching **'{raw_query}'** in your pharmacy inventory."
+
+    # 7. PRICE INTENT
+    if intent == 'PRICE':
+        matching_meds = _fuzzy_match_medicines(clean_query, request=request)
+        if matching_meds:
+            lines = []
+            for m in matching_meds[:5]:
+                stock_badge = "🟢 In Stock" if m.total_quantity >= 50 else ("🟠 Low Stock" if m.total_quantity > 0 else "🔴 Out of Stock")
+                lines.append(
+                    f"### 💰 {m.name} — Pricing Details\n"
+                    f"• **Selling Price:** **Rs.{m.price}**\n"
+                    f"• **Availability:** {stock_badge} ({m.total_quantity} units in stock)\n"
+                    f"• **Category:** {m.category.name if m.category else 'General'}\n"
+                    f"• **Supplier:** {m.supplier.name if m.supplier else 'N/A'}"
+                )
+            return "\n\n".join(lines)
+        return f"💰 I could not find pricing records matching **'{raw_query}'** in your pharmacy inventory."
+
+    # 8. EXPIRY INTENT
+    if intent == 'EXPIRY':
+        is_specific_med = bool(re.search(r'\b(expiry|expiring|expiry date)\s+(of|for|about)\s+[a-zA-Z0-9]+', clean_query, flags=re.IGNORECASE))
+        if is_specific_med:
+            matching_meds = _fuzzy_match_medicines(clean_query, request=request)
+            if matching_meds:
+                lines = []
+                for m in matching_meds[:4]:
+                    batches = m.batches.filter(quantity__gt=0).order_by('expiry_date')
+                    b_info = ', '.join([f"`{b.batch_name}` (Qty: {b.quantity}, Exp: {b.expiry_date})" for b in batches]) if batches.exists() else "No active batches in stock"
+                    lines.append(
+                        f"### ⏰ {m.name} — Expiry & Batch Details\n"
+                        f"• **Current Stock:** {m.total_quantity} units\n"
+                        f"• **Active Batches & Expiry Dates:** {b_info}"
+                    )
+                return "\n\n".join(lines)
+
         exp_batches = Batch.objects.filter(
+            medicine__in=scoped_meds,
             expiry_date__gte=today,
             expiry_date__lte=today + timedelta(days=30),
             quantity__gt=0
         ).select_related('medicine').order_by('expiry_date')
         if not exp_batches.exists():
-            return "✅ No medicine batches are expiring within the next 30 days."
+            return "✅ **Good news!** No medicine batches in your inventory are expiring within the next 30 days."
         lines = [f"• **{b.medicine.name}** (Batch: `{b.batch_name}`) — Qty: **{b.quantity}**, Exp: **{b.expiry_date}**" for b in exp_batches[:10]]
         return f"⏰ **Medicines Expiring Soon (Next 30 Days):**\n\n" + "\n".join(lines)
 
-    # Check for sales / revenue
-    if any(w in clean_query for w in ['sales', 'revenue', 'earning', 'sold today', 'today\'s sale', 'today sale', 'sale record']):
-        today_sales = Sale.objects.filter(date__date=today, status='Completed')
+    # 9. SALES & REVENUE INTENT
+    if intent == 'SALES_REVENUE':
+        if any(w in clean_query for w in ['month revenue', 'monthly revenue', 'revenue this month', 'this month sale', 'this month sales']):
+            start_of_month = today.replace(day=1)
+            month_sales = scoped_sales.filter(date__date__gte=start_of_month, date__date__lte=today, status='Completed')
+            m_count = month_sales.count()
+            m_rev = sum((s.total_price for s in month_sales), Decimal('0.00'))
+            return (
+                f"💰 **Monthly Revenue Summary ({today.strftime('%B %Y')}):**\n\n"
+                f"• **Completed Invoices:** {m_count}\n"
+                f"• **Total Revenue Earned:** Rs.{m_rev:.2f}"
+            )
+        today_sales = scoped_sales.filter(date__date=today, status='Completed')
         count = today_sales.count()
         rev = sum((s.total_price for s in today_sales), Decimal('0.00'))
         return (
@@ -2993,206 +3691,72 @@ def _fallback_database_reply(prompt):
             f"• **Total Revenue Earned:** Rs.{rev:.2f}"
         )
 
-    # Check for suppliers
-    if any(w in clean_query for w in ['supplier', 'suppliers', 'vendor', 'distributor']) and not any(w in clean_query for w in ['paracetamol', 'medicine', 'stock', 'price']):
-        suppliers = Supplier.objects.all()[:8]
+    # 10. SUPPLIERS
+    if intent == 'SUPPLIERS':
+        suppliers = scoped_suppliers[:8]
+        if not suppliers.exists():
+            return "🏢 No suppliers are currently registered in your pharmacy account."
         lines = [f"• **{s.name}** (Phone: {s.contact_number or 'N/A'}, City: {s.location or 'N/A'})" for s in suppliers]
-        return f"🏢 **Registered Suppliers ({suppliers.count()} total):**\n\n" + "\n".join(lines)
+        return f"🏢 **Registered Suppliers ({scoped_suppliers.count()} total):**\n\n" + "\n".join(lines)
 
-    # Check for categories
-    if any(w in clean_query for w in ['category', 'categories', 'medicine type']) and not any(w in clean_query for w in ['stock', 'price', 'expiry']):
-        cats = Category.objects.all()[:12]
+    # 11. CATEGORIES
+    if intent == 'CATEGORIES':
+        cats = scoped_categories[:12]
+        if not cats.exists():
+            return "📑 No medicine categories are currently registered in your pharmacy account."
         lines = [f"• **{c.name}**" for c in cats]
-        return f"📑 **Medicine Categories ({cats.count()} total):**\n\n" + "\n".join(lines)
+        return f"📑 **Medicine Categories ({scoped_categories.count()} total):**\n\n" + "\n".join(lines)
 
-    # 2. Fuzzy Medicine Matching for all specific medicine queries
-    matching_meds = _find_fuzzy_medicine_matches(clean_query)
+    # 12. HELP
+    if intent == 'HELP':
+        return (
+            "🤖 **MediBot Quick Commands & Capabilities:**\n\n"
+            "• **Stock:** *'stock of Paracetamol'* or *'show low stock'*\n"
+            "• **Price:** *'price of Azithromycin'*\n"
+            "• **Customer Details:** *'customer Rahul'* or *'phone 9876543210'*\n"
+            "• **Profit Margins:** *'profit of Paracetamol'* or *'most profitable medicines'*\n"
+            "• **Patient Refills:** *'patient refill alerts'* or *'refill for Rahul'*\n"
+            "• **Demand Forecasting:** *'demand forecast of Paracetamol'* or *'fast selling medicines'*\n"
+            "• **Medical Uses:** *'use of Paracetamol'*\n"
+            "• **Side Effects & Disadvantages:** *'disadvantage of Paracetamol'*\n"
+            "• **Dosage Guidelines:** *'dosage of Paracetamol'*\n"
+            "• **Pregnancy Safety:** *'is Paracetamol safe during pregnancy'*\n"
+            "• **Expiry Alerts:** *'what medicines are expiring soon'*\n"
+            "• **Sales & Revenue:** *'Today\'s sales'* or *'Monthly revenue'*\n"
+            "• You can also use the **Mic 🎤** to ask questions in English or Hindi!"
+        )
 
-    # If medical information was specifically requested
-    if is_medical_intent and matching_meds:
-        top_med = matching_meds[0]
-        med_base = top_med.name.split()[0].lower()
-        # Look up in medical knowledge base
-        med_desc = MEDICAL_INFO.get(med_base)
-        if not med_desc:
-            # Fuzzy match in MEDICAL_INFO keys
-            close_keys = difflib.get_close_matches(med_base, list(MEDICAL_INFO.keys()), n=1, cutoff=0.7)
-            if close_keys:
-                med_desc = MEDICAL_INFO[close_keys[0]]
+    # 13. GENERAL SEARCH OR FALLBACK
+    # 13a. Check if matches a customer
+    matching_custs = _fuzzy_match_customers(raw_query, request=request)
+    if matching_custs:
+        return _format_customer_card(matching_custs, scoped_sales)
 
-        if med_desc:
-            stock_note = f"\n\n**Live Pharmacy Stock:** We currently have **{top_med.total_quantity} units** of {top_med.name} in stock at **Rs.{top_med.price}**."
-            return (
-                f"### ℹ️ Medical Information: {top_med.name}\n\n"
-                f"{med_desc}{stock_note}\n\n"
-                "⚠️ *Safety Disclaimer: Always consult a licensed medical doctor or pharmacist before starting or stopping any medication.*"
-            )
-
-    # If matching medicines are found for stock, price, expiry, or availability
+    # 13b. Check if matches a medicine
+    matching_meds = _fuzzy_match_medicines(clean_query, request=request)
     if matching_meds:
         lines = []
-        for m in matching_meds[:6]:
+        for m in matching_meds[:5]:
             batches = m.batches.filter(quantity__gt=0).order_by('expiry_date')
             b_info = ', '.join([f"`{b.batch_name}` (Qty: {b.quantity}, Exp: {b.expiry_date})" for b in batches]) if batches.exists() else "No active batches in stock"
             stock_badge = "🟢 In Stock" if m.total_quantity >= 50 else ("🟠 Low Stock" if m.total_quantity > 0 else "🔴 Out of Stock")
-
-            # Intent-specific highlighting
-            if is_expiry_intent and not is_price_intent:
-                lines.append(
-                    f"### ⏰ {m.name} — Expiry & Batch Details\n"
-                    f"• **Current Stock:** {m.total_quantity} units ({stock_badge})\n"
-                    f"• **Active Batches & Expiry Dates:** {b_info}\n"
-                    f"• **Selling Price:** Rs.{m.price}\n"
-                    f"• **Supplier:** {m.supplier.name if m.supplier else 'N/A'}"
-                )
-            elif is_price_intent and not is_stock_intent:
-                lines.append(
-                    f"### 💰 {m.name} — Pricing Details\n"
-                    f"• **Selling Price:** **Rs.{m.price}**\n"
-                    f"• **Availability:** {stock_badge} ({m.total_quantity} units in stock)\n"
-                    f"• **Category:** {m.category.name if m.category else 'General'}\n"
-                    f"• **Active Batches:** {b_info}"
-                )
-            elif is_stock_intent and not is_price_intent:
-                lines.append(
-                    f"### 📦 {m.name} — Stock Details\n"
-                    f"• **Total Available Stock:** **{m.total_quantity} units** ({stock_badge})\n"
-                    f"• **Selling Price:** Rs.{m.price}\n"
-                    f"• **Category:** {m.category.name if m.category else 'General'}\n"
-                    f"• **Active Batches:** {b_info}"
-                )
-            else:
-                # Combined Stock & Price Overview
-                lines.append(
-                    f"### 💊 {m.name}\n"
-                    f"• **Status:** {stock_badge} (**{m.total_quantity} units** available)\n"
-                    f"• **Selling Price:** **Rs.{m.price}**\n"
-                    f"• **Category:** {m.category.name if m.category else 'General'}\n"
-                    f"• **Supplier:** {m.supplier.name if m.supplier else 'N/A'}\n"
-                    f"• **Active Batches:** {b_info}"
-                )
+            lines.append(
+                f"### 💊 {m.name}\n"
+                f"• **Status:** {stock_badge} (**{m.total_quantity} units** in stock)\n"
+                f"• **Selling Price:** **Rs.{m.price}**\n"
+                f"• **Category:** {m.category.name if m.category else 'General'}\n"
+                f"• **Supplier:** {m.supplier.name if m.supplier else 'N/A'}\n"
+                f"• **Active Batches:** {b_info}"
+            )
         return "\n\n".join(lines)
 
-    # Check for general help / greeting
-    if any(w in clean_query for w in ['help', 'command', 'commands', 'hello', 'hi', 'hey']):
-        return (
-            "🤖 **MediBot Quick Voice & Text Commands:**\n\n"
-            "• Stock & Price: *'whatis the stock of paracetmol'*\n"
-            "• Expiry Check: *'expiry of amoxicilin'*\n"
-            "• Price Check: *'price of cetrizine'*\n"
-            "• Low Stock Alert: *'Show low stock items'*\n"
-            "• Sales Summary: *'Today\'s sales'*\n"
-            "• Medical Info: *'What is Azithromycin used for?'*\n"
-            "• Speak naturally using the **Mic 🎤** in English or Hindi!"
-        )
+    # 13c. Check if matches a supplier
+    matching_sups = _fuzzy_match_suppliers(clean_query, request=request)
+    if matching_sups:
+        lines = [f"• **{s.name}** (Phone: {s.contact_number or 'N/A'}, City: {s.location or 'N/A'}, Email: {s.email or 'N/A'})" for s in matching_sups[:5]]
+        return f"🏢 **Supplier Details:**\n\n" + "\n".join(lines)
 
-    return f"I could not find medicine records matching **'{raw_query}'**. Try searching by medicine name (e.g. *Paracetamol*, *Amoxicillin*, *Cetirizine*, *Azithromycin*) or ask *'Show low stock'* or *'Today\'s sales'*."
-
-
-_vosk_model_instance = None
-
-def _get_vosk_model():
-    """Lazy-load local offline Vosk speech model from local disk."""
-    global _vosk_model_instance
-    if _vosk_model_instance is None:
-        try:
-            import vosk, os
-            vosk.SetLogLevel(-1)
-            model_path = os.path.expanduser('~/.cache/vosk/vosk-model-small-en-us-0.15')
-            if os.path.exists(model_path):
-                _vosk_model_instance = vosk.Model(model_path)
-            else:
-                _vosk_model_instance = vosk.Model(lang="en-us")
-        except Exception as e:
-            logger.warning("Vosk model initialization: %s", e)
-    return _vosk_model_instance
-
-
-def _transcribe_audio_fallback(audio_b64, audio_mime='audio/wav'):
-    """
-    Transcribe audio recording using local offline Vosk engine first,
-    then Google Speech API as fallback.
-    100% offline-capable, works behind firewalls (e.g. SonicWall) without internet!
-    """
-    import base64, io, tempfile, os, json, wave
-    try:
-        clean_b64 = audio_b64.split(',', 1)[1] if ',' in audio_b64 else audio_b64
-        audio_bytes = base64.b64decode(clean_b64)
-        if len(audio_bytes) < 400:
-            return ""
-
-        # 1. Local Offline Vosk Speech Recognition (Fast, 0 network dependency)
-        try:
-            model = _get_vosk_model()
-            if model:
-                import vosk
-                if audio_bytes.startswith(b'RIFF'):
-                    wf = wave.open(io.BytesIO(audio_bytes), "rb")
-                    sample_rate = wf.getframerate()
-                    rec = vosk.KaldiRecognizer(model, sample_rate)
-                    rec.SetWords(True)
-                    transcribed_chunks = []
-                    while True:
-                        data = wf.readframes(4000)
-                        if len(data) == 0:
-                            break
-                        if rec.AcceptWaveform(data):
-                            res = json.loads(rec.Result())
-                            if res.get("text"):
-                                transcribed_chunks.append(res["text"])
-                    final_res = json.loads(rec.FinalResult())
-                    if final_res.get("text"):
-                        transcribed_chunks.append(final_res["text"])
-                    vosk_text = " ".join(transcribed_chunks).strip()
-                    if vosk_text:
-                        return vosk_text
-                else:
-                    rec = vosk.KaldiRecognizer(model, 16000)
-                    rec.SetWords(True)
-                    chunk_size = 8000
-                    transcribed_chunks = []
-                    for i in range(0, len(audio_bytes), chunk_size):
-                        chunk = audio_bytes[i:i+chunk_size]
-                        if rec.AcceptWaveform(chunk):
-                            res = json.loads(rec.Result())
-                            if res.get("text"):
-                                transcribed_chunks.append(res["text"])
-                    final_res = json.loads(rec.FinalResult())
-                    if final_res.get("text"):
-                        transcribed_chunks.append(final_res["text"])
-                    vosk_text = " ".join(transcribed_chunks).strip()
-                    if vosk_text:
-                        return vosk_text
-        except Exception as ve:
-            logger.warning("Vosk transcription note: %s", ve)
-
-        # 2. Cloud Google Speech Fallback
-        try:
-            import speech_recognition as sr
-            r = sr.Recognizer()
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
-                tmp.write(audio_bytes)
-                tmp_path = tmp.name
-            try:
-                with sr.AudioFile(tmp_path) as source:
-                    audio_data = r.record(source)
-                    try:
-                        return r.recognize_google(audio_data, language='en-IN').strip()
-                    except sr.UnknownValueError:
-                        return r.recognize_google(audio_data, language='hi-IN').strip()
-            finally:
-                if os.path.exists(tmp_path):
-                    try:
-                        os.remove(tmp_path)
-                    except Exception:
-                        pass
-        except Exception as se:
-            logger.warning("Cloud speech fallback note: %s", se)
-
-    except Exception as e:
-        logger.warning("Local audio transcription note: %s", e)
-
-    return ""
+    return f"I could not find matching records for **'{raw_query}'**. Try asking about medicine stock (e.g. *'stock of Paracetamol'*), customer info (*'customer Neeraj Sharma'*), pricing, medical info (*'use of Amoxicillin'*), or expiry alerts (*'expiring soon'*)."
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -3200,73 +3764,47 @@ def _transcribe_audio_fallback(audio_b64, audio_mime='audio/wav'):
 @require_POST
 def chatbot_api(request):
     """
-    Intelligent Pharmacy Chatbot API endpoint:
-    Supports:
-      1. Server-Sent Events (SSE) real-time streaming when stream=True
-      2. Multimodal Neural Audio queries (MediaRecorder WebM/WAV) with Gemini transcription & answering
-      3. Standard JSON requests for API & unit testing
+    Clean, robust MediBot API endpoint with AI intent classification,
+    targeted context grounding, and clinical/inventory routing.
     """
     try:
         body = json.loads(request.body) if request.body else {}
         raw_msg = body.get('message', '').strip() if isinstance(body, dict) else ''
-        audio_b64 = body.get('audio', '').strip() if isinstance(body, dict) else ''
-        audio_mime = body.get('mime', 'audio/wav') if isinstance(body, dict) else 'audio/wav'
-        stream_mode = body.get('stream', False) if isinstance(body, dict) else False
     except (json.JSONDecodeError, AttributeError):
-        return JsonResponse({'reply': 'Invalid request format.', 'type': 'text'}, status=400)
+        return JsonResponse({'reply': 'Invalid request format.', 'status': 'error'}, status=400)
 
-    if not raw_msg and not audio_b64:
-        return JsonResponse({'reply': 'Please type a question or speak into the microphone.', 'type': 'text'}, status=400)
+    if not raw_msg:
+        return JsonResponse({'reply': 'Please type a question or speak into the microphone.', 'status': 'error'}, status=400)
 
-    # 1. Fetch live pharmacy database context
-    db_context = _build_pharmacy_db_context(raw_msg)
+    session = getattr(request, 'session', None)
+    intent_info = _classify_query_intent(raw_msg, session=session)
 
-    # 2. Audio query handling (Dual-engine voice recorder fallback)
-    if audio_b64:
-        result = _call_gemini_api('', db_context=db_context, audio_b64=audio_b64, audio_mime=audio_mime)
-        user_query = ""
-        reply = ""
+    # 1. Call AI model (with intent framing and context)
+    ai_reply = _call_gemini_api(raw_msg, intent_info=intent_info, request=request)
 
-        if result and isinstance(result, tuple):
-            reply, user_query = result
-        elif result and isinstance(result, str):
-            reply = result
+    # 2. Fallback to local rule/medical engine if AI call is unavailable
+    final_reply_text = ai_reply if ai_reply else _medibot_local_engine(raw_msg, request=request)
+    formatted_html = _format_markdown_to_html(final_reply_text)
+
+    # Context entity persistence in session
+    if session is not None:
+        if intent_info.get('med_key'):
+            session['medibot_last_med_key'] = intent_info['med_key']
         else:
-            # Transcribe audio using Python speech_recognition
-            user_query = _transcribe_audio_fallback(audio_b64, audio_mime)
-            if user_query:
-                reply = _fallback_database_reply(user_query)
+            matched_meds = _fuzzy_match_medicines(raw_msg, request=request)
+            if matched_meds:
+                session['medibot_last_med_key'] = matched_meds[0].name.lower()
 
-        if user_query or reply:
-            return JsonResponse({
-                'reply': _format_bot_markdown(reply or "I heard you, but could not find matching records."),
-                'user_query': user_query,
-                'type': 'audio_response'
-            })
-        else:
-            return JsonResponse({
-                'reply': '⚠️ Could not detect clear voice audio. Please speak a little closer to the mic or type your question.',
-                'user_query': '',
-                'type': 'audio_response'
-            }, status=200)
+        matched_custs = _fuzzy_match_customers(raw_msg, request=request)
+        if matched_custs:
+            session['medibot_last_cust_name'] = matched_custs[0].name
+        session.modified = True
 
-    # 3. Stream mode via SSE if requested
-    if stream_mode:
-        response = StreamingHttpResponse(
-            _stream_gemini_sse(raw_msg, db_context=db_context),
-            content_type='text/event-stream'
-        )
-        response['Cache-Control'] = 'no-cache'
-        response['X-Accel-Buffering'] = 'no'
-        return response
-
-    # 4. Standard JSON response (for tests and non-stream clients)
-    gemini_reply = _call_gemini_api(raw_msg)
-    if isinstance(gemini_reply, tuple):
-        gemini_reply = gemini_reply[0]
-
-    final_reply = gemini_reply if gemini_reply else _fallback_database_reply(raw_msg)
-    return JsonResponse({'reply': _format_bot_markdown(final_reply), 'type': 'text'})
+    return JsonResponse({
+        'reply': formatted_html,
+        'raw_text': final_reply_text,
+        'status': 'success'
+    })
 
 
 

@@ -180,7 +180,7 @@ RESEND_FROM_EMAIL = config('RESEND_FROM_EMAIL', default='PharmaCare <onboarding@
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 CELERY_TIMEZONE = os.environ.get('CELERY_TIMEZONE', 'UTC')
 
-# Gemini chatbot configuration.
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
-GEMINI_MODEL = os.environ.get('GEMINI_MODEL', 'gemini-flash-lite-latest')
+# Gemini chatbot configuration
+GEMINI_API_KEY = config('GEMINI_API_KEY', default=os.environ.get('GEMINI_API_KEY', ''))
+GEMINI_MODEL = config('GEMINI_MODEL', default=os.environ.get('GEMINI_MODEL', 'gemini-flash-lite-latest'))
 

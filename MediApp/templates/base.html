@@ -380,62 +380,72 @@
     }
 
     /* ═══════════════════════════════════════════════
-       MEDIBOT CHATBOT STYLES
+       MEDIBOT AI PHARMACY ASSISTANT — MODERN STYLES
     ═══════════════════════════════════════════════ */
 
-    /* FAB (Floating Action Button) */
+    /* Floating Action Button (FAB) */
     #medibot-fab {
         position: fixed;
-        bottom: 28px;
-        right: 28px;
+        bottom: 26px;
+        right: 26px;
         z-index: 9990;
-        width: 60px;
-        height: 60px;
+        width: 62px;
+        height: 62px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #0891b2, #6366f1);
-        color: white;
+        background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
+        color: #ffffff;
         border: none;
         cursor: pointer;
-        box-shadow: 0 8px 24px rgba(8,145,178,0.45);
+        box-shadow: 0 10px 28px rgba(13, 148, 136, 0.42), 0 4px 10px rgba(79, 70, 229, 0.28);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 26px;
-        transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
-        animation: fabPulse 2.5s infinite;
+        font-size: 28px;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        animation: medibotFabPulse 3s infinite;
     }
     #medibot-fab:hover {
-        transform: scale(1.12);
-        box-shadow: 0 12px 32px rgba(8,145,178,0.6);
+        transform: scale(1.1) translateY(-3px);
+        box-shadow: 0 16px 36px rgba(13, 148, 136, 0.55), 0 6px 14px rgba(79, 70, 229, 0.35);
         animation: none;
     }
-    @keyframes fabPulse {
-        0%,100% { box-shadow: 0 8px 24px rgba(8,145,178,0.45); }
-        50%      { box-shadow: 0 8px 32px rgba(99,102,241,0.6); }
+    #medibot-fab .fab-badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 14px;
+        height: 14px;
+        background: #10b981;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #10b981;
+    }
+    @keyframes medibotFabPulse {
+        0%, 100% { box-shadow: 0 10px 28px rgba(13, 148, 136, 0.42), 0 4px 10px rgba(79, 70, 229, 0.28); }
+        50% { box-shadow: 0 14px 34px rgba(79, 70, 229, 0.55), 0 6px 16px rgba(13, 148, 136, 0.35); }
     }
 
-    /* Chat Panel */
+    /* Chat Panel Window */
     #medibot-panel {
         position: fixed;
-        bottom: 100px;
-        right: 28px;
+        bottom: 98px;
+        right: 26px;
         z-index: 9991;
-        width: 400px;
+        width: 420px;
         max-width: calc(100vw - 32px);
-        height: 580px;
+        height: 600px;
         max-height: calc(100vh - 120px);
-        border-radius: 20px;
-        background: rgba(255,255,255,0.92);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        box-shadow: 0 24px 64px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.6);
+        border-radius: 24px;
+        background: #ffffff;
+        box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(226, 232, 240, 0.9);
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        transform: translateY(30px) scale(0.95);
+        transform: translateY(24px) scale(0.94);
         opacity: 0;
         pointer-events: none;
-        transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease;
+        transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.24s ease;
+        font-family: 'Poppins', system-ui, -apple-system, sans-serif;
     }
     #medibot-panel.open {
         transform: translateY(0) scale(1);
@@ -445,370 +455,416 @@
 
     /* Header */
     .medibot-header {
-        background: linear-gradient(135deg, #0891b2 0%, #6366f1 100%);
-        padding: 16px 20px;
+        background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
+        padding: 14px 18px;
         display: flex;
         align-items: center;
         gap: 12px;
         flex-shrink: 0;
+        color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
     }
-    .medibot-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.25);
+    .medibot-avatar-box {
+        position: relative;
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(8px);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: 22px;
         flex-shrink: 0;
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    .medibot-title { color: white; }
-    .medibot-title h3 { font-size: 16px; font-weight: 700; margin: 0; line-height: 1.2; }
-    .medibot-title p  { font-size: 11px; opacity: 0.85; margin: 0; }
-    .medibot-close {
-        background: rgba(255,255,255,0.18);
-        border: none;
-        color: white;
-        width: 32px;
-        height: 32px;
+    .medibot-avatar-box .online-dot {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 10px;
+        height: 10px;
+        background: #22c55e;
+        border: 2px solid #ffffff;
         border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        transition: background 0.2s;
     }
-    .medibot-close:hover { background: rgba(255,255,255,0.32); }
-
-    .medibot-head-btn {
-        background: rgba(255,255,255,0.18);
-        border: none;
-        color: white;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 15px;
-        transition: all 0.2s;
+    .medibot-title-box {
+        flex: 1;
+        min-width: 0;
     }
-    .medibot-head-btn:hover { background: rgba(255,255,255,0.32); transform: scale(1.05); }
-    .medibot-head-btn.active { background: rgba(255,255,255,0.92); color: #0891b2; box-shadow: 0 0 8px rgba(255,255,255,0.6); }
-
-    .medibot-msg-actions {
+    .medibot-title-box h3 {
+        font-size: 15.5px;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.2;
         display: flex;
         align-items: center;
         gap: 6px;
-        margin-top: 6px;
-        padding-top: 4px;
-        border-top: 1px dashed rgba(8,145,178,0.25);
+        color: #ffffff;
     }
-    .medibot-action-btn {
-        background: rgba(255,255,255,0.85);
-        border: 1px solid #bae6fd;
-        border-radius: 12px;
-        color: #0891b2;
-        padding: 2px 8px;
-        font-size: 11px;
+    .medibot-title-box h3 .ai-pill {
+        font-size: 10px;
         font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
+        padding: 1px 6px;
+        background: rgba(255, 255, 255, 0.22);
+        border-radius: 10px;
+        letter-spacing: 0.5px;
+    }
+    .medibot-title-box p {
+        font-size: 11.5px;
+        opacity: 0.9;
+        margin: 2px 0 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    .medibot-header-actions {
+        display: flex;
         align-items: center;
-        gap: 4px;
-        transition: all 0.2s;
+        gap: 6px;
     }
-    .medibot-action-btn:hover {
-        background: #0891b2;
+    .medibot-icon-btn {
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.22);
         color: white;
-        border-color: #0891b2;
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s ease;
     }
-    .medibot-action-btn.speaking {
-        background: #ef4444 !important;
-        color: white !important;
-        border-color: #dc2626 !important;
-        animation: pulseSpeaker 1s infinite;
+    .medibot-icon-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.06);
     }
-    @keyframes pulseSpeaker {
-        0%,100% { opacity: 1; }
-        50% { opacity: 0.7; }
-    }
-    @keyframes medibotBlink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0; }
+    .medibot-icon-btn.active {
+        background: #ffffff;
+        color: #0d9488;
+        border-color: #ffffff;
     }
 
-    /* Messages */
+    /* Message History Area */
     .medibot-messages {
         flex: 1;
         overflow-y: auto;
         padding: 16px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
+        background: #f8fafc;
         scroll-behavior: smooth;
     }
-    .medibot-messages::-webkit-scrollbar { width: 4px; }
-    .medibot-messages::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+    .medibot-messages::-webkit-scrollbar { width: 5px; }
+    .medibot-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .medibot-messages::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    /* Bubbles */
-    .msg-bot, .msg-user {
-        max-width: 88%;
-        padding: 10px 14px;
-        border-radius: 16px;
+    /* Message Bubble Styles */
+    .medibot-msg-row {
+        display: flex;
+        width: 100%;
+    }
+    .medibot-msg-row.user { justify-content: flex-end; }
+    .medibot-msg-row.bot { justify-content: flex-start; }
+
+    .msg-bubble {
+        max-width: 86%;
+        padding: 11px 15px;
+        border-radius: 18px;
         font-size: 13.5px;
-        line-height: 1.5;
-        animation: bubbleIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        line-height: 1.55;
+        position: relative;
+        word-break: break-word;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        animation: medibotBubblePop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    @keyframes bubbleIn {
-        from { transform: scale(0.85) translateY(8px); opacity: 0; }
-        to   { transform: scale(1) translateY(0); opacity: 1; }
+    @keyframes medibotBubblePop {
+        from { transform: scale(0.9) translateY(8px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
     }
-    .msg-bot {
-        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-        border: 1px solid #bae6fd;
-        color: #0c4a6e;
+    .medibot-msg-row.bot .msg-bubble {
+        background: #ffffff;
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
         border-bottom-left-radius: 4px;
-        align-self: flex-start;
     }
-    .msg-user {
-        background: linear-gradient(135deg, #0891b2, #6366f1);
-        color: white;
+    .medibot-msg-row.user .msg-bubble {
+        background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
+        color: #ffffff;
         border-bottom-right-radius: 4px;
-        align-self: flex-end;
     }
 
-    /* Table inside bot message */
-    .medibot-table-wrap { overflow-x: auto; margin-top: 8px; }
+    .msg-timestamp {
+        font-size: 10px;
+        opacity: 0.65;
+        margin-top: 4px;
+        display: block;
+        text-align: right;
+    }
+    .medibot-msg-row.bot .msg-timestamp { text-align: left; }
+
+    /* Bot Message Content Formatting */
+    .msg-bubble strong { font-weight: 600; }
+    .msg-bubble ul, .msg-bubble ol { margin: 6px 0 6px 18px; padding: 0; }
+    .msg-bubble li { margin-bottom: 3px; }
+    .msg-bubble p { margin: 0 0 6px 0; }
+    .msg-bubble p:last-child { margin-bottom: 0; }
+    .msg-bubble code {
+        background: rgba(15, 23, 42, 0.06);
+        padding: 2px 5px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-family: monospace;
+    }
+
+    /* Bot Tables */
+    .medibot-table-wrap {
+        overflow-x: auto;
+        margin: 8px 0 4px 0;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
     .medibot-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 12px;
-        border-radius: 8px;
-        overflow: hidden;
+        background: #ffffff;
     }
     .medibot-table th {
-        background: #0891b2;
-        color: white;
-        padding: 6px 8px;
+        background: #0d9488;
+        color: #ffffff;
+        padding: 6px 10px;
         text-align: left;
         font-weight: 600;
-        text-transform: none;
-        font-size: 11px;
-        letter-spacing: 0;
+        font-size: 11.5px;
     }
     .medibot-table td {
-        padding: 5px 8px;
-        border-top: 1px solid #e0f2fe;
-        color: #0c4a6e;
+        padding: 6px 10px;
+        border-top: 1px solid #f1f5f9;
+        color: #334155;
     }
-    .medibot-table tr:nth-child(even) td { background: rgba(8,145,178,0.05); }
+    .medibot-table tr:nth-child(even) td { background: #f8fafc; }
 
-    /* Link button inside bot message */
-    .medibot-link-btn {
-        display: inline-flex;
+    /* Action Buttons Under Bot Messages */
+    .msg-actions {
+        display: flex;
         align-items: center;
         gap: 6px;
         margin-top: 8px;
-        padding: 8px 16px;
-        background: linear-gradient(135deg, #0891b2, #6366f1);
-        color: white;
-        border-radius: 8px;
-        text-decoration: none;
-        font-size: 13px;
-        font-weight: 600;
-        transition: opacity 0.2s, transform 0.2s;
+        padding-top: 6px;
+        border-top: 1px dashed #e2e8f0;
     }
-    .medibot-link-btn:hover { opacity: 0.88; transform: scale(1.03); }
+    .msg-action-btn {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        color: #475569;
+        padding: 3px 9px;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.15s ease;
+    }
+    .msg-action-btn:hover {
+        background: #e0f2fe;
+        color: #0284c7;
+        border-color: #bae6fd;
+    }
+    .msg-action-btn.speaking {
+        background: #fee2e2;
+        color: #dc2626;
+        border-color: #fca5a5;
+        animation: medibotSpeakerPulse 1.2s infinite;
+    }
+    @keyframes medibotSpeakerPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.65; }
+    }
 
-    /* Quick chips */
-    .medibot-chips {
-        padding: 8px 14px 10px;
+    /* Quick Action Chips */
+    .medibot-chips-bar {
+        padding: 8px 12px;
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
         background: #f8fafc;
         border-top: 1px solid #e2e8f0;
-        flex-shrink: 0;
-        max-height: 160px;
+        max-height: 82px;
         overflow-y: auto;
+        flex-shrink: 0;
     }
-    .medibot-chips::-webkit-scrollbar { width: 3px; }
-    .medibot-chips::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
-    .medibot-chips-label {
-        width: 100%;
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        color: #94a3b8;
-        padding: 2px 0 0;
-    }
+    .medibot-chips-bar::-webkit-scrollbar { width: 4px; }
+    .medibot-chips-bar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
     .medibot-chip {
-        background: white;
-        border: 1.5px solid #bae6fd;
-        color: #0891b2;
-        border-radius: 20px;
-        padding: 4px 12px;
-        font-size: 11.5px;
+        background: #ffffff;
+        border: 1px solid #ccfbf1;
+        color: #0f766e;
+        border-radius: 12px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
-        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
     }
     .medibot-chip:hover {
-        background: #0891b2;
-        color: white;
-        border-color: #0891b2;
-        transform: scale(1.05);
+        background: #0d9488;
+        color: #ffffff;
+        border-color: #0d9488;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
     }
 
-    /* Input area */
+    /* Live Voice Listening Bar */
+    .medibot-voice-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        background: #f0fdf4;
+        border-top: 1px solid #bbf7d0;
+        font-size: 12px;
+        color: #166534;
+        animation: medibotBubblePop 0.2s ease;
+        flex-shrink: 0;
+    }
+    .voice-waves {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+    .voice-bar-line {
+        width: 3px;
+        height: 14px;
+        background: #22c55e;
+        border-radius: 2px;
+        animation: medibotWave 0.7s ease-in-out infinite alternate;
+    }
+    .voice-bar-line:nth-child(1) { animation-delay: 0.1s; height: 8px; }
+    .voice-bar-line:nth-child(2) { animation-delay: 0.3s; height: 18px; }
+    .voice-bar-line:nth-child(3) { animation-delay: 0.15s; height: 12px; }
+    .voice-bar-line:nth-child(4) { animation-delay: 0.4s; height: 16px; }
+    .voice-bar-line:nth-child(5) { animation-delay: 0.2s; height: 10px; }
+    @keyframes medibotWave {
+        0% { transform: scaleY(0.3); opacity: 0.5; }
+        100% { transform: scaleY(1.4); opacity: 1; }
+    }
+
+    /* Typing Indicator */
+    .medibot-typing-bubble {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 10px 16px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .typing-dot {
+        width: 7px;
+        height: 7px;
+        background: #0d9488;
+        border-radius: 50%;
+        animation: medibotDotBounce 1.2s infinite ease-in-out;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes medibotDotBounce {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+        30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* Input Footer Area */
     .medibot-input-area {
-        padding: 12px 16px;
+        padding: 10px 14px;
         border-top: 1px solid #e2e8f0;
         display: flex;
+        align-items: center;
         gap: 8px;
-        background: white;
+        background: #ffffff;
         flex-shrink: 0;
     }
     #medibot-input {
         flex: 1;
         padding: 10px 14px;
-        border: 2px solid #e2e8f0;
-        border-radius: 24px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 22px;
         font-size: 13.5px;
         outline: none;
-        font-family: 'Poppins', sans-serif;
-        transition: border-color 0.2s;
+        font-family: inherit;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        color: #1e293b;
+        background: #f8fafc;
     }
-    #medibot-input:focus { border-color: #0891b2; }
-    .medibot-input-area.listening-active #medibot-input {
-        border-color: #ef4444;
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
-        background: #fffafa;
+    #medibot-input:focus {
+        border-color: #0d9488;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
     }
-    .medibot-input-area.initializing-active #medibot-input {
-        border-color: #0891b2;
-        box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.25);
-        background: #f0f9ff;
-    }
-    #medibot-send {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #0891b2, #6366f1);
-        color: white;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        transition: transform 0.2s, opacity 0.2s;
-    }
-    #medibot-send:hover { transform: scale(1.1); opacity: 0.9; }
-
-    /* Mic button */
     #medibot-mic {
-        width: 42px;
-        height: 42px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         background: #f1f5f9;
-        border: 2px solid #e2e8f0;
+        border: 1.5px solid #e2e8f0;
         color: #64748b;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        transition: all 0.2s;
+        transition: all 0.2s ease;
     }
     #medibot-mic:hover {
         background: #e0f2fe;
-        border-color: #0891b2;
-        color: #0891b2;
-        transform: scale(1.1);
-    }
-    #medibot-mic.initializing {
-        background: linear-gradient(135deg, #0891b2, #06b6d4);
-        border-color: #0891b2;
-        color: white;
-        animation: micInitPulse 0.8s infinite alternate;
-    }
-    @keyframes micInitPulse {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.6); }
-        100% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(8, 145, 178, 0); }
+        color: #0284c7;
+        border-color: #7dd3fc;
+        transform: scale(1.06);
     }
     #medibot-mic.listening {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
+        background: #ef4444;
         border-color: #dc2626;
-        color: white;
-        animation: micPulse 1s infinite;
+        color: #ffffff;
+        animation: medibotMicGlow 1s infinite;
     }
-    @keyframes micPulse {
-        0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
-        50%      { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+    @keyframes medibotMicGlow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+        50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
     }
-
-    /* Live Audio Wave Visualizer */
-    .medibot-audio-wave {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 7px 16px;
-        background: #f0fdf4;
-        border-top: 1px solid #bbf7d0;
-        font-size: 11.5px;
-        color: #166534;
-        animation: bubbleIn 0.2s ease-out;
-        flex-shrink: 0;
-    }
-    .medibot-audio-wave .wave-bar {
-        width: 3.5px;
-        height: 12px;
-        background: #22c55e;
-        border-radius: 2px;
-        animation: wavePulseAnim 0.7s ease-in-out infinite alternate;
-    }
-    .medibot-audio-wave .wave-bar:nth-child(1) { animation-delay: 0.1s; height: 8px; }
-    .medibot-audio-wave .wave-bar:nth-child(2) { animation-delay: 0.25s; height: 16px; }
-    .medibot-audio-wave .wave-bar:nth-child(3) { animation-delay: 0.15s; height: 11px; }
-    .medibot-audio-wave .wave-bar:nth-child(4) { animation-delay: 0.35s; height: 18px; }
-    .medibot-audio-wave .wave-bar:nth-child(5) { animation-delay: 0.2s; height: 9px; }
-    @keyframes wavePulseAnim {
-        0% { transform: scaleY(0.4); opacity: 0.6; }
-        100% { transform: scaleY(1.4); opacity: 1; }
-    }
-    .medibot-audio-wave .wave-text {
-        margin-left: 6px;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    /* Typing indicator */
-    .medibot-typing {
-        display: flex;
-        gap: 5px;
-        align-items: center;
-        padding: 10px 14px;
-    }
-    .medibot-typing span {
-        width: 7px; height: 7px;
-        background: #0891b2;
+    #medibot-send {
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
-        animation: typingDot 1.2s infinite;
+        background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
+        color: #ffffff;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
     }
-    .medibot-typing span:nth-child(2) { animation-delay: 0.2s; }
-    .medibot-typing span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes typingDot {
-        0%,60%,100% { transform: translateY(0); opacity: 0.4; }
-        30%          { transform: translateY(-6px); opacity: 1; }
+    #medibot-send:hover {
+        transform: scale(1.08);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
     }
+    #medibot-send:active { transform: scale(0.96); }
 
     </style>
 </head>
@@ -1104,73 +1160,94 @@
 
     {% if request.user.is_authenticated %}
     <!-- ═══════════════════════════════════════════════
-         MEDIBOT — Pharmacy AI Assistant Widget
+         MEDIBOT — MODERN PHARMACY AI ASSISTANT WIDGET
     ═══════════════════════════════════════════════ -->
 
-    <!-- FAB Button -->
-    <button id="medibot-fab" onclick="medibotToggle()" title="MediBot — Pharmacy Assistant" aria-label="Open MediBot">
+    <!-- Floating Action Button -->
+    <button id="medibot-fab" onclick="medibotToggle()" title="MediBot — AI Pharmacy Assistant" aria-label="Open MediBot">
         🤖
+        <span class="fab-badge"></span>
     </button>
 
     <!-- Chat Panel -->
-    <div id="medibot-panel" role="dialog" aria-label="MediBot Chat">
+    <div id="medibot-panel" role="dialog" aria-label="MediBot Assistant">
         <!-- Header -->
         <div class="medibot-header">
-            <div class="medibot-avatar">🤖</div>
-            <div class="medibot-title">
-                <h3>MediBot</h3>
-                <p id="medibot-status-sub">Pharmacy AI • 🎙️ English Voice</p>
+            <div class="medibot-avatar-box">
+                🤖
+                <span class="online-dot"></span>
             </div>
-            <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
-                <button id="medibot-tts-toggle" onclick="medibotTtsToggle()" class="medibot-head-btn active" title="Auto Voice Response: ON (Click to Mute)" aria-label="Toggle Voice Response">
-                    🔊
+            <div class="medibot-title-box">
+                <h3>MediBot <span class="ai-pill">AI</span></h3>
+                <p id="medibot-subtitle">Pharmacy Assistant • Online</p>
+            </div>
+            <div class="medibot-header-actions">
+                <button id="medibot-lang-btn" class="medibot-icon-btn" onclick="medibotToggleLang()" title="Toggle Language (English / हिन्दी)">
+                    EN
                 </button>
-                <button class="medibot-close" onclick="medibotToggle()" aria-label="Close">✕</button>
+                <button id="medibot-sound-btn" class="medibot-icon-btn" onclick="medibotToggleAutoSpeak()" title="Voice Narration (Auto Read)">
+                    🔇
+                </button>
+                <button class="medibot-icon-btn" onclick="medibotClearChat()" title="Clear Chat History">
+                    🗑️
+                </button>
+                <button class="medibot-icon-btn" onclick="medibotToggle()" title="Close MediBot" style="font-size:16px;">
+                    ✕
+                </button>
             </div>
         </div>
 
         <!-- Message History -->
         <div class="medibot-messages" id="medibot-messages">
-            <div class="msg-bot">
-                👋 Hi <strong>{{ request.user.first_name|default:request.user.username }}</strong>! I'm <strong>MediBot</strong>, your pharmacy AI assistant.<br>
-                You can ask questions by typing or using the <strong>Mic 🎤</strong> button to check stock, medicine prices, expiry alerts, or medical advice.<br>
-                <div class="medibot-msg-actions">
-                    <button class="medibot-action-btn" onclick="medibotSpeakText(this.closest('.msg-bot').innerHTML, this)">
-                        🔊 Read Aloud
-                    </button>
+            <div class="medibot-msg-row bot">
+                <div class="msg-bubble">
+                    👋 Namaste / Hello <strong>{{ request.user.first_name|default:request.user.username }}</strong>!<br>
+                    I'm <strong>MediBot</strong>, your intelligent pharmacy assistant powered by AI.<br><br>
+                    How can I help you today? You can type or tap the <strong>Mic 🎤</strong> button to check stock, expiry dates, today's sales, medicine prices, or ask clinical questions.
+                    <div class="msg-actions">
+                        <button class="msg-action-btn" onclick="medibotSpeakText(this, `Namaste {{ request.user.first_name|default:request.user.username }}! I am MediBot, your pharmacy assistant. Ask me about medicine stock, prices, or sales.`)">
+                            🔊 Read
+                        </button>
+                        <button class="msg-action-btn" onclick="medibotCopyText(this, `Namaste {{ request.user.first_name|default:request.user.username }}! I am MediBot, your pharmacy assistant.`)">
+                            📋 Copy
+                        </button>
+                    </div>
+                    <span class="msg-timestamp">Just now</span>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Chips -->
-        <div class="medibot-chips">
-            <div class="medibot-chips-label">📦 Inventory</div>
-            <button class="medibot-chip" onclick="medibotSend('Show low stock')">🔴 Low Stock</button>
-            <button class="medibot-chip" onclick="medibotSend('Stock of Paracetamol')">💊 Stock of Paracetamol</button>
-            <button class="medibot-chip" onclick="medibotSend('Expiring in 30 days')">⏰ Expiring Soon</button>
-            <button class="medibot-chip" onclick="medibotSend('Add medicine')">➕ Add Medicine</button>
-            <div class="medibot-chips-label" style="margin-top:6px">💰 Sales & Finance</div>
-            <button class="medibot-chip" onclick="medibotSend('Today\'s sales')">🛒 Today's Sales</button>
-            <button class="medibot-chip" onclick="medibotSend('Revenue this month')">💰 Monthly Revenue</button>
-            <button class="medibot-chip" onclick="medibotSend('Top 5 selling')">🏆 Top 5 Sellers</button>
-            <div class="medibot-chips-label" style="margin-top:6px">⚙️ General & Actions</div>
-            <button class="medibot-chip" onclick="medibotSend('What is Azithromycin used for?')">💊 About Azithromycin</button>
-            <button class="medibot-chip" onclick="medibotSend('help')">❓ Help & Commands</button>
+        <!-- Quick Action Chips -->
+        <div class="medibot-chips-bar" id="medibot-chips">
+            <button class="medibot-chip" onclick='medibotSend("Show low stock")'>🔴 Low Stock</button>
+            <button class="medibot-chip" onclick='medibotSend("What medicines are expiring soon?")'>⏰ Expiring Soon</button>
+            <button class="medibot-chip" onclick='medibotSend("Top profitable medicines")'>💵 Profit Margins</button>
+            <button class="medibot-chip" onclick='medibotSend("Patient refill alerts")'>🔔 Refill Alerts</button>
+            <button class="medibot-chip" onclick='medibotSend("Demand forecast")'>📈 Demand Forecast</button>
+            <button class="medibot-chip" onclick='medibotSend("Today sales summary")'>🛒 Today&#39;s Sales</button>
+            <button class="medibot-chip" onclick='medibotSend("Stock of Paracetamol")'>💊 Stock Paracetamol</button>
+            <button class="medibot-chip" onclick='medibotSend("Registered customers")'>👤 Customers</button>
+            <button class="medibot-chip" onclick='medibotSend("Help me with commands")'>❓ Help</button>
         </div>
 
-        <!-- Live Audio Wave Indicator -->
-        <div id="medibot-audio-wave" class="medibot-audio-wave" style="display:none;">
-            <span class="wave-bar"></span>
-            <span class="wave-bar"></span>
-            <span class="wave-bar"></span>
-            <span class="wave-bar"></span>
-            <span class="wave-bar"></span>
-            <span class="wave-text">🎙️ Listening in <strong>English</strong>... Speak now</span>
+        <!-- Live Voice Listening Status Bar (hidden by default) -->
+        <div id="medibot-voice-bar" class="medibot-voice-bar" style="display:none;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div class="voice-waves">
+                    <span class="voice-bar-line"></span>
+                    <span class="voice-bar-line"></span>
+                    <span class="voice-bar-line"></span>
+                    <span class="voice-bar-line"></span>
+                    <span class="voice-bar-line"></span>
+                </div>
+                <span id="medibot-voice-status-text">🎙️ Listening in English... Speak clearly</span>
+            </div>
+            <button onclick="medibotStopVoice()" style="background:none; border:none; color:#166534; font-weight:700; cursor:pointer; font-size:12px; padding:2px 6px;">Stop ✕</button>
         </div>
 
         <!-- Input Area -->
         <div class="medibot-input-area">
-            <button id="medibot-mic" onclick="medibotMicToggle()" aria-label="Voice input" title="Click to speak">
+            <button id="medibot-mic" onclick="medibotMicToggle()" aria-label="Voice input" title="Click to speak (Voice Recognition)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -1181,12 +1258,12 @@
             <input
                 type="text"
                 id="medibot-input"
-                placeholder="Ask MediBot or click 🎤 to speak in English…"
+                placeholder="Ask MediBot or click 🎤 to speak…"
                 autocomplete="off"
                 onkeydown="if(event.key==='Enter') medibotSend()"
             >
-            <button id="medibot-send" onclick="medibotSend()" aria-label="Send">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <button id="medibot-send" onclick="medibotSend()" aria-label="Send query" title="Send (Enter)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
@@ -1194,876 +1271,528 @@
         </div>
     </div>
 
+    <!-- MediBot Application Logic -->
     <script>
     (function () {
         'use strict';
 
         // ── State ────────────────────────────────────────────────────────────
         let isOpen = false;
-        let ttsEnabled = true;
-        let activeSpeakerBtn = null;
+        let isAutoSpeakEnabled = false;
+        let currentLang = 'en-IN'; // 'en-IN' or 'hi-IN'
+        let isListening = false;
+        let speechRecognition = null;
+        let activeSpeakerButton = null;
+        let isAwaitingResponse = false;
 
-        // ── Toggle panel ─────────────────────────────────────────────────────
+        // ── Format Helper ───────────────────────────────────────────────────
+        function getFormattedTime() {
+            const d = new Date();
+            let hours = d.getHours();
+            let minutes = d.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            return hours + ':' + minutes + ' ' + ampm;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // ── UI Control: Open/Close Panel ─────────────────────────────────────
         window.medibotToggle = function () {
             const panel = document.getElementById('medibot-panel');
             const fab   = document.getElementById('medibot-fab');
             isOpen = !isOpen;
-            panel.classList.toggle('open', isOpen);
-            fab.textContent = isOpen ? '✕' : '🤖';
             if (isOpen) {
-                document.getElementById('medibot-input').focus();
+                panel.classList.add('open');
+                if (fab) fab.style.transform = 'scale(0.85)';
+                setTimeout(() => {
+                    const input = document.getElementById('medibot-input');
+                    if (input) input.focus();
+                }, 300);
             } else {
-                // Stop speech if closed
-                if (window.speechSynthesis) {
-                    window.speechSynthesis.cancel();
-                    resetSpeakerButtons();
+                panel.classList.remove('open');
+                if (fab) fab.style.transform = '';
+                medibotStopVoice();
+                medibotStopSpeaking();
+            }
+        };
+
+        // ── Language Toggle (English <-> Hindi) ──────────────────────────────
+        window.medibotToggleLang = function () {
+            const btn = document.getElementById('medibot-lang-btn');
+            const sub = document.getElementById('medibot-subtitle');
+            const input = document.getElementById('medibot-input');
+            if (currentLang === 'en-IN') {
+                currentLang = 'hi-IN';
+                if (btn) { btn.innerText = 'HI'; btn.classList.add('active'); btn.title = 'Current Language: Hindi (Click for English)'; }
+                if (sub) sub.innerText = 'Pharmacy AI • Hindi (हिन्दी)';
+                if (input) input.placeholder = 'MediBot से पूछें या 🎤 दबाकर बोलें...';
+            } else {
+                currentLang = 'en-IN';
+                if (btn) { btn.innerText = 'EN'; btn.classList.remove('active'); btn.title = 'Current Language: English (Click for Hindi)'; }
+                if (sub) sub.innerText = 'Pharmacy AI • English';
+                if (input) input.placeholder = 'Ask MediBot or click 🎤 to speak…';
+            }
+            if (isListening) {
+                medibotStopVoice();
+                medibotStartVoice();
+            }
+        };
+
+        // ── Auto-Speak Toggle ────────────────────────────────────────────────
+        window.medibotToggleAutoSpeak = function () {
+            const btn = document.getElementById('medibot-sound-btn');
+            isAutoSpeakEnabled = !isAutoSpeakEnabled;
+            if (btn) {
+                if (isAutoSpeakEnabled) {
+                    btn.innerText = '🔊';
+                    btn.classList.add('active');
+                    btn.title = 'Voice Narration: ON (Click to Mute)';
+                } else {
+                    btn.innerText = '🔇';
+                    btn.classList.remove('active');
+                    btn.title = 'Voice Narration: OFF (Click to Enable)';
+                    medibotStopSpeaking();
                 }
             }
         };
 
-        // ── Voice Output (TTS) Controls ──────────────────────────────────────
-        window.medibotTtsToggle = function () {
-            ttsEnabled = !ttsEnabled;
-            const btn = document.getElementById('medibot-tts-toggle');
-            if (btn) {
-                btn.textContent = ttsEnabled ? '🔊' : '🔇';
-                btn.className = ttsEnabled ? 'medibot-head-btn active' : 'medibot-head-btn';
-                btn.title = ttsEnabled ? 'Auto Voice Response: ON (Click to Mute)' : 'Auto Voice Response: OFF (Click to Enable)';
-            }
-            if (!ttsEnabled && window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-                resetSpeakerButtons();
-            }
+        // ── Clear Chat ───────────────────────────────────────────────────────
+        window.medibotClearChat = function () {
+            medibotStopSpeaking();
+            const container = document.getElementById('medibot-messages');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="medibot-msg-row bot">
+                    <div class="msg-bubble">
+                        ✨ Chat cleared. How can I assist you with your pharmacy inventory or sales today?
+                        <span class="msg-timestamp">${getFormattedTime()}</span>
+                    </div>
+                </div>
+            `;
         };
 
-        function resetSpeakerButtons() {
-            document.querySelectorAll('.medibot-action-btn.speaking').forEach(b => {
-                b.classList.remove('speaking');
-                b.innerHTML = '🔊 Read Aloud';
-            });
-            activeSpeakerBtn = null;
+        // ── Append Messages ──────────────────────────────────────────────────
+        function appendUserMessage(text) {
+            const container = document.getElementById('medibot-messages');
+            if (!container) return;
+            const row = document.createElement('div');
+            row.className = 'medibot-msg-row user';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble';
+            bubble.textContent = text;
+
+            const time = document.createElement('span');
+            time.className = 'msg-timestamp';
+            time.textContent = getFormattedTime();
+            bubble.appendChild(time);
+
+            row.appendChild(bubble);
+            container.appendChild(row);
+            container.scrollTop = container.scrollHeight;
         }
 
-        function extractSpeakableText(htmlString) {
-            if (!htmlString) return '';
-            const temp = document.createElement('div');
-            temp.innerHTML = htmlString;
-            // Remove actions toolbar, tables metadata, scripts
-            temp.querySelectorAll('script, style, .medibot-msg-actions, button').forEach(el => el.remove());
-            let text = temp.innerText || temp.textContent || '';
-            // Remove unicode emojis & formatting characters
-            text = text.replace(/[\u{1F600}-\u{1F6FF}\u{1F300}-\u{1F5FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
-            text = text.replace(/[*#_~`>•▫️•]/g, ' ');
-            text = text.replace(/\s+/g, ' ').trim();
-            return text;
+        function appendBotMessage(htmlContent, rawPlainText) {
+            const container = document.getElementById('medibot-messages');
+            if (!container) return;
+
+            const row = document.createElement('div');
+            row.className = 'medibot-msg-row bot';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble';
+            bubble.innerHTML = htmlContent;
+
+            // Plain text for speech and copy
+            const textToRead = rawPlainText || bubble.innerText || bubble.textContent;
+
+            // Action toolbar
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'msg-actions';
+
+            const speakBtn = document.createElement('button');
+            speakBtn.className = 'msg-action-btn';
+            speakBtn.innerHTML = '🔊 Read';
+            speakBtn.onclick = function() { medibotSpeakText(speakBtn, textToRead); };
+            actionsDiv.appendChild(speakBtn);
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'msg-action-btn';
+            copyBtn.innerHTML = '📋 Copy';
+            copyBtn.onclick = function() { medibotCopyText(copyBtn, textToRead); };
+            actionsDiv.appendChild(copyBtn);
+
+            bubble.appendChild(actionsDiv);
+
+            const time = document.createElement('span');
+            time.className = 'msg-timestamp';
+            time.textContent = getFormattedTime();
+            bubble.appendChild(time);
+
+            row.appendChild(bubble);
+            container.appendChild(row);
+            container.scrollTop = container.scrollHeight;
+
+            // Auto-speak if enabled
+            if (isAutoSpeakEnabled) {
+                medibotSpeakText(speakBtn, textToRead);
+            }
         }
 
-        window.medibotSpeakText = function (htmlContent, btnElement) {
-            if (!window.speechSynthesis) {
-                if (typeof showAlert === 'function') showAlert('Speech synthesis not supported in this browser.', 'warning');
+        // ── Typing Indicator ────────────────────────────────────────────────
+        function showTypingIndicator() {
+            const container = document.getElementById('medibot-messages');
+            if (!container) return;
+            let existing = document.getElementById('medibot-typing-indicator');
+            if (existing) return;
+
+            const row = document.createElement('div');
+            row.className = 'medibot-msg-row bot';
+            row.id = 'medibot-typing-indicator';
+
+            row.innerHTML = `
+                <div class="medibot-typing-bubble">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
+            `;
+            container.appendChild(row);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const el = document.getElementById('medibot-typing-indicator');
+            if (el) el.remove();
+        }
+
+        // ── Text-to-Speech (Read Aloud) ──────────────────────────────────────
+        window.medibotSpeakText = function (btn, rawText) {
+            if (!('speechSynthesis' in window)) {
+                alert('Speech synthesis is not supported in this browser.');
                 return;
             }
 
-            // If already speaking, cancel
-            if (window.speechSynthesis.speaking) {
-                window.speechSynthesis.cancel();
-                if (btnElement && btnElement.classList.contains('speaking')) {
-                    resetSpeakerButtons();
-                    return;
-                }
+            // If already speaking this button, stop it
+            if (btn && btn.classList.contains('speaking')) {
+                medibotStopSpeaking();
+                return;
             }
 
-            resetSpeakerButtons();
-            const cleanText = extractSpeakableText(htmlContent);
+            medibotStopSpeaking();
+
+            // Clean up text: remove table formatting markers, HTML tags, multiple spaces
+            let cleanText = (rawText || '')
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/[|#*_`]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
             if (!cleanText) return;
 
+            // Shorten if excessively long to avoid browser timeout
+            if (cleanText.length > 500) {
+                cleanText = cleanText.substring(0, 497) + '...';
+            }
+
             const utterance = new SpeechSynthesisUtterance(cleanText);
-            utterance.rate = 1.0;
+            utterance.lang = currentLang === 'hi-IN' ? 'hi-IN' : 'en-IN';
+            utterance.rate = 1.02;
             utterance.pitch = 1.0;
 
-            // Pick natural English voice
-            const voices = window.speechSynthesis.getVoices() || [];
-            const enVoice = voices.find(v => v.lang && (v.lang === 'en-US' || v.lang === 'en-GB' || v.lang.startsWith('en')));
-            if (enVoice) {
-                utterance.voice = enVoice;
-            }
-            utterance.lang = 'en-US';
-
-            if (btnElement) {
-                btnElement.classList.add('speaking');
-                btnElement.innerHTML = '⏹️ Stop';
-                activeSpeakerBtn = btnElement;
+            if (btn) {
+                activeSpeakerButton = btn;
+                btn.classList.add('speaking');
+                btn.innerHTML = '⏹️ Stop';
             }
 
             utterance.onend = function () {
-                resetSpeakerButtons();
+                medibotStopSpeaking();
             };
             utterance.onerror = function () {
-                resetSpeakerButtons();
+                medibotStopSpeaking();
             };
 
             window.speechSynthesis.speak(utterance);
         };
 
-        // ── Get CSRF token ────────────────────────────────────────────────────
-        function getCsrf() {
-            const name = 'csrftoken';
-            const val  = document.cookie.split(';').find(c => c.trim().startsWith(name + '='));
-            return val ? decodeURIComponent(val.trim().slice(name.length + 1)) : '';
-        }
+        window.medibotStopSpeaking = function () {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            if (activeSpeakerButton) {
+                activeSpeakerButton.classList.remove('speaking');
+                activeSpeakerButton.innerHTML = '🔊 Read';
+                activeSpeakerButton = null;
+            }
+        };
 
-        // ── Append message to chat ────────────────────────────────────────────
-        function appendMsg(html, cls) {
-            const box = document.getElementById('medibot-messages');
-            const div = document.createElement('div');
-            div.className = cls;
-            div.innerHTML = html;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-            return div;
-        }
+        // ── Copy Message to Clipboard ────────────────────────────────────────
+        window.medibotCopyText = function (btn, text) {
+            const cleanText = (text || '').replace(/<[^>]*>/g, '').trim();
+            if (!cleanText) return;
 
-        // ── Show typing indicator ─────────────────────────────────────────────
-        function showTyping() {
-            const box = document.getElementById('medibot-messages');
-            const dot = document.createElement('div');
-            dot.className = 'msg-bot medibot-typing';
-            dot.id = 'medibot-typing-indicator';
-            dot.innerHTML = '<span></span><span></span><span></span>';
-            box.appendChild(dot);
-            box.scrollTop = box.scrollHeight;
-        }
+            navigator.clipboard.writeText(cleanText).then(() => {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = orig;
+                }, 1500);
+            }).catch(() => {
+                btn.innerHTML = '❌ Failed';
+                setTimeout(() => { btn.innerHTML = '📋 Copy'; }, 1500);
+            });
+        };
 
-        function hideTyping() {
-            const el = document.getElementById('medibot-typing-indicator');
-            if (el) el.remove();
-        }
+        // ── Send Message ─────────────────────────────────────────────────────
+        window.medibotSend = async function (overrideText) {
+            if (isAwaitingResponse) return;
 
-        // ── Client-side Markdown Formatter for Live Streaming ───────────────
-        function formatMarkdownLive(text) {
-            if (!text) return '';
-            let s = text
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
+            const input = document.getElementById('medibot-input');
+            const text = (overrideText !== undefined ? overrideText : (input ? input.value : '')).trim();
+            if (!text) return;
 
-            // Bold **text**
-            s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            // Inline code `text`
-            s = s.replace(/`([^`]+)`/g, '<code style="background:rgba(8,145,178,0.12); color:#0891b2; padding:1px 5px; border-radius:4px; font-size:12px; font-family:monospace;">$1</code>');
-            // Headers ### Header
-            s = s.replace(/^### (.*$)/gim, '<div style="font-weight:700; font-size:14px; color:#0891b2; margin-top:8px; margin-bottom:4px;">$1</div>');
-            s = s.replace(/^## (.*$)/gim, '<div style="font-weight:700; font-size:15px; color:#0891b2; margin-top:9px; margin-bottom:4px;">$1</div>');
-            s = s.replace(/^# (.*$)/gim, '<div style="font-weight:700; font-size:16px; color:#0891b2; margin-top:10px; margin-bottom:4px;">$1</div>');
-            // Bullet points
-            s = s.replace(/^\s*[\*\-]\s+(.*$)/gim, '<div style="display:flex; align-items:flex-start; margin:2px 0;"><span style="color:#0891b2; margin-right:6px; line-height:1.4;">•</span><span>$1</span></div>');
-            // Line breaks
-            s = s.replace(/\n\n/g, '<div style="height:6px;"></div>');
-            s = s.replace(/\n/g, '<br>');
-            return s;
-        }
+            if (input) input.value = '';
+            medibotStopVoice();
+            medibotStopSpeaking();
 
-        // ── SSE Live Streaming Fetch Engine (Line-by-Line / Word-by-Word) ────
-        async function medibotStreamFetch(msg, isVoiceQuery = false) {
-            hideTyping();
-            const box = document.getElementById('medibot-messages');
-            const msgId = 'bot-msg-' + Date.now();
-
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'msg-bot';
-            msgDiv.innerHTML = `<div id="${msgId}" class="bot-content-wrap"><span class="bot-live-text"></span><span class="bot-live-cursor" style="display:inline-block; font-weight:bold; color:#0891b2; animation: medibotBlink 0.7s infinite;">▍</span></div>`;
-            box.appendChild(msgDiv);
-            box.scrollTop = box.scrollHeight;
-
-            const textSpan = msgDiv.querySelector('.bot-live-text');
-            const cursorSpan = msgDiv.querySelector('.bot-live-cursor');
-
-            let accumulated = '';
-            let controller = new AbortController();
-            let timeoutId = setTimeout(() => controller.abort(), 35000);
+            appendUserMessage(text);
+            showTypingIndicator();
+            isAwaitingResponse = true;
 
             try {
                 const response = await fetch('/api/chatbot/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': getCsrf(),
+                        'X-CSRFToken': getCookie('csrftoken') || ''
                     },
-                    body: JSON.stringify({ message: msg, is_voice: isVoiceQuery, stream: true }),
-                    signal: controller.signal,
+                    body: JSON.stringify({ message: text })
                 });
-                clearTimeout(timeoutId);
+
+                hideTypingIndicator();
+                isAwaitingResponse = false;
 
                 if (!response.ok) {
-                    if (cursorSpan) cursorSpan.remove();
-                    textSpan.innerHTML = '⚠️ Sorry, could not complete the request. Please try again.';
+                    appendBotMessage(`⚠️ <strong>Server response error (${response.status}).</strong> Please try again.`);
                     return;
                 }
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder('utf-8');
-                let buffer = '';
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop(); // Keep incomplete trailing line in buffer
-
-                    for (const line of lines) {
-                        const trimmed = line.trim();
-                        if (trimmed.startsWith('data:')) {
-                            const jsonStr = trimmed.slice(5).trim();
-                            if (!jsonStr) continue;
-                            try {
-                                const parsed = JSON.parse(jsonStr);
-                                if (parsed.done) {
-                                    break;
-                                }
-                                if (parsed.chunk) {
-                                    accumulated += parsed.chunk;
-                                    textSpan.innerHTML = formatMarkdownLive(accumulated);
-                                    box.scrollTop = box.scrollHeight;
-                                }
-                            } catch(e) {}
-                        }
-                    }
-                }
-
-                // Final flush of remaining buffer
-                if (buffer.trim().startsWith('data:')) {
-                    try {
-                        const parsed = JSON.parse(buffer.trim().slice(5).trim());
-                        if (parsed.chunk) {
-                            accumulated += parsed.chunk;
-                            textSpan.innerHTML = formatMarkdownLive(accumulated);
-                        }
-                    } catch(e) {}
-                }
-
-            } catch (err) {
-                console.error("Streaming error:", err);
-                if (!accumulated) {
-                    textSpan.innerHTML = '⚠️ Connection issue or request timed out. Please try again.';
-                }
-            } finally {
-                clearTimeout(timeoutId);
-                if (cursorSpan) cursorSpan.remove();
-
-                // Append actions toolbar
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'medibot-msg-actions';
-                actionsDiv.innerHTML = `
-                    <button class="medibot-action-btn" onclick="medibotSpeakText(document.getElementById('${msgId}').innerHTML, this)">
-                        🔊 Read Aloud
-                    </button>
-                    <button class="medibot-action-btn" onclick="navigator.clipboard.writeText(document.getElementById('${msgId}').innerText); if(typeof showAlert === 'function') showAlert('Copied to clipboard!', 'info')">
-                        📋 Copy
-                    </button>
-                `;
-                msgDiv.appendChild(actionsDiv);
-                box.scrollTop = box.scrollHeight;
-
-                // If voice query and TTS enabled -> speak response out loud
-                if (isVoiceQuery && ttsEnabled && accumulated) {
-                    setTimeout(() => {
-                        const spkBtn = actionsDiv.querySelector('.medibot-action-btn');
-                        medibotSpeakText(accumulated, spkBtn);
-                    }, 100);
-                }
-            }
-        }
-
-        window.medibotSend = function (presetMsg, isVoiceQuery = false) {
-            // Stop any active mic listening before sending
-            stopAllVoiceInputs();
-
-            const input = document.getElementById('medibot-input');
-            const msg   = (presetMsg !== undefined ? presetMsg : input.value).trim();
-            if (!msg) return;
-
-            // Stop any ongoing voice speech
-            if (window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-                resetSpeakerButtons();
-            }
-
-            appendMsg(isVoiceQuery ? `🎙️ ${msg}` : msg, 'msg-user');
-            input.value = '';
-            showTyping();
-
-            medibotStreamFetch(msg, isVoiceQuery);
-        };
-
-        // ── Voice Engine (Instant Initialization, Audio Cues, Pharmacy Phonetic Correction & Visualizer) ──
-        let activeRecognition = null;
-        let isListeningVoice = false;
-        let liveTranscriptAccumulator = '';
-        let mediaRecorderInstance = null;
-        let audioChunks = [];
-        let micStream = null;
-        let audioCtx = null;
-        let audioAnalyser = null;
-        let audioSourceNode = null;
-        let animFrameId = null;
-        let currentVoiceLang = 'en-IN'; // 'en-IN' | 'hi-IN' | 'en-US'
-
-        const langMeta = {
-            'en-IN': { label: '🌐 EN (IN)', name: 'English (India)', sub: 'Pharmacy AI • 🎙️ English (IN) Voice', placeholder: 'Ask MediBot or click 🎤 to speak in English…' },
-            'hi-IN': { label: '🌐 HI (हिंदी)', name: 'हिंदी / Hinglish', sub: 'Pharmacy AI • 🎙️ हिंदी / Hinglish Voice', placeholder: 'MediBot se puchein ya 🎤 bol kar Hindi/Hinglish me puchein…' },
-            'en-US': { label: '🌐 EN (US)', name: 'English (US)', sub: 'Pharmacy AI • 🎙️ English (US) Voice', placeholder: 'Ask MediBot or click 🎤 to speak in English…' }
-        };
-
-        // ── Web Audio API Instant Beep/Chime Cues ──────────────────────────────
-        function playAudioCue(type) {
-            try {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (!AudioCtx) return;
-                const ctx = new AudioCtx();
-                if (ctx.state === 'suspended') {
-                    ctx.resume();
-                }
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-
-                if (type === 'start') {
-                    // Crisp, friendly start chime: 660Hz -> 880Hz (tells user: MIC IS READY NOW!)
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(660, ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
-                    gain.gain.setValueAtTime(0.12, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-                    osc.start(ctx.currentTime);
-                    osc.stop(ctx.currentTime + 0.12);
-                } else if (type === 'stop') {
-                    // Soft descending tone: 520Hz -> 380Hz
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(520, ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(380, ctx.currentTime + 0.08);
-                    gain.gain.setValueAtTime(0.10, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-                    osc.start(ctx.currentTime);
-                    osc.stop(ctx.currentTime + 0.1);
-                }
-            } catch (e) {
-                // Audio cue is progressive enhancement
-            }
-        }
-
-        // ── Pharmacy Vocabulary & Phonetic Speech Correction ────────────────────
-        const PHARMACY_MEDICINES = [
-            'Paracetamol', 'Paracetamol 500mg', 'Paracetamol 650mg',
-            'Amoxicillin', 'Amoxicillin 500mg',
-            'Amlodipine', 'Amlodipine 5mg',
-            'Aspirin', 'Aspirin 75mg',
-            'Atorvastatin', 'Atorvastatin 20mg',
-            'Azithromycin', 'Azithromycin 500mg',
-            'Budesonide', 'Budesonide 200mcg',
-            'Cetirizine', 'Cetirizine 10mg',
-            'Ciprofloxacin', 'Ciprofloxacin 500mg',
-            'Clobetasol', 'Clobetasol 0.05%',
-            'Diclofenac', 'Diclofenac 50mg',
-            'Doxycycline', 'Doxycycline 100mg',
-            'Empagliflozin', 'Empagliflozin 25mg',
-            'Glimepiride', 'Glimepiride 2mg',
-            'Ibuprofen', 'Ibuprofen 400mg',
-            'Levocetirizine', 'Levocetirizine 5mg',
-            'Losartan', 'Losartan 50mg',
-            'Metformin', 'Metformin 500mg',
-            'Metronidazole', 'Metronidazole 400mg',
-            'Miconazole', 'Miconazole 2%',
-            'Omega-3', 'Omega-3 1000mg',
-            'Omeprazole', 'Omeprazole 20mg',
-            'Pantoprazole', 'Pantoprazole 40mg',
-            'Salbutamol', 'Salbutamol 100mcg',
-            'Telmisartan', 'Telmisartan 40mg',
-            'Tramadol', 'Tramadol 50mg',
-            'Vitamin B12', 'Vitamin B12 1000mcg',
-            'Vitamin C', 'Vitamin C 500mg',
-            'Vitamin D3', 'Vitamin D3 2000IU'
-        ];
-
-        const PHONETIC_ALIASES = [
-            { pattern: /\b(parasitamol|paracetmol|paracitamol|parasetamol|peracetamol|parasitmol|parastamol)\b/gi, replacement: 'Paracetamol' },
-            { pattern: /\b(dolo\s*650|dolo-650)\b/gi, replacement: 'Paracetamol 650mg' },
-            { pattern: /\bdolo\b/gi, replacement: 'Paracetamol' },
-            { pattern: /\b(crocin\s*650|crocin-650)\b/gi, replacement: 'Paracetamol 650mg' },
-            { pattern: /\bcrocin\b/gi, replacement: 'Paracetamol' },
-            { pattern: /\bcalpol\b/gi, replacement: 'Paracetamol' },
-            { pattern: /\b(amoxilin|amoxicilin|amoxycillin|mox\s*500)\b/gi, replacement: 'Amoxicillin' },
-            { pattern: /\b(azithral|azithro|azithromicin|azithromycine)\b/gi, replacement: 'Azithromycin' },
-            { pattern: /\b(amlodipin|amlong|amlo)\b/gi, replacement: 'Amlodipine' },
-            { pattern: /\b(atorva|atorvastin|atorvastatin)\b/gi, replacement: 'Atorvastatin' },
-            { pattern: /\b(cetrizin|cetrizine|citrizin|cetzine|okacet)\b/gi, replacement: 'Cetirizine' },
-            { pattern: /\b(levocet|levocetrizin|levocetirizine)\b/gi, replacement: 'Levocetirizine' },
-            { pattern: /\b(ciproflox|cipro|ciprofloxacin)\b/gi, replacement: 'Ciprofloxacin' },
-            { pattern: /\b(diclo|voveran)\b/gi, replacement: 'Diclofenac' },
-            { pattern: /\b(doxy|doxycyclin)\b/gi, replacement: 'Doxycycline' },
-            { pattern: /\b(glimepride|glimepirid|amaryl)\b/gi, replacement: 'Glimepiride' },
-            { pattern: /\b(ibuprofin|brufen)\b/gi, replacement: 'Ibuprofen' },
-            { pattern: /\b(metformin|glycomet|metfor)\b/gi, replacement: 'Metformin' },
-            { pattern: /\b(metrogyl)\b/gi, replacement: 'Metronidazole' },
-            { pattern: /\b(omeprazol|omez)\b/gi, replacement: 'Omeprazole' },
-            { pattern: /\b(pantoprazol|pantocid|pantodac|pantop)\b/gi, replacement: 'Pantoprazole' },
-            { pattern: /\b(salbutamol|asthalin)\b/gi, replacement: 'Salbutamol' },
-            { pattern: /\b(telmisartin|telma)\b/gi, replacement: 'Telmisartan' },
-            { pattern: /\b(tramadol|ultram)\b/gi, replacement: 'Tramadol' },
-            { pattern: /\b(budesonid|budecort)\b/gi, replacement: 'Budesonide' },
-            { pattern: /\b(vit\s*d3?|vitamin\s*d)\b/gi, replacement: 'Vitamin D3' },
-            { pattern: /\b(vit\s*c|vitamin\s*c)\b/gi, replacement: 'Vitamin C' },
-            { pattern: /\b(vit\s*b12|vitamin\s*b12)\b/gi, replacement: 'Vitamin B12' },
-            // Speech cut-off prefix repairs (if beginning syllables were clipped before mic opened)
-            { pattern: /^(\s*)(ck|ock|tock)\s+and\s+price/i, replacement: '$1Stock and price' },
-            { pattern: /^(\s*)(ck|ock|tock)\s+of/i, replacement: '$1Stock of' },
-            { pattern: /^(\s*)(rice|ice)\s+of/i, replacement: '$1Price of' },
-            { pattern: /^(\s*)(xpiry|piry|expir)\s+of/i, replacement: '$1Expiry of' },
-        ];
-
-        function correctPharmacySpeech(text) {
-            if (!text) return '';
-            let cleaned = text;
-
-            // 1. Apply phonetic & common brand aliases
-            for (let i = 0; i < PHONETIC_ALIASES.length; i++) {
-                cleaned = cleaned.replace(PHONETIC_ALIASES[i].pattern, PHONETIC_ALIASES[i].replacement);
-            }
-
-            // 2. Normalize dosage formats: e.g. "650 mg" -> "650mg"
-            cleaned = cleaned.replace(/\b(\d+)\s*(mg|mcg|gm|g|iu|%)\b/gi, '$1$2');
-
-            // 3. Proper capitalization for query start
-            cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-
-            return cleaned;
-        }
-
-        window.medibotLangToggle = function () {
-            if (currentVoiceLang === 'en-IN') currentVoiceLang = 'hi-IN';
-            else if (currentVoiceLang === 'hi-IN') currentVoiceLang = 'en-US';
-            else currentVoiceLang = 'en-IN';
-
-            const meta = langMeta[currentVoiceLang];
-            const btn = document.getElementById('medibot-lang-toggle');
-            const sub = document.getElementById('medibot-status-sub');
-            const input = document.getElementById('medibot-input');
-            const langName = document.getElementById('medibot-active-lang-name');
-
-            if (btn) btn.textContent = meta.label;
-            if (sub) sub.textContent = meta.sub;
-            if (input && !input.value) input.placeholder = meta.placeholder;
-            if (langName) langName.textContent = meta.name;
-
-            if (typeof showAlert === 'function') {
-                showAlert(`Voice recognition language set to: ${meta.name}`, 'info');
-            }
-
-            if (activeRecognition && isListeningVoice) {
-                try {
-                    activeRecognition.lang = currentVoiceLang;
-                } catch(e){}
-            }
-        };
-
-        function startAudioVisualizer(stream) {
-            try {
-                const waveEl = document.getElementById('medibot-audio-wave');
-                if (waveEl) waveEl.style.display = 'flex';
-
-                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-                if (!AudioCtxClass) return;
-                audioCtx = new AudioCtxClass();
-                audioAnalyser = audioCtx.createAnalyser();
-                audioAnalyser.fftSize = 64;
-                audioSourceNode = audioCtx.createMediaStreamSource(stream);
-                audioSourceNode.connect(audioAnalyser);
-
-                const dataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
-                const bars = document.querySelectorAll('.medibot-audio-wave .wave-bar');
-
-                function updateVolume() {
-                    if (!isListeningVoice || !audioAnalyser) return;
-                    audioAnalyser.getByteFrequencyData(dataArray);
-
-                    let sum = 0;
-                    for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-                    const avg = sum / dataArray.length;
-
-                    bars.forEach((bar, idx) => {
-                        const val = dataArray[idx * 2] || avg;
-                        const height = Math.max(6, Math.min(22, (val / 255) * 26));
-                        bar.style.height = `${height}px`;
-                    });
-
-                    animFrameId = requestAnimationFrame(updateVolume);
-                }
-                updateVolume();
-            } catch (err) {
-                console.warn('Audio visualizer init note:', err);
-            }
-        }
-
-        function stopAudioVisualizer() {
-            if (animFrameId) {
-                cancelAnimationFrame(animFrameId);
-                animFrameId = null;
-            }
-            if (audioSourceNode) {
-                try { audioSourceNode.disconnect(); } catch(e){}
-                audioSourceNode = null;
-            }
-            if (audioCtx) {
-                try { audioCtx.close(); } catch(e){}
-                audioCtx = null;
-            }
-            audioAnalyser = null;
-            const waveEl = document.getElementById('medibot-audio-wave');
-            if (waveEl) waveEl.style.display = 'none';
-        }
-
-        function setMicButtonState(active, placeholderText, isInitializing = false) {
-            const micBtn = document.getElementById('medibot-mic');
-            const inputEl = document.getElementById('medibot-input');
-            const inputArea = document.querySelector('.medibot-input-area');
-            const meta = langMeta[currentVoiceLang] || langMeta['en-IN'];
-
-            if (micBtn) {
-                if (isInitializing) {
-                    micBtn.classList.remove('listening');
-                    micBtn.classList.add('initializing');
-                    micBtn.title = 'Initializing microphone…';
-                } else if (active) {
-                    micBtn.classList.remove('initializing');
-                    micBtn.classList.add('listening');
-                    micBtn.title = 'Listening… Click to finish speaking';
+                const data = await response.json();
+                if (data.status === 'success' || data.reply) {
+                    appendBotMessage(data.reply, data.raw_reply || data.reply);
                 } else {
-                    micBtn.classList.remove('listening', 'initializing');
-                    micBtn.title = 'Click 🎤 to speak';
+                    appendBotMessage(`⚠️ ${data.message || 'Unable to process your request at this moment.'}`);
                 }
-            }
-
-            if (inputArea) {
-                if (isInitializing) {
-                    inputArea.classList.add('initializing-active');
-                    inputArea.classList.remove('listening-active');
-                } else if (active) {
-                    inputArea.classList.add('listening-active');
-                    inputArea.classList.remove('initializing-active');
-                } else {
-                    inputArea.classList.remove('listening-active', 'initializing-active');
-                }
-            }
-
-            if (inputEl) {
-                inputEl.placeholder = placeholderText || meta.placeholder;
-            }
-        }
-
-        function stopAllVoiceInputs() {
-            isListeningVoice = false;
-            stopAudioVisualizer();
-
-            if (activeRecognition) {
-                try {
-                    activeRecognition.onstart = null;
-                    activeRecognition.onresult = null;
-                    activeRecognition.onerror = null;
-                    activeRecognition.onend = null;
-                    activeRecognition.abort();
-                } catch(e) {}
-                activeRecognition = null;
-            }
-            if (mediaRecorderInstance && mediaRecorderInstance.state !== 'inactive') {
-                try { mediaRecorderInstance.stop(); } catch(e) {}
-            }
-            if (micStream) {
-                try {
-                    micStream.getTracks().forEach(t => t.stop());
-                } catch(e) {}
-                micStream = null;
-            }
-            setMicButtonState(false);
-        }
-
-        // Send recorded audio directly to Gemini backend for neural transcription & response
-        async function sendAudioRecording(audioBlob, mimeType) {
-            const inputEl = document.getElementById('medibot-input');
-            setMicButtonState(false, '🎙️ Transcribing voice with Gemini AI...');
-
-            try {
-                const reader = new FileReader();
-                reader.readAsDataURL(audioBlob);
-                reader.onloadend = async function () {
-                    const base64Audio = reader.result;
-                    try {
-                        const response = await fetch('/api/chatbot/', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': getCsrf(),
-                            },
-                            body: JSON.stringify({
-                                audio: base64Audio,
-                                mime: mimeType || 'audio/webm',
-                                is_voice: true
-                            })
-                        });
-
-                        if (!response.ok) {
-                            appendMsg('⚠️ Sorry, could not process voice input. Please try again or type your question.', 'msg-bot');
-                            setMicButtonState(false);
-                            return;
-                        }
-
-                        const data = await response.json();
-                        const userQ = (data.user_query || '').trim();
-                        const botReply = (data.reply || '').trim();
-
-                        if (userQ) {
-                            appendMsg(`🎙️ ${userQ}`, 'msg-user');
-                            if (botReply) {
-                                appendMsg(botReply, 'msg-bot');
-                                if (typeof ttsEnabled !== 'undefined' && ttsEnabled) {
-                                    medibotSpeakText(botReply);
-                                }
-                            }
-                        } else if (botReply) {
-                            appendMsg(botReply, 'msg-bot');
-                        } else {
-                            appendMsg('⚠️ Could not detect speech clearly. Please try speaking again or type your question.', 'msg-bot');
-                        }
-                    } catch (err) {
-                        console.error('Audio query error:', err);
-                        appendMsg('⚠️ Network issue processing audio. Please try again.', 'msg-bot');
-                    } finally {
-                        setMicButtonState(false);
-                    }
-                };
-            } catch (e) {
-                setMicButtonState(false);
-            }
-        }
-
-        // MediaRecorder Fallback (starts recording mic audio)
-        function startMediaRecorderFallback(stream) {
-            try {
-                audioChunks = [];
-                let options = { mimeType: 'audio/webm' };
-                if (typeof MediaRecorder !== 'undefined') {
-                    if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                        if (MediaRecorder.isTypeSupported('audio/ogg')) options = { mimeType: 'audio/ogg' };
-                        else if (MediaRecorder.isTypeSupported('audio/mp4')) options = { mimeType: 'audio/mp4' };
-                        else options = {};
-                    }
-                }
-                mediaRecorderInstance = new MediaRecorder(stream, options);
-                mediaRecorderInstance.ondataavailable = e => {
-                    if (e.data && e.data.size > 0) audioChunks.push(e.data);
-                };
-                mediaRecorderInstance.onstop = () => {
-                    const mime = mediaRecorderInstance.mimeType || 'audio/webm';
-                    const audioBlob = new Blob(audioChunks, { type: mime });
-                    if (audioBlob.size > 1000) {
-                        sendAudioRecording(audioBlob, mime);
-                    } else {
-                        setMicButtonState(false);
-                    }
-                };
-                mediaRecorderInstance.start(250);
-                isListeningVoice = true;
-                playAudioCue('start');
-                setMicButtonState(true, '🎙️ Recording voice... Click mic again to stop & review');
             } catch (err) {
-                console.error("MediaRecorder fallback failed:", err);
-                stopAllVoiceInputs();
-                appendMsg('🎤 Could not start voice recording. Please check microphone permissions.', 'msg-bot');
+                console.error('MediBot fetch error:', err);
+                hideTypingIndicator();
+                isAwaitingResponse = false;
+                appendBotMessage(`🔌 <strong>Connection error:</strong> Could not reach the MediBot server. Please check your network connection.`);
             }
+        };
+
+        // ── Web Speech API Voice Recognition (English & Hindi) ───────────────
+        function isSpeechSupported() {
+            return ('SpeechRecognition' in window) || ('webkitSpeechRecognition' in window);
         }
 
-        // ── Pure WAV Audio Encoder for 100% Reliable Microphone Capture ───────
-        function encodeWAV(samples, sampleRate) {
-            const buffer = new ArrayBuffer(44 + samples.length * 2);
-            const view = new DataView(buffer);
-            function writeString(offset, string) {
-                for (let i = 0; i < string.length; i++) {
-                    view.setUint8(offset + i, string.charCodeAt(i));
-                }
+        window.medibotMicToggle = function () {
+            console.log('[MediBot Speech] Mic button clicked. Currently listening:', isListening);
+            if (isListening) {
+                medibotStopVoice();
+            } else {
+                medibotStartVoice();
             }
-            writeString(0, 'RIFF');
-            view.setUint32(4, 36 + samples.length * 2, true);
-            writeString(8, 'WAVE');
-            writeString(12, 'fmt ');
-            view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true); // PCM
-            view.setUint16(22, 1, true); // Mono
-            view.setUint32(24, sampleRate, true);
-            view.setUint32(28, sampleRate * 2, true);
-            view.setUint16(32, 2, true);
-            view.setUint16(34, 16, true);
-            writeString(36, 'data');
-            view.setUint32(40, samples.length * 2, true);
-            let offset = 44;
-            for (let i = 0; i < samples.length; i++, offset += 2) {
-                const s = Math.max(-1, Math.min(1, samples[i]));
-                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-            }
-            return new Blob([view], { type: 'audio/wav' });
-        }
+        };
 
-        window.medibotMicToggle = async function () {
-            const inputEl = document.getElementById('medibot-input');
+        window.medibotStartVoice = async function () {
+            console.log('[MediBot Speech] Starting voice recognition process...');
 
-            // Stop any playing TTS audio before recording
-            if (window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-                resetSpeakerButtons();
-            }
-
-            // If already listening -> STOP listening and proceed
-            if (isListeningVoice) {
-                playAudioCue('stop');
-                const capturedText = (inputEl ? inputEl.value : '').trim();
-
-                // Stop active speech recognition
-                if (activeRecognition) {
-                    try {
-                        activeRecognition.onresult = null;
-                        activeRecognition.onend = null;
-                        activeRecognition.onerror = null;
-                        activeRecognition.stop();
-                    } catch(e){}
-                    activeRecognition = null;
-                }
-
-                // If input has recognized text from browser Web Speech, send it immediately!
-                if (capturedText) {
-                    stopAllVoiceInputs();
-                    setMicButtonState(false, 'Press Send (➤) or Enter to get answer…');
-                    medibotSend(capturedText, true);
-                    return;
-                }
-
-                // If input was empty (e.g. firewall blocked browser cloud speech), process recorded 16kHz WAV audio via backend Vosk
-                if (window._medibotAudioBuffers && window._medibotAudioBuffers.length > 0) {
-                    const totalLen = window._medibotAudioBuffers.reduce((acc, b) => acc + b.length, 0);
-                    if (totalLen > 1000) {
-                        const merged = new Float32Array(totalLen);
-                        let offset = 0;
-                        for (const b of window._medibotAudioBuffers) {
-                            merged.set(b, offset);
-                            offset += b.length;
-                        }
-                        const sampleRate = audioCtx ? audioCtx.sampleRate : 16000;
-                        const wavBlob = encodeWAV(merged, sampleRate);
-                        stopAllVoiceInputs();
-                        sendAudioRecording(wavBlob, 'audio/wav');
-                        return;
-                    }
-                }
-
-                stopAllVoiceInputs();
-                setMicButtonState(false, 'Press Send (➤) or Enter to get answer…');
-                if (inputEl) inputEl.focus();
+            if (!isSpeechSupported()) {
+                console.error('[MediBot Speech ERROR] Web Speech API is not supported in this browser.');
+                appendBotMessage('⚠️ <strong>Voice input not supported:</strong> Your browser does not support the Web Speech API. Please use <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, or <strong>Safari</strong>.');
                 return;
             }
 
-            // Request microphone access
-            let streamGranted = null;
+            medibotStopSpeaking();
+
+            // 1. Explicitly verify microphone hardware access via getUserMedia
+            let micPermissionGranted = false;
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 try {
-                    streamGranted = await navigator.mediaDevices.getUserMedia({
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: true
-                        }
-                    });
+                    console.log('[MediBot Speech] Requesting microphone access via getUserMedia...');
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    micPermissionGranted = true;
+                    console.log('[MediBot Speech] Microphone permission granted.');
+                    // Release the test stream tracks immediately
+                    stream.getTracks().forEach(track => track.stop());
                 } catch (permErr) {
-                    console.warn('Microphone permission:', permErr);
-                    setMicButtonState(false);
-                    appendMsg('🎤 <strong>Microphone access blocked:</strong> Please allow microphone access in your browser address bar.', 'msg-bot');
+                    console.error('[MediBot Speech ERROR] Microphone permission denied or failed:', permErr);
+                    appendBotMessage('🎤 <strong>Microphone Permission Blocked:</strong> Please allow microphone access for this site in your browser address bar (click the lock / tune icon next to the URL, then set Microphone to "Allow") and try again.');
                     return;
                 }
             }
 
-            if (!streamGranted) {
-                appendMsg('🎤 Could not access microphone. Please check browser microphone permissions.', 'msg-bot');
-                return;
-            }
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-            stopAllVoiceInputs();
-            if (inputEl) inputEl.value = '';
-            window._medibotAudioBuffers = [];
-            micStream = streamGranted;
-
-            // Start AudioContext to record 16kHz PCM audio buffers for backend Vosk
             try {
-                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtxClass) {
-                    audioCtx = new AudioCtxClass({ sampleRate: 16000 });
-                    audioSourceNode = audioCtx.createMediaStreamSource(streamGranted);
+                console.log('[MediBot Speech] Initializing SpeechRecognition instance. Language:', currentLang);
+                speechRecognition = new SpeechRec();
+                speechRecognition.lang = currentLang; // 'en-IN' or 'hi-IN'
+                speechRecognition.continuous = false;
+                speechRecognition.interimResults = true;
+                speechRecognition.maxAlternatives = 1;
 
-                    const procNode = audioCtx.createScriptProcessor(4096, 1, 1);
-                    procNode.onaudioprocess = function (e) {
-                        if (!isListeningVoice) return;
-                        const channelData = e.inputBuffer.getChannelData(0);
-                        window._medibotAudioBuffers.push(new Float32Array(channelData));
-                    };
-                    audioSourceNode.connect(procNode);
-                    procNode.connect(audioCtx.destination);
-                }
-            } catch (ae) {
-                console.warn('AudioContext recording notice:', ae);
-            }
+                const micBtn = document.getElementById('medibot-mic');
+                const voiceBar = document.getElementById('medibot-voice-bar');
+                const voiceStatus = document.getElementById('medibot-voice-status-text');
+                const input = document.getElementById('medibot-input');
 
-            // Start SpeechRecognition in parallel for live realtime typing
-            const SpeechRecClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-            isListeningVoice = true;
-            setMicButtonState(true, '🎙️ Listening in English... Speak now!');
-            playAudioCue('start');
+                let recordedTranscript = '';
 
-            const waveEl = document.getElementById('medibot-audio-wave');
-            if (waveEl) waveEl.style.display = 'flex';
+                // 2. Attach all event handlers BEFORE calling .start()
+                speechRecognition.onstart = function () {
+                    console.log('[MediBot Speech EVENT] onstart: Speech recognition service has started.');
+                    isListening = true;
+                    if (micBtn) {
+                        micBtn.classList.add('listening');
+                        micBtn.title = 'Listening... Click to Stop & Send';
+                    }
+                    if (voiceBar) voiceBar.style.display = 'flex';
+                    if (voiceStatus) {
+                        voiceStatus.innerText = currentLang === 'hi-IN'
+                            ? '🎙️ सुन रहा हूँ (हिन्दी)... बोलिए'
+                            : '🎙️ Listening in English... Speak now';
+                    }
+                    if (input) {
+                        input.placeholder = currentLang === 'hi-IN' ? 'सुन रहा हूँ... बोलिए' : 'Listening... Speak your query';
+                    }
+                };
 
-            if (SpeechRecClass) {
-                try {
-                    activeRecognition = new SpeechRecClass();
-                    activeRecognition.lang = 'en-US';
-                    activeRecognition.interimResults = true;
-                    activeRecognition.continuous = true;
-                    activeRecognition.maxAlternatives = 1;
+                speechRecognition.onaudiostart = function () {
+                    console.log('[MediBot Speech EVENT] onaudiostart: Audio hardware capturing.');
+                };
 
-                    activeRecognition.onresult = function (event) {
-                        let fullText = '';
-                        for (let i = 0; i < event.results.length; i++) {
-                            fullText += event.results[i][0].transcript + ' ';
-                        }
-                        fullText = fullText.trim();
-                        if (fullText && inputEl) {
-                            inputEl.value = correctPharmacySpeech(fullText);
-                            inputEl.scrollLeft = inputEl.scrollWidth;
-                        }
-                    };
+                speechRecognition.onspeechstart = function () {
+                    console.log('[MediBot Speech EVENT] onspeechstart: Speech sound detected by microphone.');
+                };
 
-                    activeRecognition.onerror = function (event) {
-                        console.warn('Browser speech recognition event:', event.error);
-                    };
+                speechRecognition.onresult = function (event) {
+                    console.log('[MediBot Speech EVENT] onresult triggered with results length:', event.results.length);
+                    let fullTranscript = '';
+                    for (let i = 0; i < event.results.length; i++) {
+                        fullTranscript += event.results[i][0].transcript;
+                    }
+                    fullTranscript = fullTranscript.trim();
+                    recordedTranscript = fullTranscript;
 
-                    activeRecognition.onend = function () {
-                        if (isListeningVoice && activeRecognition) {
-                            try { activeRecognition.start(); } catch(re){}
-                        }
-                    };
+                    const isFinal = event.results[event.results.length - 1].isFinal;
+                    console.log(`[MediBot Speech] Transcript [${isFinal ? 'FINAL' : 'INTERIM'}]: "${fullTranscript}"`);
 
-                    activeRecognition.start();
-                } catch (srErr) {
-                    console.warn('Web Speech start note:', srErr);
-                }
+                    if (input && fullTranscript) {
+                        input.value = fullTranscript;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                };
+
+                speechRecognition.onerror = function (event) {
+                    console.error('[MediBot Speech ERROR] onerror triggered:', event.error, event);
+                    isListening = false;
+
+                    let errorMsg = '';
+                    switch (event.error) {
+                        case 'not-allowed':
+                        case 'service-not-allowed':
+                            errorMsg = '🎤 <strong>Microphone Access Denied:</strong> Permission was not granted to use the microphone. Please allow microphone access in your browser settings (look for the lock or microphone icon in the address bar).';
+                            break;
+                        case 'no-speech':
+                            errorMsg = '🎤 <strong>No Speech Detected:</strong> MediBot did not hear any audio. Please check that your microphone is unmuted and speak clearly into your mic.';
+                            break;
+                        case 'network':
+                            errorMsg = '🌐 <strong>Voice Recognition Network Error:</strong> Could not connect to the cloud speech recognition service (ensure you are connected to the internet or type your query in the text box).';
+                            break;
+                        case 'audio-capture':
+                            errorMsg = '🎤 <strong>Microphone Hardware Error:</strong> No microphone was detected or it is in use by another application.';
+                            break;
+                        case 'aborted':
+                            console.log('[MediBot Speech] Recognition was cancelled/aborted by user.');
+                            break;
+                        default:
+                            errorMsg = `⚠️ <strong>Voice Recognition Error:</strong> ${event.error}. Please try again or type your message.`;
+                    }
+
+                    if (errorMsg) {
+                        appendBotMessage(errorMsg);
+                    }
+                    medibotStopVoice();
+                };
+
+                speechRecognition.onend = function () {
+                    console.log('[MediBot Speech EVENT] onend: Speech recognition session ended.');
+                    const finalCapturedText = input ? input.value.trim() : recordedTranscript;
+                    medibotStopVoice();
+
+                    if (finalCapturedText) {
+                        console.log('[MediBot Speech] Auto-submitting recognized speech query:', finalCapturedText);
+                        medibotSend(finalCapturedText);
+                    } else {
+                        console.log('[MediBot Speech] Session ended with no text captured.');
+                    }
+                };
+
+                // 3. Call .start() and verify execution
+                speechRecognition.start();
+                console.log('[MediBot Speech] speechRecognition.start() fired successfully.');
+
+            } catch (err) {
+                console.error('[MediBot Speech FATAL ERROR] Exception during speech recognition init/start:', err);
+                appendBotMessage(`⚠️ <strong>Could not start voice recognition:</strong> ${err.message || err}. Please try typing your question.`);
+                medibotStopVoice();
             }
         };
+
+        window.medibotStopVoice = function () {
+            console.log('[MediBot Speech] Stopping voice recognition...');
+            isListening = false;
+            if (speechRecognition) {
+                try {
+                    speechRecognition.stop();
+                } catch(e) {
+                    console.warn('[MediBot Speech] Note on stopping recognition:', e);
+                }
+                speechRecognition = null;
+            }
+            const micBtn = document.getElementById('medibot-mic');
+            const voiceBar = document.getElementById('medibot-voice-bar');
+            const input = document.getElementById('medibot-input');
+
+            if (micBtn) {
+                micBtn.classList.remove('listening');
+                micBtn.title = 'Click to speak (Voice Recognition)';
+            }
+            if (voiceBar) voiceBar.style.display = 'none';
+            if (input && !input.value) {
+                input.placeholder = currentLang === 'hi-IN' ? 'MediBot से पूछें या 🎤 दबाकर बोलें...' : 'Ask MediBot or click 🎤 to speak…';
+            }
+        };
+
     })();
     </script>
     {% endif %}
