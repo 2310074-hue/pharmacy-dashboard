@@ -75,6 +75,7 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
     
+    error = None
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -85,9 +86,15 @@ def login_view(request):
             messages.success(request, f'Welcome back, {user.get_full_name()}!')
             return redirect('dashboard')
         else:
-            messages.error(request, 'Invalid username or password.')
+            error = 'Invalid username or password.'
+    else:
+        # Clear any stale 'Invalid username or password' flash messages from cookies
+        storage = messages.get_messages(request)
+        other_messages = [m for m in storage if 'Invalid username or password' not in str(m)]
+        for m in other_messages:
+            messages.add_message(request, m.level, m.message, extra_tags=m.extra_tags)
     
-    return render(request, 'login.html')
+    return render(request, 'login.html', {'error': error})
 
 
 def logout_view(request):
