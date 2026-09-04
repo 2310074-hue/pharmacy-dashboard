@@ -172,6 +172,10 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=config('EMAIL_HOST_USER', default=''))
 
+# Resend HTTPS API Configuration (Port 443 - 100% unblocked on Render cloud)
+RESEND_API_KEY = config('RESEND_API_KEY', default='')
+RESEND_FROM_EMAIL = config('RESEND_FROM_EMAIL', default='PharmaCare <onboarding@resend.dev>')
+
 # Celery broker (use Redis locally)
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 CELERY_TIMEZONE = os.environ.get('CELERY_TIMEZONE', 'UTC')

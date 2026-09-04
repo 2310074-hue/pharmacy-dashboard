@@ -3751,24 +3751,26 @@ def _dispatch_consolidated_expiry_email(customer_name, customer_email, logs_list
     """
 
     try:
-        from MediApp.admin import get_email_connection
-        if conn is None:
-            conn = get_email_connection()
-        send_mail(
+        from MediApp.utils.email_utils import send_universal_mail
+        success, err = send_universal_mail(
             subject=subject,
-            message=plain_body,
-            html_message=html_body,
-            from_email=django_settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=False,
-            connection=conn
+            plain_body=plain_body,
+            html_body=html_body,
+            to_email=email,
+            conn=conn
         )
-        for log in logs_list:
-            log.reminder_sent = True
-            log.sent_at = timezone.now()
-            log.message = plain_body
-            log.save(update_fields=['reminder_sent', 'sent_at', 'message'])
-        return True, None
+        if success:
+            for log in logs_list:
+                log.reminder_sent = True
+                log.sent_at = timezone.now()
+                log.message = plain_body
+                log.save(update_fields=['reminder_sent', 'sent_at', 'message'])
+            return True, None
+        else:
+            for log in logs_list:
+                log.message = f"Send Failed: {err}"
+                log.save(update_fields=['message'])
+            return False, str(err)
     except Exception as exc:
         for log in logs_list:
             log.message = f"Send Failed: {exc}"

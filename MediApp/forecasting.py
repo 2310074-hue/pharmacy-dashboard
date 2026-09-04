@@ -415,25 +415,34 @@ def send_forecast_critical_stock_email(recipient_email=None, force=False):
 </html>"""
 
     try:
-        connection = get_email_connection()
-        email = EmailMultiAlternatives(
+        from MediApp.utils.email_utils import send_universal_mail
+        success, err = send_universal_mail(
             subject=subject,
-            body=plain_body,
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'sharmaneeraj3415@gmail.com'),
-            to=[target_email],
-            connection=connection
+            plain_body=plain_body,
+            html_body=html_content,
+            to_email=target_email,
         )
-        email.attach_alternative(html_content, "text/html")
-        email.send(fail_silently=False)
-        return {
-            'success': True,
-            'email_sent': True,
-            'message': f"Critical stock alert email successfully sent to {target_email}",
-            'critical_count': len(critical),
-            'high_risk_count': len(high_risk),
-            'total_at_risk': len(items_to_report),
-            'medicines': items_to_report
-        }
+        if success:
+            return {
+                'success': True,
+                'email_sent': True,
+                'message': f"Critical stock alert email successfully sent to {target_email}",
+                'critical_count': len(critical),
+                'high_risk_count': len(high_risk),
+                'total_at_risk': len(items_to_report),
+                'medicines': items_to_report
+            }
+        else:
+            return {
+                'success': False,
+                'email_sent': False,
+                'error': err,
+                'message': f"Failed to send email: {err}",
+                'critical_count': len(critical),
+                'high_risk_count': len(high_risk),
+                'total_at_risk': len(items_to_report),
+                'medicines': items_to_report
+            }
     except Exception as e:
         return {
             'success': False,

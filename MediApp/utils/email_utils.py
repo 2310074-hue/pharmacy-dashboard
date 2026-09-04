@@ -1,6 +1,97 @@
+import json
+import os
 import ssl
+import urllib.request
+import urllib.error
 from django.core.mail import send_mail, EmailMultiAlternatives, get_connection
 from django.conf import settings
+
+
+def send_via_resend(to_email, subject, html_content, text_content=None, from_email=None):
+    """
+    Dispatches email via Resend HTTPS REST API (Port 443).
+    100% reliable on Cloud hosting platforms like Render where SMTP ports are blocked.
+    """
+    api_key = getattr(settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
+    if not api_key:
+        return False, "No RESEND_API_KEY configured"
+
+    from_addr = from_email or getattr(settings, 'RESEND_FROM_EMAIL', '') or os.environ.get('RESEND_FROM_EMAIL', 'PharmaCare <onboarding@resend.dev>')
+    
+    url = "https://api.resend.com/emails"
+    headers = {
+        "Authorization": f"Bearer {api_key.strip()}",
+        "Content-Type": "application/json",
+        "User-Agent": "PharmaCare-App/1.0"
+    }
+    
+    recipients = [to_email] if isinstance(to_email, str) else list(to_email)
+    recipients = [r.strip() for r in recipients if r and r.strip()]
+    if not recipients:
+        return False, "No recipient email address provided"
+
+    payload = {
+        "from": from_addr,
+        "to": recipients,
+        "subject": subject,
+        "html": html_content,
+    }
+    if text_content:
+        payload["text"] = text_content
+
+    try:
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode('utf-8'),
+            headers=headers,
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=12) as response:
+            res_body = response.read().decode('utf-8')
+            return True, None
+    except urllib.error.HTTPError as err:
+        err_msg = err.read().decode('utf-8')
+        try:
+            err_json = json.loads(err_msg)
+            err_msg = err_json.get('message', err_msg)
+        except Exception:
+            pass
+        return False, f"Resend API Error: {err_msg}"
+    except Exception as exc:
+        return False, f"Resend Error: {exc}"
+
+
+def send_universal_mail(subject, plain_body, html_body, to_email, from_email=None, conn=None):
+    """
+    Smart unified email dispatcher:
+    1. If RESEND_API_KEY is configured (Render Cloud), uses HTTPS port 443 (100% unblocked).
+    2. Falls back seamlessly to Django SMTP backend (for local dev or custom SMTP).
+    """
+    resend_key = getattr(settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
+    if resend_key:
+        success, err = send_via_resend(to_email, subject, html_body, text_content=plain_body, from_email=from_email)
+        if success:
+            return True, None
+        # If Resend failed and SMTP credentials exist, attempt SMTP fallback
+        if not getattr(settings, 'EMAIL_HOST_PASSWORD', ''):
+            return False, err
+
+    # Fallback to standard SMTP
+    try:
+        if conn is None:
+            conn = get_email_connection()
+        send_mail(
+            subject=subject,
+            message=plain_body,
+            html_message=html_body,
+            from_email=from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', ''),
+            recipient_list=[to_email] if isinstance(to_email, str) else list(to_email),
+            fail_silently=False,
+            connection=conn
+        )
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
 
 
 def get_email_connection():
@@ -137,21 +228,13 @@ def send_reminder_email(customer, reminder):
 </html>
 """
 
-    try:
-        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'noreply@pharmacare.com')
-        connection = get_email_connection()
-        email = EmailMultiAlternatives(
-            subject=subject,
-            body=plain_message,
-            from_email=from_email,
-            to=[customer.email.strip()],
-            connection=connection,
-        )
-        email.attach_alternative(html_message, "text/html")
-        email.send(fail_silently=False)
-        return {'success': True, 'error': None}
-    except Exception as exc:
-        return {'success': False, 'error': str(exc)}
+    success, err = send_universal_mail(
+        subject=subject,
+        plain_body=plain_message,
+        html_body=html_message,
+        to_email=customer.email.strip(),
+    )
+    return {'success': success, 'error': err}
 
 
 def send_stock_available_email(medicine, customers):
@@ -262,19 +345,15 @@ def send_stock_available_email(medicine, customers):
 </html>
 """
 
-        try:
-            connection = get_email_connection()
-            email = EmailMultiAlternatives(
-                subject=subject,
-                body=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[customer.email],
-                connection=connection,
-            )
-            email.attach_alternative(html_message, "text/html")
-            email.send(fail_silently=False)
+        success, err = send_universal_mail(
+            subject=subject,
+            plain_body=plain_message,
+            html_body=html_message,
+            to_email=customer.email.strip(),
+        )
+        if success:
             sent += 1
-        except Exception as exc:
-            errors.append(f"Failed to email {customer.name} ({customer.email}): {exc}")
+        else:
+            errors.append(f"Failed to email {customer.name} ({customer.email}): {err}")
 
     return {"sent": sent, "errors": errors}
