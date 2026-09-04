@@ -81,37 +81,53 @@
                         <span class="text-xs px-2.5 py-1 bg-cyan-100 text-cyan-800 font-bold rounded-full">{{ filtered_count }} Records</span>
                     </h2>
                     <p class="text-sm text-gray-500 mt-0.5">Select customers to send automated medicine expiry reminder emails</p>
-                </div>
+                    
+                    <div class="flex flex-wrap items-center gap-2.5 mt-4">
+                        <!-- Add Custom Reminder Button -->
+                        <button 
+                            type="button" 
+                            onclick="openAddReminderModal()" 
+                            class="btn btn-primary flex items-center gap-1.5 shadow-sm font-bold bg-cyan-600 hover:bg-cyan-700 text-white text-xs sm:text-sm py-2 px-3 sm:px-4"
+                        >
+                            <span>➕</span> Create Reminder
+                        </button>
 
-                <div class="flex flex-wrap items-center gap-3">
-                    <!-- Add Custom Reminder Button -->
-                    <button 
-                        type="button" 
-                        onclick="openAddReminderModal()" 
-                        class="btn btn-primary flex items-center gap-1.5 shadow-sm font-bold bg-cyan-600 hover:bg-cyan-700 text-white"
-                    >
-                        <span>➕</span> Create Reminder
-                    </button>
+                        <!-- Bulk Send Email Button -->
+                        <button 
+                            type="submit" 
+                            id="bulkSendBtn" 
+                            class="btn btn-secondary flex items-center gap-1.5 shadow-sm font-bold opacity-60 cursor-not-allowed text-xs sm:text-sm py-2 px-3 sm:px-4" 
+                            disabled
+                            onclick="return confirmBulkSend()"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <span>Send Reminder Email</span>
+                            <span id="selectedCountBadge" class="hidden px-1.5 py-0.5 bg-white text-cyan-700 text-xs font-black rounded-full">0</span>
+                        </button>
 
-                    <!-- Bulk Send Button -->
-                    <button 
-                        type="submit" 
-                        id="bulkSendBtn" 
-                        class="btn btn-secondary flex items-center gap-2 shadow-sm font-bold opacity-60 cursor-not-allowed" 
-                        disabled
-                        onclick="return confirmBulkSend()"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                        <span>Send Reminder Email</span>
-                        <span id="selectedCountBadge" class="hidden px-2 py-0.5 bg-white text-cyan-700 text-xs font-black rounded-full">0</span>
-                    </button>
+                        <!-- Bulk WhatsApp Button -->
+                        <button 
+                            type="button" 
+                            id="bulkWhatsAppBtn" 
+                            onclick="triggerBulkWhatsApp()"
+                            class="btn flex items-center gap-1.5 shadow-sm font-bold opacity-60 cursor-not-allowed bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm py-2 px-3 sm:px-4 rounded-lg transition-all" 
+                            disabled
+                            title="Send WhatsApp reminder message to selected customers"
+                        >
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                            </svg>
+                            <span>Send Message on WhatsApp</span>
+                            <span id="selectedWhatsAppBadge" class="hidden px-1.5 py-0.5 bg-white text-emerald-700 text-xs font-black rounded-full">0</span>
+                        </button>
 
-                    <!-- Manual Sync Button -->
-                    <a href="{% url 'sync_expiry_reminders_view' %}" class="btn btn-outline flex items-center gap-1.5 shadow-sm text-sm" title="Re-scan sales history to discover any new expiring medicine purchases">
-                        <span>🔄</span> Sync Alerts
-                    </a>
+                        <!-- Manual Sync Button -->
+                        <a href="{% url 'sync_expiry_reminders_view' %}" class="btn btn-outline flex items-center gap-1.5 shadow-sm text-xs sm:text-sm py-2 px-3" title="Re-scan sales history to discover any new expiring medicine purchases">
+                            <span>🔄</span> Sync Alerts
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -215,6 +231,12 @@
                                     name="selected_logs" 
                                     value="{{ log.id }}" 
                                     class="log-checkbox w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500 cursor-pointer"
+                                    data-name="{{ log.customer_name|default:'Valued Customer'|escape }}"
+                                    data-phone="{{ log.customer_phone|default:''|escape }}"
+                                    data-med="{{ log.medicine_name|escape }}"
+                                    data-expiry="{{ log.expiry_date|date:'d-M-Y'|default:'Soon' }}"
+                                    data-status="{{ log.badge_text|default:'Expiring Soon'|escape }}"
+                                    data-whatsapp-url="{{ log.whatsapp_url|default:''|escape }}"
                                     onchange="updateSelectionState()"
                                 >
                             </td>
@@ -535,6 +557,45 @@
     </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- 💬 BULK WHATSAPP DISPATCH MODAL -->
+<!-- ========================================================================= -->
+<div id="bulkWhatsAppModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 flex flex-col max-h-[85vh] animate-scaleIn">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 bg-gradient-to-r from-emerald-700 to-teal-800 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <span class="text-2xl">💬</span>
+                <div>
+                    <h3 class="font-black text-base tracking-wide">WhatsApp Reminder Dispatch</h3>
+                    <p class="text-xs text-emerald-100">Send personalized expiry alerts to selected customers</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeBulkWhatsAppModal()" class="text-emerald-100 hover:text-white text-lg font-bold p-1">
+                ✕
+            </button>
+        </div>
+
+        <!-- Modal Body (Customer List) -->
+        <div class="p-5 overflow-y-auto space-y-3 flex-1">
+            <p class="text-xs text-gray-600 font-semibold mb-1">
+                Click below to send formatted WhatsApp message to each customer:
+            </p>
+            <div id="bulkWhatsAppCustomerList" class="space-y-2.5">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <span class="text-xs text-gray-500 font-semibold" id="bulkWhatsAppSummary">0 customers</span>
+            <button type="button" onclick="closeBulkWhatsAppModal()" class="btn btn-secondary text-xs font-bold py-2 px-4 shadow-sm">
+                Done / Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Search Handler
     function applySearch() {
@@ -563,19 +624,40 @@
         const checkboxes = document.querySelectorAll('.log-checkbox:checked');
         const count = checkboxes.length;
         const btn = document.getElementById('bulkSendBtn');
+        const waBtn = document.getElementById('bulkWhatsAppBtn');
         const badge = document.getElementById('selectedCountBadge');
+        const waBadge = document.getElementById('selectedWhatsAppBadge');
         const master = document.getElementById('selectAllCheckbox');
         const allBoxes = document.querySelectorAll('.log-checkbox');
 
         if (count > 0) {
-            btn.disabled = false;
-            btn.classList.remove('opacity-60', 'cursor-not-allowed');
-            badge.classList.remove('hidden');
-            badge.textContent = count;
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+            if (waBtn) {
+                waBtn.disabled = false;
+                waBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+            if (badge) {
+                badge.classList.remove('hidden');
+                badge.textContent = count;
+            }
+            if (waBadge) {
+                waBadge.classList.remove('hidden');
+                waBadge.textContent = count;
+            }
         } else {
-            btn.disabled = true;
-            btn.classList.add('opacity-60', 'cursor-not-allowed');
-            badge.classList.add('hidden');
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-60', 'cursor-not-allowed');
+            }
+            if (waBtn) {
+                waBtn.disabled = true;
+                waBtn.classList.add('opacity-60', 'cursor-not-allowed');
+            }
+            if (badge) badge.classList.add('hidden');
+            if (waBadge) waBadge.classList.add('hidden');
         }
 
         if (master) {
@@ -971,6 +1053,90 @@
 
         const msg = `🏥 *PharmaCare Pharmacy - Medicine Expiry Alert*\n\nDear *${custName}*,\nThis is an important reminder that your following medicine(s) are reaching expiry:\n\n${medLines}\nPlease visit PharmaCare Pharmacy to refill or replace in time.\n\nStay Healthy,\n*PharmaCare Healthcare Team*`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    // Trigger Bulk WhatsApp from selected table checkboxes
+    function triggerBulkWhatsApp() {
+        const checkedBoxes = document.querySelectorAll('.log-checkbox:checked');
+        if (checkedBoxes.length === 0) {
+            alert('Please select at least one customer record to send WhatsApp reminder.');
+            return;
+        }
+
+        const items = [];
+        checkedBoxes.forEach(cb => {
+            items.push({
+                id: cb.value,
+                name: cb.getAttribute('data-name') || 'Valued Customer',
+                phone: cb.getAttribute('data-phone') || '',
+                med: cb.getAttribute('data-med') || '',
+                expiry: cb.getAttribute('data-expiry') || 'Soon',
+                status: cb.getAttribute('data-status') || 'Expiring Soon',
+                url: cb.getAttribute('data-whatsapp-url') || ''
+            });
+        });
+
+        if (items.length === 1) {
+            const item = items[0];
+            if (item.url) {
+                window.open(item.url, '_blank');
+            } else {
+                openWhatsAppPrompt(item.name, item.med, item.expiry, item.status);
+            }
+            return;
+        }
+
+        openBulkWhatsAppModal(items);
+    }
+
+    function openBulkWhatsAppModal(items) {
+        const modal = document.getElementById('bulkWhatsAppModal');
+        const listEl = document.getElementById('bulkWhatsAppCustomerList');
+        const summaryEl = document.getElementById('bulkWhatsAppSummary');
+
+        summaryEl.textContent = `${items.length} customer${items.length > 1 ? 's' : ''} selected`;
+        let html = '';
+
+        items.forEach((item, idx) => {
+            let directUrl = item.url;
+            if (!directUrl && item.phone) {
+                let clean = item.phone.replace(/[^0-9]/g, '');
+                if (clean.length === 10) clean = '91' + clean;
+                const msg = `🏥 *PharmaCare Pharmacy - Medicine Expiry Alert*\n\nDear *${item.name}*,\nYour prescribed medicine *${item.med}* is reaching expiry on *${item.expiry}* (${item.status}).\n\nPlease visit PharmaCare Pharmacy to restock or replace in time.\n\nStay Healthy,\n*PharmaCare Healthcare Team*`;
+                directUrl = `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
+            }
+
+            html += `
+                <div class="p-3 bg-emerald-50/50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 hover:bg-emerald-50 transition">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-900 text-sm truncate">${escapeHtml(item.name)}</span>
+                            <span class="text-[11px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">📱 ${item.phone ? escapeHtml(item.phone) : 'No phone'}</span>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-0.5 truncate">💊 ${escapeHtml(item.med)} • Exp: ${escapeHtml(item.expiry)}</p>
+                    </div>
+                    <div>
+                        ${directUrl ? `
+                            <a href="${directUrl}" target="_blank" class="btn btn-sm py-1.5 px-3 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm flex items-center gap-1 rounded-lg">
+                                <span>💬 Send ➔</span>
+                            </a>
+                        ` : `
+                            <button type="button" onclick="openWhatsAppPrompt('${escapeHtml(item.name)}', '${escapeHtml(item.med)}', '${escapeHtml(item.expiry)}', '${escapeHtml(item.status)}')" class="btn btn-sm py-1.5 px-3 text-xs font-bold text-emerald-800 bg-white border border-emerald-300 hover:bg-emerald-100 rounded-lg">
+                                <span>+ Phone ➔</span>
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+        });
+
+        listEl.innerHTML = html;
+        modal.style.display = 'flex';
+    }
+
+    function closeBulkWhatsAppModal() {
+        const modal = document.getElementById('bulkWhatsAppModal');
+        if (modal) modal.style.display = 'none';
     }
 
     function escapeHtml(str) {
