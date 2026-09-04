@@ -3309,18 +3309,35 @@ def _medibot_local_engine(prompt, request=None):
         if matched_customers:
             return _format_customer_card(matched_customers, scoped_sales)
 
-        # General customer list
-        if any(w in clean_query for w in ['top', 'list', 'all', 'spending', 'highest', 'best', 'loyal', 'registered', 'customers']):
-            cust_list = list(scoped_customers[:6])
-            if not cust_list:
-                return "👤 No customers are currently registered in your pharmacy account."
+        # Permanent / Loyal customer list
+        if any(w in clean_query for w in ['permanent', 'permanent customer', 'permanent customers', 'loyal member', 'loyal members', 'vip', 'permanent member', 'permanent members', 'permanent bala', 'permanent wale', 'sign bana', 'permanent sign']):
+            perm_custs = list(scoped_customers.filter(is_permanent=True))
+            if not perm_custs:
+                return "⭐ No permanent members are currently marked in your pharmacy records."
             lines = []
-            for c in cust_list:
+            for c in perm_custs:
                 c_sales = scoped_sales.filter(customer=c, status='Completed')
                 spent = sum((s.total_price for s in c_sales), Decimal('0.00'))
-                lines.append(f"• **{c.name}** (Phone: `{c.contact_number}`) — Orders: **{c_sales.count()}**, Total Spent: **Rs.{spent:.2f}**")
-            total_cust_count = len(scoped_customers) if isinstance(scoped_customers, list) else scoped_customers.count()
-            return f"👤 **Registered Customers ({total_cust_count} total):**\n\n" + "\n".join(lines)
+                wa_msg = f"Hello {c.name}, greeting from PharmaCare! As our valued permanent member, how can we assist you today?"
+                wa_btn = f"[[WA:{c.contact_number}|{wa_msg}|WhatsApp {c.name.split()[0]}]]"
+                lines.append(f"• **{c.name}** (`{c.contact_number}`) — Orders: **{c_sales.count()} bills**, Total Spent: **Rs.{spent:.2f}** {wa_btn}")
+            perm_btn = "[[LINK:/customer/|👥 Open Customer Management]]"
+            return f"⭐ **Permanent Member Customers ({len(perm_custs)} total):**\n\n" + "\n".join(lines) + f"\n\n{perm_btn}"
+
+        # General customer list (All customers)
+        if any(w in clean_query for w in ['top', 'list', 'all', 'spending', 'highest', 'best', 'loyal', 'registered', 'customers', 'pure', 'saare', 'sare', 'batao', 'dikhaye']):
+            all_custs = list(scoped_customers)
+            if not all_custs:
+                return "👤 No customers are currently registered in your pharmacy account."
+            lines = []
+            for idx, c in enumerate(all_custs, 1):
+                c_sales = scoped_sales.filter(customer=c, status='Completed')
+                spent = sum((s.total_price for s in c_sales), Decimal('0.00'))
+                perm_badge = " ⭐" if c.is_permanent else ""
+                lines.append(f"• **{idx}. {c.name}**{perm_badge} (`{c.contact_number}`) — Orders: **{c_sales.count()}**, Spent: **Rs.{spent:.2f}**")
+            total_cust_count = len(all_custs)
+            crm_btn = "[[LINK:/customer/|👥 Open Full Customer Management (96 total)]]"
+            return f"👤 **All Registered Customers ({total_cust_count} total):**\n\n" + "\n".join(lines) + f"\n\n{crm_btn}"
 
         return f"👤 I could not find customer records matching **'{raw_query}'**. Try searching by customer name (e.g. *'Customer Rahul'*) or phone number (*'Customer 9876543210'*)."
 
