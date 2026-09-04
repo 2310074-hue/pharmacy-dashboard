@@ -3851,8 +3851,34 @@ def expiry_reminder_list(request):
     except EmptyPage:
         logs_page = paginator.page(paginator.num_pages)
 
-    # Attach computed timeline metadata to each log item in the page
+    # Fetch customer phone numbers for records on this page
+    import urllib.parse
+    import re
+    cust_emails = [item.customer_email.strip().lower() for item in logs_page if item.customer_email]
+    cust_names = [item.customer_name.strip() for item in logs_page if item.customer_name]
+
+    phone_map = {}
+    if cust_emails:
+        for c in Customer.objects.filter(email__in=cust_emails).exclude(contact_number=''):
+            phone_map[c.email.strip().lower()] = c.contact_number
+    if cust_names:
+        for c in Customer.objects.filter(name__in=cust_names).exclude(contact_number=''):
+            if c.name.strip() not in phone_map:
+                phone_map[c.name.strip()] = c.contact_number
+
+    # Attach computed timeline metadata and WhatsApp links to each log item in the page
     for item in logs_page:
+        email_clean = (item.customer_email or '').strip().lower()
+        name_clean = (item.customer_name or '').strip()
+        phone = phone_map.get(email_clean) or phone_map.get(name_clean) or ''
+        item.customer_phone = phone
+
+        # Format number for WhatsApp link
+        clean_num = re.sub(r'[^0-9]', '', phone)
+        if len(clean_num) == 10:
+            clean_num = '91' + clean_num
+        item.whatsapp_phone = clean_num
+
         if item.expiry_date:
             days_left = (item.expiry_date - today).days
             item.days_left = days_left
@@ -3877,6 +3903,24 @@ def expiry_reminder_list(request):
             item.badge_class = 'bg-gray-100 text-gray-600 border-gray-300'
             item.badge_text = 'No Date'
             item.badge_icon = '⚪'
+
+        exp_str = item.expiry_date.strftime('%d-%b-%Y') if item.expiry_date else 'Soon'
+        cust_display_name = item.customer_name or 'Valued Customer'
+        status_info = item.badge_text
+
+        wa_msg = (
+            f"🏥 *PharmaCare Pharmacy - Medicine Expiry Alert*\n\n"
+            f"Dear *{cust_display_name}*,\n"
+            f"This is an important reminder regarding your prescribed medicine:\n\n"
+            f"💊 *Medicine:* {item.medicine_name}\n"
+            f"📅 *Expiry Date:* {exp_str}\n"
+            f"⚠️ *Status:* {status_info}\n\n"
+            f"Please visit PharmaCare Pharmacy or consult your doctor to replace or restock your supply in time.\n\n"
+            f"Stay Healthy,\n"
+            f"*PharmaCare Healthcare Team*"
+        )
+        item.whatsapp_message = wa_msg
+        item.whatsapp_url = f"https://wa.me/{clean_num}?text={urllib.parse.quote(wa_msg)}" if clean_num else ""
 
     context = {
         'logs': logs_page,

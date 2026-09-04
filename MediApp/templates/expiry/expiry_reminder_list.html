@@ -228,6 +228,11 @@
                                     <div>
                                         <p class="font-bold text-gray-900">{{ log.customer_name|default:"Valued Customer" }}</p>
                                         <p class="text-xs text-gray-500 font-mono">{{ log.customer_email }}</p>
+                                        {% if log.customer_phone %}
+                                        <p class="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
+                                            <span>📱</span> {{ log.customer_phone }}
+                                        </p>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </td>
@@ -275,19 +280,50 @@
                                 {% endif %}
                             </td>
 
-                            <!-- Single Action -->
+                            <!-- Actions: Email & WhatsApp -->
                             <td class="px-4 py-3 text-center whitespace-nowrap">
-                                <a 
-                                    href="{% url 'send_single_expiry_reminder' log.id %}" 
-                                    class="btn btn-sm btn-outline py-1 px-2.5 text-xs font-bold text-cyan-700 hover:bg-cyan-50 flex items-center gap-1 inline-flex"
-                                    title="Send reminder email to this customer immediately"
-                                    onclick="return confirm('Send expiry reminder email to {{ log.customer_name }} ({{ log.customer_email }})?');"
-                                >
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                    </svg>
-                                    <span>{% if log.reminder_sent %}Resend{% else %}Send Email{% endif %}</span>
-                                </a>
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <!-- Email Button -->
+                                    <a 
+                                        href="{% url 'send_single_expiry_reminder' log.id %}" 
+                                        class="btn btn-sm btn-outline py-1 px-2 text-xs font-bold text-cyan-700 hover:bg-cyan-50 flex items-center gap-1 inline-flex shadow-sm rounded-lg"
+                                        title="Send reminder email via Resend/SMTP"
+                                        onclick="return confirm('Send expiry reminder email to {{ log.customer_name }} ({{ log.customer_email }})?');"
+                                    >
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                        <span>{% if log.reminder_sent %}Resend{% else %}Email{% endif %}</span>
+                                    </a>
+
+                                    <!-- WhatsApp Button -->
+                                    {% if log.whatsapp_url %}
+                                    <a 
+                                        href="{{ log.whatsapp_url }}" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        class="btn btn-sm py-1 px-2.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 flex items-center gap-1.5 inline-flex shadow-sm transition-all rounded-lg"
+                                        title="Send reminder directly on WhatsApp ({{ log.customer_phone }})"
+                                    >
+                                        <svg class="w-3.5 h-3.5 fill-current text-emerald-600" viewBox="0 0 24 24">
+                                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                                        </svg>
+                                        <span>WhatsApp</span>
+                                    </a>
+                                    {% else %}
+                                    <button 
+                                        type="button"
+                                        onclick="openWhatsAppPrompt('{{ log.customer_name|escapejs }}', '{{ log.medicine_name|escapejs }}', '{{ log.expiry_date|date:'d-M-Y' }}', '{{ log.badge_text|escapejs }}')" 
+                                        class="btn btn-sm py-1 px-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 flex items-center gap-1 inline-flex shadow-sm rounded-lg"
+                                        title="Send reminder on WhatsApp (Click to enter phone number)"
+                                    >
+                                        <svg class="w-3.5 h-3.5 fill-current text-emerald-600" viewBox="0 0 24 24">
+                                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                                        </svg>
+                                        <span>WhatsApp</span>
+                                    </button>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% empty %}
@@ -404,15 +440,19 @@
                 </button>
             </div>
 
-            <!-- Manual Name / Email Inputs (if new walk-in customer) -->
-            <div id="manualCustomerInputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <!-- Manual Name / Email / Phone Inputs (if new walk-in customer) -->
+            <div id="manualCustomerInputs" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Customer Full Name</label>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Customer Name</label>
                     <input type="text" id="manualCustomerName" class="form-input text-sm" placeholder="e.g. Rahul Sharma">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Email Address <span class="text-rose-500">*</span></label>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Email Address</label>
                     <input type="email" id="manualCustomerEmail" class="form-input text-sm" placeholder="customer@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">WhatsApp Phone</label>
+                    <input type="tel" id="manualCustomerPhone" class="form-input text-sm" placeholder="e.g. 9876543210">
                 </div>
             </div>
 
@@ -474,15 +514,21 @@
                 0 medicines selected
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <button type="button" onclick="closeAddReminderModal()" class="btn btn-outline text-xs font-bold py-2 px-3">
                     Cancel
                 </button>
-                <button type="button" onclick="submitReminderModal(false)" class="btn btn-secondary text-xs font-bold py-2 px-4 shadow-sm" id="modalSaveOnlyBtn">
+                <button type="button" onclick="submitReminderModal(false)" class="btn btn-secondary text-xs font-bold py-2 px-3 shadow-sm" id="modalSaveOnlyBtn">
                     💾 Save Alert
                 </button>
-                <button type="button" onclick="submitReminderModal(true)" class="btn btn-primary text-xs font-bold py-2 px-4 shadow-sm bg-cyan-600 hover:bg-cyan-700 text-white flex items-center gap-1.5" id="modalSendEmailBtn">
-                    <span>✉️</span> Send Reminder Email Now
+                <button type="button" onclick="openModalInWhatsApp()" class="btn btn-sm text-xs font-bold py-2 px-3.5 shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 rounded-lg" id="modalSendWhatsAppBtn" title="Send reminder message directly on WhatsApp">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                    </svg>
+                    <span>Send via WhatsApp</span>
+                </button>
+                <button type="button" onclick="submitReminderModal(true)" class="btn btn-primary text-xs font-bold py-2 px-3.5 shadow-sm bg-cyan-600 hover:bg-cyan-700 text-white flex items-center gap-1.5 rounded-lg" id="modalSendEmailBtn">
+                    <span>✉️</span> Send Email
                 </button>
             </div>
         </div>
@@ -630,9 +676,11 @@
         document.getElementById('modalCustomerSearch').value = name;
         document.getElementById('manualCustomerName').value = name;
         document.getElementById('manualCustomerEmail').value = email;
+        const phoneInput = document.getElementById('manualCustomerPhone');
+        if (phoneInput) phoneInput.value = phone || '';
 
         document.getElementById('selectedCustomerNameDisplay').textContent = name;
-        document.getElementById('selectedCustomerEmailDisplay').textContent = email ? `${email} ${phone ? '• 📞 ' + phone : ''}` : '(No email on file)';
+        document.getElementById('selectedCustomerEmailDisplay').textContent = email ? `${email} ${phone ? '• 📱 ' + phone : ''}` : (phone ? '📱 ' + phone : '(No email on file)');
         document.getElementById('selectedCustomerInitial').textContent = name.charAt(0).toUpperCase();
 
         document.getElementById('selectedCustomerCard').classList.remove('hidden');
@@ -647,6 +695,8 @@
         document.getElementById('selectedCustomerCard').classList.add('hidden');
         document.getElementById('manualCustomerInputs').classList.remove('hidden');
         document.getElementById('modalCustomerSearch').value = '';
+        const phoneInput = document.getElementById('manualCustomerPhone');
+        if (phoneInput) phoneInput.value = '';
         document.getElementById('modalCustomerSearch').focus();
     }
 
@@ -875,6 +925,52 @@
             sendBtn.innerHTML = originalText;
             alert('Server error: ' + err);
         });
+    }
+
+    // =========================================================================
+    // 💬 WHATSAPP REMINDER DISPATCHERS
+    // =========================================================================
+    function openWhatsAppPrompt(custName, medName, expDate, statusInfo) {
+        let phone = prompt(`Enter WhatsApp phone number for ${custName || 'Customer'}:`, "");
+        if (!phone) return;
+        phone = phone.replace(/[^0-9]/g, '');
+        if (phone.length === 10) {
+            phone = '91' + phone;
+        }
+        const msg = `🏥 *PharmaCare Pharmacy - Medicine Expiry Alert*\n\nDear *${custName || 'Customer'}*,\nThis is an important reminder regarding your prescribed medicine:\n\n💊 *Medicine:* ${medName}\n📅 *Expiry Date:* ${expDate || 'Soon'}\n⚠️ *Status:* ${statusInfo || 'Expiring Soon'}\n\nPlease visit PharmaCare Pharmacy or consult your doctor to replace or restock your supply in time.\n\nStay Healthy,\n*PharmaCare Healthcare Team*`;
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+    }
+
+    function openModalInWhatsApp() {
+        const custName = (document.getElementById('manualCustomerName').value || document.getElementById('modalCustomerSearch').value || 'Valued Customer').trim();
+        const checkedBoxes = document.querySelectorAll('.modal-med-cb:checked');
+        if (checkedBoxes.length === 0) {
+            alert('Please select at least one medicine to create the WhatsApp reminder.');
+            return;
+        }
+
+        let phone = '';
+        const phoneField = document.getElementById('manualCustomerPhone');
+        if (phoneField && phoneField.value) {
+            phone = phoneField.value.trim();
+        }
+        if (!phone) {
+            phone = prompt(`Enter WhatsApp number for ${custName}:`, '');
+        }
+        if (!phone) return;
+        phone = phone.replace(/[^0-9]/g, '');
+        if (phone.length === 10) phone = '91' + phone;
+
+        let medLines = '';
+        checkedBoxes.forEach(cb => {
+            const name = cb.getAttribute('data-name');
+            const exp = cb.getAttribute('data-expiry') || 'Soon';
+            medLines += `• 💊 *${name}* (Expiry: ${exp})\n`;
+        });
+
+        const msg = `🏥 *PharmaCare Pharmacy - Medicine Expiry Alert*\n\nDear *${custName}*,\nThis is an important reminder that your following medicine(s) are reaching expiry:\n\n${medLines}\nPlease visit PharmaCare Pharmacy to refill or replace in time.\n\nStay Healthy,\n*PharmaCare Healthcare Team*`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     function escapeHtml(str) {
