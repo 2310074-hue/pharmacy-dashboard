@@ -3922,24 +3922,34 @@ def send_expiry_reminders_bulk(request):
     skipped_count = len(qs) - sum(len(items) for items in cust_groups.values())
     failed_count = 0
 
-    from MediApp.admin import get_email_connection
-    conn = get_email_connection()
+    conn = None
+    try:
+        from MediApp.admin import get_email_connection
+        conn = get_email_connection()
+    except Exception as exc:
+        conn = None
 
+    last_error = None
     for email, items in cust_groups.items():
         cust_name = items[0].customer_name or 'Valued Customer'
-        success, err = _dispatch_consolidated_expiry_email(cust_name, email, items, conn=conn)
-        if success:
-            sent_count += 1
-        else:
+        try:
+            success, err = _dispatch_consolidated_expiry_email(cust_name, email, items, conn=conn)
+            if success:
+                sent_count += 1
+            else:
+                failed_count += 1
+                last_error = err
+        except Exception as exc:
             failed_count += 1
+            last_error = str(exc)
 
     total_meds_sent = sum(len(items) for email, items in cust_groups.items()) if sent_count > 0 else 0
     if sent_count > 0 and failed_count == 0 and skipped_count == 0:
         messages.success(request, f"✅ Successfully sent consolidated expiry reminder email(s) to {sent_count} customer(s) ({total_meds_sent} medicine alerts)!")
     elif sent_count > 0:
-        messages.info(request, f"📧 Reminder Email Results: {sent_count} customer(s) notified ({total_meds_sent} medicines), {skipped_count} skipped (no email), {failed_count} failed.")
+        messages.info(request, f"📧 Reminder Email Results: {sent_count} customer(s) notified ({total_meds_sent} medicines), {skipped_count} skipped (no email), {failed_count} failed ({last_error}).")
     else:
-        messages.error(request, f"❌ Failed to send emails ({failed_count} failed, {skipped_count} skipped without email on file).")
+        messages.error(request, f"❌ Failed to send emails ({failed_count} failed, {skipped_count} skipped without email on file. Reason: {last_error or 'Check SMTP settings'}).")
 
     # Retain filter query parameters in redirect if provided
     redirect_url = request.POST.get('redirect_url')

@@ -4,7 +4,7 @@ from django.conf import settings
 
 
 def get_email_connection():
-    """Create SMTP connection with SSL certificate verification fallback for Windows environments."""
+    """Create SMTP connection with SSL certificate verification fallback for Windows and Cloud environments."""
     ssl_context = None
     try:
         ssl_context = ssl._create_unverified_context()
@@ -16,13 +16,20 @@ def get_email_connection():
         except Exception:
             pass
 
+    use_ssl = getattr(settings, 'EMAIL_USE_SSL', False)
+    use_tls = getattr(settings, 'EMAIL_USE_TLS', True)
+    if use_ssl and use_tls:
+        use_tls = False
+
     return get_connection(
         backend=getattr(settings, 'EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend'),
         host=getattr(settings, 'EMAIL_HOST', 'smtp.gmail.com'),
-        port=getattr(settings, 'EMAIL_PORT', 587),
+        port=getattr(settings, 'EMAIL_PORT', 465 if use_ssl else 587),
         username=getattr(settings, 'EMAIL_HOST_USER', ''),
         password=getattr(settings, 'EMAIL_HOST_PASSWORD', ''),
-        use_tls=getattr(settings, 'EMAIL_USE_TLS', True),
+        use_tls=use_tls,
+        use_ssl=use_ssl,
+        timeout=getattr(settings, 'EMAIL_TIMEOUT', 10),
         ssl_context=ssl_context,
     )
 

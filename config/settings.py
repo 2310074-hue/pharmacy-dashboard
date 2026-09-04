@@ -160,8 +160,14 @@ from decouple import config
 
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
-EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+_email_port = config('EMAIL_PORT', default=465, cast=int)
+EMAIL_PORT = _email_port
+_use_ssl = config('EMAIL_USE_SSL', default=(_email_port == 465), cast=bool)
+EMAIL_USE_SSL = _use_ssl
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=(_email_port == 587 and not _use_ssl), cast=bool)
+if EMAIL_USE_SSL and EMAIL_USE_TLS:
+    EMAIL_USE_TLS = False
+EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=config('EMAIL_HOST_USER', default=''))
