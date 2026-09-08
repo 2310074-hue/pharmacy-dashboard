@@ -162,33 +162,33 @@ def forecast_demand(medicine_id, days_ahead=30):
     else:
         days_of_stock_left = 999.0
 
-    # Determine Risk Category
+    # Determine Risk Category based on Days of Inventory & Physical Stock Thresholds
     if current_stock <= 0:
         risk_level = 'OUT_OF_STOCK'
         risk_label = 'Out of Stock'
         risk_color = '#ef4444' # Red
         risk_badge = '🔴 Out of Stock'
         projected_stockout_date = last_date.strftime('%b %d, %Y')
-    elif days_of_stock_left < 7.0:
+    elif days_of_stock_left < 7.0 or current_stock < 20:
         risk_level = 'CRITICAL'
         risk_label = 'Critical Stockout Risk (< 7 days)'
         risk_color = '#ef4444' # Red
         risk_badge = f'🔴 Critical ({days_of_stock_left}d left)'
         stockout_dt = last_date + timedelta(days=max(1, int(days_of_stock_left)))
         projected_stockout_date = stockout_dt.strftime('%b %d, %Y')
-    elif days_of_stock_left < 15.0:
+    elif days_of_stock_left < 15.0 or current_stock < 40:
         risk_level = 'HIGH'
         risk_label = 'High Risk - Reorder Soon (< 15 days)'
         risk_color = '#f97316' # Orange
         risk_badge = f'🟠 High Risk ({days_of_stock_left}d left)'
-        stockout_dt = last_date + timedelta(days=int(days_of_stock_left))
+        stockout_dt = last_date + timedelta(days=max(1, int(days_of_stock_left)))
         projected_stockout_date = stockout_dt.strftime('%b %d, %Y')
-    elif days_of_stock_left < 30.0:
+    elif days_of_stock_left < 30.0 or current_stock < 60:
         risk_level = 'MODERATE'
         risk_label = 'Moderate - Watchlist (< 30 days)'
         risk_color = '#eab308' # Yellow/Amber
         risk_badge = f'🟡 Moderate ({days_of_stock_left}d left)'
-        stockout_dt = last_date + timedelta(days=int(days_of_stock_left))
+        stockout_dt = last_date + timedelta(days=max(1, int(days_of_stock_left)))
         projected_stockout_date = stockout_dt.strftime('%b %d, %Y')
     else:
         risk_level = 'ADEQUATE'
@@ -197,8 +197,9 @@ def forecast_demand(medicine_id, days_ahead=30):
         risk_badge = f'🟢 Safe ({days_of_stock_left}d left)'
         projected_stockout_date = 'No stockout risk in 30 days'
 
-    # Suggested Reorder Quantity (Buffer to cover 45 days of demand)
-    safety_stock_target = int(math.ceil(avg_daily_demand * 45))
+    # Suggested Reorder Quantity (Buffer to cover 45 days of demand and safe pharmacy minimum)
+    min_safety_threshold = max(50, getattr(medicine, 'reorder_threshold', 10) * 3)
+    safety_stock_target = max(min_safety_threshold, int(math.ceil(avg_daily_demand * 45)))
     recommended_reorder_qty = max(0, safety_stock_target - current_stock)
 
     # Historical slice for UI charts (last 45 days for optimal visibility)
@@ -269,8 +270,9 @@ def get_all_medicine_forecasts(days_ahead=30):
 
 def send_forecast_critical_stock_email(recipient_email=None, force=False):
     """
-    Evaluates catalog inventory forecasting and sends a consolidated critical stock alert email.
-    Only sends if there are Critical or High Risk medicines (unless force=True).
+    Evaluates catalog inventory forecasting and sends a consolidated daily demand & restock alert email to Admin.
+    Reports ONLY medicines where AI predicts stock shortages or recommended reorders (Critical, High, Moderate, or Reorder Needed).
+    Safe / Adequate items that do not require replenishment are excluded from the alert.
     """
     from django.conf import settings
     from django.core.mail import EmailMultiAlternatives
@@ -278,64 +280,91 @@ def send_forecast_critical_stock_email(recipient_email=None, force=False):
 
     all_fc = get_all_medicine_forecasts(days_ahead=30)
     
-    # Filter at-risk items (Critical, Out of Stock, or High Risk)
-    at_risk = [f for f in all_fc if f['risk_level'] in ('CRITICAL', 'OUT_OF_STOCK', 'HIGH')]
+    # Filter ONLY medicines that require attention: Critical, Out of stock, High risk, Moderate, or positive suggested reorder
+    reorder_needed = [
+        f for f in all_fc 
+        if f.get('recommended_reorder_qty', 0) > 0 
+        or f['risk_level'] in ('CRITICAL', 'OUT_OF_STOCK', 'HIGH', 'MODERATE') 
+        or f.get('days_of_stock_left', 999) < 30.0
+    ]
     critical = [f for f in all_fc if f['risk_level'] in ('CRITICAL', 'OUT_OF_STOCK')]
     high_risk = [f for f in all_fc if f['risk_level'] == 'HIGH']
     moderate = [f for f in all_fc if f['risk_level'] == 'MODERATE']
 
-    if not at_risk and not force:
+    # If no medicine requires reorder and force is False, do not send empty email
+    if not reorder_needed and not force:
         return {
             'success': True,
             'email_sent': False,
-            'message': 'All medicines have adequate inventory (DOI >= 15 days). No critical alert email needed.',
+            'message': 'All medicines currently have adequate stock (no shortages or reorders needed). Alert email not required.',
             'critical_count': 0,
             'high_risk_count': 0,
-            'moderate_count': len(moderate),
-            'total_medicines': len(all_fc)
+            'moderate_count': 0,
+            'total_at_risk': 0,
+            'total_reorder_qty': 0,
+            'medicines': []
         }
 
-    # If force=True and no critical/high, include moderate watchlist or top items
-    items_to_report = at_risk if at_risk else (moderate if moderate else all_fc[:5])
+    # If force is True but no medicines are at risk, pick top 3 for test demonstration
+    items_to_report = reorder_needed if reorder_needed else (all_fc[:3] if all_fc else [])
 
     target_email = recipient_email or getattr(settings, 'DEFAULT_FROM_EMAIL', 'sharmaneeraj3415@gmail.com')
     if not target_email:
         target_email = 'sharmaneeraj3415@gmail.com'
 
-    total_reorder_qty = sum(f['recommended_reorder_qty'] for f in items_to_report)
+    total_reorder_qty = sum(f.get('recommended_reorder_qty', 0) for f in items_to_report)
     now_str = timezone.now().strftime("%B %d, %Y at %I:%M %p")
 
-    subject = f"🚨 [URGENT] PharmaCare Critical Stock Alert ({len(items_to_report)} Medicines at Risk)"
+    subject = f"🚨 [Action Required] PharmaCare AI Restock Alert: {len(items_to_report)} Medicine(s) Need Stock Refill"
 
     # Build Plain Text Body
     plain_lines = [
-        "PharmaCare AI Demand Forecasting - Automated Inventory Alert",
-        "=" * 60,
+        "PharmaCare AI Demand Forecasting - Priority Restock Alert",
+        "=" * 65,
         f"Generated: {now_str}",
+        f"Admin Recipient: {target_email}",
+        f"Medicines Requiring Refill: {len(items_to_report)}",
         f"Critical Shortages (<7d): {len(critical)}",
         f"High Risk Shortages (<15d): {len(high_risk)}",
-        f"Total Suggested Restock: {total_reorder_qty} units",
-        "-" * 60,
-        "AT-RISK MEDICINES SUMMARY:",
+        f"Total Suggested Restock Needed: {total_reorder_qty} units",
+        "-" * 65,
+        "PREDICTED RESTOCK REQUIREMENTS (AT-RISK / REORDER LIST):",
     ]
     for item in items_to_report:
         plain_lines.append(
             f"- {item['medicine_name']} ({item['category']}): "
-            f"Stock: {item['current_stock']} units | 30d Demand: {item['total_30_day_demand']} | "
-            f"Supply Left: {item['days_of_stock_left']} days | Reorder: +{item['recommended_reorder_qty']} units"
+            f"Current Stock: {item['current_stock']} | 30D Forecast: {item['total_30_day_demand']} | "
+            f"Supply Left: {item['days_of_stock_left']}d | AI Refill Target: +{item['recommended_reorder_qty']} units | "
+            f"Status: {item['risk_badge']}"
         )
-    plain_lines.append("\nOpen Dashboard: http://127.0.0.1:8000/forecast/")
+    plain_lines.append("\nOpen Demand Forecast Dashboard: http://127.0.0.1:8000/forecast/")
     plain_body = "\n".join(plain_lines)
 
-    # Build HTML Table Rows
+    # Build HTML Table Rows with direct 1-Click PO Link
     table_rows = []
     for item in items_to_report:
-        status_bg = '#fee2e2' if item['risk_level'] in ('CRITICAL', 'OUT_OF_STOCK') else '#ffedd5'
-        status_color = '#b91c1c' if item['risk_level'] in ('CRITICAL', 'OUT_OF_STOCK') else '#c2410c'
-        badge_text = '🔴 Critical (<7d)' if item['risk_level'] in ('CRITICAL', 'OUT_OF_STOCK') else ('🟠 High Risk (<15d)' if item['risk_level'] == 'HIGH' else '🟡 Moderate (<30d)')
-        
+        if item['risk_level'] in ('CRITICAL', 'OUT_OF_STOCK'):
+            status_bg = '#fee2e2'
+            status_color = '#b91c1c'
+            badge_text = '🔴 Critical (<7d)'
+        elif item['risk_level'] == 'HIGH':
+            status_bg = '#ffedd5'
+            status_color = '#c2410c'
+            badge_text = '🟠 High Risk (<15d)'
+        elif item['risk_level'] == 'MODERATE':
+            status_bg = '#fef9c3'
+            status_color = '#a16207'
+            badge_text = '🟡 Moderate (<30d)'
+        else:
+            status_bg = '#dbeafe'
+            status_color = '#1d4ed8'
+            badge_text = '🔵 Reorder Target'
+
+        reorder_display = f"+{item['recommended_reorder_qty']} units" if item['recommended_reorder_qty'] > 0 else "<span style='color:#d97706;font-weight:700;'>Restock Recommended</span>"
+        po_url = f"http://127.0.0.1:8000/purchase-orders/add/?medicine={item['medicine_id']}&qty={item['recommended_reorder_qty']}"
+
         row_html = f"""
-        <tr style="border-bottom: 1px solid #e2e8f0;">
+        <tr style="border-bottom: 1px solid #e2e8f0; background-color: {'#fff1f2' if item['risk_level'] in ('CRITICAL','OUT_OF_STOCK') else ('#fff7ed' if item['risk_level'] == 'HIGH' else '#ffffff')};">
           <td style="padding: 12px 14px; font-weight: 700; color: #0f172a; font-size: 13px;">
             {item['medicine_name']}<br>
             <span style="font-size: 11px; color: #64748b; font-weight: 500;">{item['category']}</span>
@@ -355,7 +384,12 @@ def send_forecast_critical_stock_email(recipient_email=None, force=False):
             </span>
           </td>
           <td style="padding: 12px 14px; text-align: right; font-weight: 800; color: #d97706; font-size: 13px;">
-            +{item['recommended_reorder_qty']} units
+            {reorder_display}
+          </td>
+          <td style="padding: 12px 14px; text-align: center;">
+            <a href="{po_url}" style="display: inline-block; padding: 6px 14px; background-color: #4f46e5; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+              ⚡ Create PO
+            </a>
           </td>
         </tr>
         """
@@ -366,36 +400,44 @@ def send_forecast_critical_stock_email(recipient_email=None, force=False):
 <head>
   <meta charset="utf-8">
   <style>
-    body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; }}
-    .container {{ max-width: 680px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }}
-    .header {{ background: linear-gradient(135deg, #091e3a 0%, #0f2e4e 60%, #0891b2 100%); padding: 24px 28px; color: #ffffff; }}
+    body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; }}
+    .container {{ max-width: 740px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }}
+    .header {{ background: linear-gradient(135deg, #091e3a 0%, #881337 50%, #b91c1c 100%); padding: 24px 28px; color: #ffffff; }}
+    .kpi-box {{ display: inline-block; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 14px; margin-right: 8px; margin-top: 10px; font-size: 12px; color: #ffffff; font-weight: 600; }}
     table {{ width: 100%; border-collapse: collapse; }}
-    th {{ background: #f1f5f9; padding: 10px 14px; font-size: 11px; text-transform: uppercase; color: #475569; letter-spacing: 0.5px; }}
-    .btn {{ display: inline-block; background: linear-gradient(135deg, #0891b2, #0e7490); color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; margin-top: 20px; }}
+    th {{ background: #f1f5f9; padding: 10px 12px; font-size: 11px; text-transform: uppercase; color: #475569; letter-spacing: 0.5px; }}
+    .btn {{ display: inline-block; background: linear-gradient(135deg, #4f46e5, #0891b2); color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; }}
     .footer {{ background: #f8fafc; padding: 16px 28px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; }}
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #38bdf8; margin-bottom: 4px;">PharmaCare AI Forecasting</div>
-      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">🚨 Critical Stockout Prevention Alert</h1>
-      <p style="margin: 6px 0 0 0; font-size: 13px; color: #cbd5e1;">Automated audit detected {len(items_to_report)} medicine(s) with low supply.</p>
+      <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #fca5a5; margin-bottom: 4px;">PharmaCare AI Restock Prevention</div>
+      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">🚨 Priority Stock Refill Alert</h1>
+      <p style="margin: 6px 0 0 0; font-size: 13px; color: #fecdd3;">AI demand audit detected <strong>{len(items_to_report)} medicine(s)</strong> that require stock replenishment.</p>
+      
+      <div>
+        <div class="kpi-box">⚠️ Refill Needed: <strong>{len(items_to_report)} medicines</strong></div>
+        <div class="kpi-box">⚡ Suggested Reorder Target: <strong>+{total_reorder_qty} units</strong></div>
+        <div class="kpi-box" style="background: rgba(0,0,0,0.25);">🔴 Critical/High Shortages: <strong>{len(critical) + len(high_risk)}</strong></div>
+      </div>
     </div>
     <div style="padding: 24px 28px;">
-      <div style="font-size: 12px; color: #64748b; margin-bottom: 16px;">
+      <div style="font-size: 12px; color: #475569; margin-bottom: 16px; line-height: 1.6; background-color: #fff1f2; border: 1px solid #fecdd3; padding: 12px 16px; border-radius: 8px;">
         📅 <strong>Audit Timestamp:</strong> {now_str}<br>
-        🎯 <strong>Action Required:</strong> Review low-stock medicines below and create purchase orders to prevent stockouts.
+        🎯 <strong>Action Required:</strong> Only at-risk & restock-recommended medicines are listed below. Click on <strong>"⚡ Create PO"</strong> next to any item to instantly draft a supplier Purchase Order.
       </div>
       <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
         <thead>
           <tr>
             <th style="text-align: left;">Medicine</th>
             <th style="text-align: center;">Stock</th>
-            <th style="text-align: center;">30d Demand</th>
-            <th style="text-align: center;">Supply Left</th>
+            <th style="text-align: center;">30D Demand</th>
+            <th style="text-align: center;">Days Left</th>
             <th style="text-align: center;">Risk Level</th>
-            <th style="text-align: right;">Reorder Target</th>
+            <th style="text-align: right;">AI Refill Needed</th>
+            <th style="text-align: center;">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -407,7 +449,7 @@ def send_forecast_critical_stock_email(recipient_email=None, force=False):
       </div>
     </div>
     <div class="footer">
-      This is an automated alert generated by PharmaCare AI Demand Forecasting Engine.<br>
+      This automated alert contains only medicines requiring restocking based on AI Demand Predictions.<br>
       PharmaCare Pharmacy Management System &bull; Confidential
     </div>
   </div>
@@ -426,10 +468,12 @@ def send_forecast_critical_stock_email(recipient_email=None, force=False):
             return {
                 'success': True,
                 'email_sent': True,
-                'message': f"Critical stock alert email successfully sent to {target_email}",
+                'message': f"Daily AI Demand Restock Alert successfully sent to {target_email}",
+                'recipient': target_email,
                 'critical_count': len(critical),
                 'high_risk_count': len(high_risk),
                 'total_at_risk': len(items_to_report),
+                'total_reorder_qty': total_reorder_qty,
                 'medicines': items_to_report
             }
         else:
@@ -437,7 +481,8 @@ def send_forecast_critical_stock_email(recipient_email=None, force=False):
                 'success': False,
                 'email_sent': False,
                 'error': err,
-                'message': f"Failed to send email: {err}",
+                'message': f"Failed to send email to {target_email}: {err}",
+                'recipient': target_email,
                 'critical_count': len(critical),
                 'high_risk_count': len(high_risk),
                 'total_at_risk': len(items_to_report),
@@ -449,6 +494,7 @@ def send_forecast_critical_stock_email(recipient_email=None, force=False):
             'email_sent': False,
             'error': str(e),
             'message': f"Failed to send email: {str(e)}",
+            'recipient': target_email,
             'critical_count': len(critical),
             'high_risk_count': len(high_risk),
             'total_at_risk': len(items_to_report),

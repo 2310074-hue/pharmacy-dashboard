@@ -146,7 +146,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # django-crontab configuration: runs daily at 08:00 server time
 CRONJOBS = [
-    ('0 8 * * *', 'django.core.management.call_command', ['send_expiry_reminders'])
+    ('0 8 * * *', 'django.core.management.call_command', ['send_expiry_reminders']),
+    ('0 8 * * *', 'django.core.management.call_command', ['check_critical_stock']),
 ]
 
 # Login settings

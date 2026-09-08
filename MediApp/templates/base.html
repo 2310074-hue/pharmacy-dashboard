@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Pharmacy Dashboard{% endblock %}</title>
-    
+
     <!-- Google Fonts - Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <style>
         * {
             font-family: 'Poppins', sans-serif;
         }
-        
+
         :root {
             --primary-color: #0891b2;
             --primary-dark: #0e7490;
@@ -26,11 +28,11 @@
             --warning-color: #f59e0b;
             --danger-color: #44bfef;
         }
-        
+
         body {
             background-color: #f3f4f6;
         }
-        
+
         /* Sidebar Styles */
         .sidebar {
             position: fixed;
@@ -45,11 +47,11 @@
             z-index: 1000;
             overflow-y: auto;
         }
-        
+
         .sidebar.closed {
             transform: translateX(-100%);
         }
-        
+
         /* Overlay for mobile */
         .sidebar-overlay {
             display: none;
@@ -63,12 +65,12 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-        
+
         .sidebar-overlay.active {
             display: block;
             opacity: 1;
         }
-        
+
         /* Main content area */
         .main-content {
             margin-left: 16rem;
@@ -77,52 +79,52 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .main-content.full-width {
             margin-left: 0;
         }
-        
+
         /* Mobile styles */
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
             }
-            
+
             .sidebar.open {
                 transform: translateX(0);
             }
-            
+
             .main-content {
                 margin-left: 0;
             }
         }
-        
+
         .nav-link {
             transition: all 0.3s ease;
         }
-        
+
         .nav-link:hover {
             background-color: rgba(255, 255, 255, 0.1);
             transform: translateX(5px);
         }
-        
+
         .nav-link.active {
             background-color: rgba(255, 255, 255, 0.2);
             border-left: 4px solid white;
         }
-        
+
         .card {
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
         }
-        
+
         .card:hover {
             transform: translateY(-4px);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         }
-        
+
         .btn {
             padding: 10px 20px;
             border-radius: 8px;
@@ -134,33 +136,35 @@
             cursor: pointer;
             border: none;
         }
-        
+
         .btn:hover {
             transform: scale(1.05);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-        
+
         .btn-primary {
             background-color: var(--primary-color);
             color: white;
         }
-        
+
         .btn-secondary {
             background-color: var(--secondary-color);
             color: white;
         }
-        
+
         .btn-success {
             background-color: var(--success-color);
             color: white;
         }
-        
+
         .btn-danger {
             background-color: var(--danger-color);
             color: white;
         }
-        
-        .form-input, .form-select, .form-textarea {
+
+        .form-input,
+        .form-select,
+        .form-textarea {
             width: 100%;
             padding: 10px 16px;
             border: 2px solid #e5e7eb;
@@ -168,13 +172,15 @@
             transition: all 0.3s ease;
             font-size: 14px;
         }
-        
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
         }
-        
+
         .alert {
             position: fixed;
             top: 20px;
@@ -190,42 +196,43 @@
             min-width: 300px;
             max-width: 90%;
         }
-        
+
         @keyframes slideIn {
             from {
                 transform: translateX(400px);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
             }
         }
-        
+
         .alert-success {
             background-color: #d1fae5;
             color: #065f46;
             border-left: 4px solid var(--success-color);
         }
-        
+
         .alert-error {
             background-color: #fee2e2;
             color: #9ae728;
             border-left: 4px solid var(--danger-color);
         }
-        
+
         .alert-warning {
             background-color: #fef3c7;
             color: #92400e;
             border-left: 4px solid var(--warning-color);
         }
-        
+
         .alert-info {
             background-color: #dbeafe;
             color: #1e3a8a;
             border-left: 4px solid var(--secondary-color);
         }
-        
+
         .modal {
             display: none;
             position: fixed;
@@ -238,11 +245,11 @@
             justify-content: center;
             align-items: center;
         }
-        
+
         .modal.active {
             display: flex;
         }
-        
+
         .modal-content {
             background: white;
             border-radius: 16px;
@@ -253,22 +260,23 @@
             overflow-y: auto;
             animation: modalSlide 0.3s ease;
         }
-        
+
         @keyframes modalSlide {
             from {
                 transform: translateY(-50px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
             }
         }
-        
+
         .user-dropdown {
             position: relative;
         }
-        
+
         .dropdown-menu {
             display: none;
             position: absolute;
@@ -281,23 +289,24 @@
             min-width: 250px;
             z-index: 1000;
         }
-        
+
         .dropdown-menu.active {
             display: block;
             animation: slideDown 0.2s ease;
         }
-        
+
         @keyframes slideDown {
             from {
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
+
         .stat-card {
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
@@ -305,23 +314,23 @@
             padding: 24px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        
+
         .table-container {
             background: white;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        
+
         thead {
             background-color: #f9fafb;
         }
-        
+
         th {
             padding: 16px;
             text-align: left;
@@ -331,21 +340,21 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         td {
             padding: 16px;
             border-top: 1px solid #e5e7eb;
         }
-        
+
         tr:hover {
             background-color: #f9fafb;
         }
-        
+
         /* Hamburger menu icon animation */
         .hamburger {
             cursor: pointer;
         }
-        
+
         .hamburger-line {
             width: 24px;
             height: 2px;
@@ -354,7 +363,7 @@
             margin: 5px 0;
             transition: all 0.3s ease;
         }
-        
+
         /* Responsive utilities */
         @media (max-width: 640px) {
             .alert {
@@ -363,639 +372,841 @@
             }
         }
 
-         /* Smooth appear animation for main content */
-    @keyframes fadeSlideIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+        /* Smooth appear animation for main content */
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
 
-    main {
-        animation: fadeSlideIn 0.6s ease-out;
-    }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-    /* ═══════════════════════════════════════════════
+        main {
+            animation: fadeSlideIn 0.6s ease-out;
+        }
+
+        /* ═══════════════════════════════════════════════
        MEDIBOT AI PHARMACY ASSISTANT — MODERN STYLES
     ═══════════════════════════════════════════════ */
 
-    /* Floating Action Button (FAB) */
-    #medibot-fab {
-        position: fixed;
-        bottom: 26px;
-        right: 26px;
-        z-index: 9990;
-        width: 62px;
-        height: 62px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
-        color: #ffffff;
-        border: none;
-        cursor: pointer;
-        box-shadow: 0 10px 28px rgba(13, 148, 136, 0.42), 0 4px 10px rgba(79, 70, 229, 0.28);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 28px;
-        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        animation: medibotFabPulse 3s infinite;
-    }
-    #medibot-fab:hover {
-        transform: scale(1.1) translateY(-3px);
-        box-shadow: 0 16px 36px rgba(13, 148, 136, 0.55), 0 6px 14px rgba(79, 70, 229, 0.35);
-        animation: none;
-    }
-    #medibot-fab .fab-badge {
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        width: 14px;
-        height: 14px;
-        background: #10b981;
-        border: 2px solid #ffffff;
-        border-radius: 50%;
-        box-shadow: 0 0 8px #10b981;
-    }
-    @keyframes medibotFabPulse {
-        0%, 100% { box-shadow: 0 10px 28px rgba(13, 148, 136, 0.42), 0 4px 10px rgba(79, 70, 229, 0.28); }
-        50% { box-shadow: 0 14px 34px rgba(79, 70, 229, 0.55), 0 6px 16px rgba(13, 148, 136, 0.35); }
-    }
+        /* Floating Action Button (FAB) */
+        #medibot-fab {
+            position: fixed;
+            bottom: 26px;
+            right: 26px;
+            z-index: 9990;
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 28px rgba(13, 148, 136, 0.42), 0 4px 10px rgba(79, 70, 229, 0.28);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: medibotFabPulse 3s infinite;
+        }
 
-    /* Chat Panel Window */
-    #medibot-panel {
-        position: fixed;
-        bottom: 98px;
-        right: 26px;
-        z-index: 9991;
-        width: 420px;
-        max-width: calc(100vw - 32px);
-        height: 600px;
-        max-height: calc(100vh - 120px);
-        border-radius: 24px;
-        background: #ffffff;
-        box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(226, 232, 240, 0.9);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        transform: translateY(24px) scale(0.94);
-        opacity: 0;
-        pointer-events: none;
-        transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.24s ease;
-        font-family: 'Poppins', system-ui, -apple-system, sans-serif;
-    }
-    #medibot-panel.open {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-        pointer-events: all;
-    }
+        #medibot-fab:hover {
+            transform: scale(1.1) translateY(-3px);
+            box-shadow: 0 16px 36px rgba(13, 148, 136, 0.55), 0 6px 14px rgba(79, 70, 229, 0.35);
+            animation: none;
+        }
 
-    /* Header */
-    .medibot-header {
-        background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
-        padding: 14px 18px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-shrink: 0;
-        color: white;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    }
-    .medibot-avatar-box {
-        position: relative;
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(8px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        flex-shrink: 0;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    .medibot-avatar-box .online-dot {
-        position: absolute;
-        bottom: -2px;
-        right: -2px;
-        width: 10px;
-        height: 10px;
-        background: #22c55e;
-        border: 2px solid #ffffff;
-        border-radius: 50%;
-    }
-    .medibot-title-box {
-        flex: 1;
-        min-width: 0;
-    }
-    .medibot-title-box h3 {
-        font-size: 15.5px;
-        font-weight: 700;
-        margin: 0;
-        line-height: 1.2;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        color: #ffffff;
-    }
-    .medibot-title-box h3 .ai-pill {
-        font-size: 10px;
-        font-weight: 600;
-        padding: 1px 6px;
-        background: rgba(255, 255, 255, 0.22);
-        border-radius: 10px;
-        letter-spacing: 0.5px;
-    }
-    .medibot-title-box p {
-        font-size: 11.5px;
-        opacity: 0.9;
-        margin: 2px 0 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        color: rgba(255, 255, 255, 0.9);
-    }
-    .medibot-header-actions {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .medibot-icon-btn {
-        background: rgba(255, 255, 255, 0.16);
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        color: white;
-        width: 32px;
-        height: 32px;
-        border-radius: 10px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-    .medibot-icon-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: scale(1.06);
-    }
-    .medibot-icon-btn.active {
-        background: #ffffff;
-        color: #0d9488;
-        border-color: #ffffff;
-    }
+        #medibot-fab .fab-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 14px;
+            height: 14px;
+            background: #10b981;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+        }
 
-    /* Message History Area */
-    .medibot-messages {
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        background: #f8fafc;
-        scroll-behavior: smooth;
-    }
-    .medibot-messages::-webkit-scrollbar { width: 5px; }
-    .medibot-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    .medibot-messages::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @keyframes medibotFabPulse {
 
-    /* Message Bubble Styles */
-    .medibot-msg-row {
-        display: flex;
-        width: 100%;
-    }
-    .medibot-msg-row.user { justify-content: flex-end; }
-    .medibot-msg-row.bot { justify-content: flex-start; }
+            0%,
+            100% {
+                box-shadow: 0 10px 28px rgba(13, 148, 136, 0.42), 0 4px 10px rgba(79, 70, 229, 0.28);
+            }
 
-    .msg-bubble {
-        max-width: 86%;
-        padding: 11px 15px;
-        border-radius: 18px;
-        font-size: 13.5px;
-        line-height: 1.55;
-        position: relative;
-        word-break: break-word;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        animation: medibotBubblePop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    @keyframes medibotBubblePop {
-        from { transform: scale(0.9) translateY(8px); opacity: 0; }
-        to { transform: scale(1) translateY(0); opacity: 1; }
-    }
-    .medibot-msg-row.bot .msg-bubble {
-        background: #ffffff;
-        color: #1e293b;
-        border: 1px solid #e2e8f0;
-        border-bottom-left-radius: 4px;
-    }
-    .medibot-msg-row.user .msg-bubble {
-        background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
-        color: #ffffff;
-        border-bottom-right-radius: 4px;
-    }
+            50% {
+                box-shadow: 0 14px 34px rgba(79, 70, 229, 0.55), 0 6px 16px rgba(13, 148, 136, 0.35);
+            }
+        }
 
-    .msg-timestamp {
-        font-size: 10px;
-        opacity: 0.65;
-        margin-top: 4px;
-        display: block;
-        text-align: right;
-    }
-    .medibot-msg-row.bot .msg-timestamp { text-align: left; }
+        /* Chat Panel Window */
+        #medibot-panel {
+            position: fixed;
+            bottom: 98px;
+            right: 26px;
+            z-index: 9991;
+            width: 420px;
+            max-width: calc(100vw - 32px);
+            height: 600px;
+            max-height: calc(100vh - 120px);
+            border-radius: 24px;
+            background: #ffffff;
+            box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(226, 232, 240, 0.9);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: translateY(24px) scale(0.94);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.24s ease;
+            font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+        }
 
-    /* Bot Message Content Formatting */
-    .msg-bubble strong { font-weight: 600; }
-    .msg-bubble ul, .msg-bubble ol { margin: 6px 0 6px 18px; padding: 0; }
-    .msg-bubble li { margin-bottom: 3px; }
-    .msg-bubble p { margin: 0 0 6px 0; }
-    .msg-bubble p:last-child { margin-bottom: 0; }
-    .msg-bubble code {
-        background: rgba(15, 23, 42, 0.06);
-        padding: 2px 5px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-family: monospace;
-    }
+        #medibot-panel.open {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            pointer-events: all;
+        }
 
-    /* Bot Tables */
-    .medibot-table-wrap {
-        overflow-x: auto;
-        margin: 8px 0 4px 0;
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
-    }
-    .medibot-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
-        background: #ffffff;
-    }
-    .medibot-table th {
-        background: #0d9488;
-        color: #ffffff;
-        padding: 6px 10px;
-        text-align: left;
-        font-weight: 600;
-        font-size: 11.5px;
-    }
-    .medibot-table td {
-        padding: 6px 10px;
-        border-top: 1px solid #f1f5f9;
-        color: #334155;
-    }
-    .medibot-table tr:nth-child(even) td { background: #f8fafc; }
+        /* Header */
+        .medibot-header {
+            background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
 
-    /* Action Buttons Under Bot Messages */
-    .msg-actions {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-top: 8px;
-        padding-top: 6px;
-        border-top: 1px dashed #e2e8f0;
-    }
-    .msg-action-btn {
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        color: #475569;
-        padding: 3px 9px;
-        font-size: 11px;
-        font-weight: 500;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        transition: all 0.15s ease;
-    }
-    .msg-action-btn:hover {
-        background: #e0f2fe;
-        color: #0284c7;
-        border-color: #bae6fd;
-    }
-    .msg-action-btn.speaking {
-        background: #fee2e2;
-        color: #dc2626;
-        border-color: #fca5a5;
-        animation: medibotSpeakerPulse 1.2s infinite;
-    }
-    @keyframes medibotSpeakerPulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.65; }
-    }
+        .medibot-avatar-box {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
 
-    /* Quick Action Chips */
-    .medibot-chips-bar {
-        padding: 8px 12px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
-        max-height: 82px;
-        overflow-y: auto;
-        flex-shrink: 0;
-    }
-    .medibot-chips-bar::-webkit-scrollbar { width: 4px; }
-    .medibot-chips-bar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .medibot-avatar-box .online-dot {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 10px;
+            height: 10px;
+            background: #22c55e;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+        }
 
-    .medibot-chip {
-        background: #ffffff;
-        border: 1px solid #ccfbf1;
-        color: #0f766e;
-        border-radius: 12px;
-        padding: 4px 10px;
-        font-size: 11px;
-        font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        transition: all 0.2s ease;
-        flex-shrink: 0;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    }
-    .medibot-chip:hover {
-        background: #0d9488;
-        color: #ffffff;
-        border-color: #0d9488;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
-    }
+        .medibot-title-box {
+            flex: 1;
+            min-width: 0;
+        }
 
-    /* Live Voice Listening Bar */
-    .medibot-voice-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px 16px;
-        background: #f0fdf4;
-        border-top: 1px solid #bbf7d0;
-        font-size: 12px;
-        color: #166534;
-        animation: medibotBubblePop 0.2s ease;
-        flex-shrink: 0;
-    }
-    .voice-waves {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-    }
-    .voice-bar-line {
-        width: 3px;
-        height: 14px;
-        background: #22c55e;
-        border-radius: 2px;
-        animation: medibotWave 0.7s ease-in-out infinite alternate;
-    }
-    .voice-bar-line:nth-child(1) { animation-delay: 0.1s; height: 8px; }
-    .voice-bar-line:nth-child(2) { animation-delay: 0.3s; height: 18px; }
-    .voice-bar-line:nth-child(3) { animation-delay: 0.15s; height: 12px; }
-    .voice-bar-line:nth-child(4) { animation-delay: 0.4s; height: 16px; }
-    .voice-bar-line:nth-child(5) { animation-delay: 0.2s; height: 10px; }
-    @keyframes medibotWave {
-        0% { transform: scaleY(0.3); opacity: 0.5; }
-        100% { transform: scaleY(1.4); opacity: 1; }
-    }
+        .medibot-title-box h3 {
+            font-size: 15.5px;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #ffffff;
+        }
 
-    /* Typing Indicator */
-    .medibot-typing-bubble {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 10px 16px;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 18px;
-        border-bottom-left-radius: 4px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    }
-    .typing-dot {
-        width: 7px;
-        height: 7px;
-        background: #0d9488;
-        border-radius: 50%;
-        animation: medibotDotBounce 1.2s infinite ease-in-out;
-    }
-    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes medibotDotBounce {
-        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-        30% { transform: translateY(-6px); opacity: 1; }
-    }
+        .medibot-title-box h3 .ai-pill {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 6px;
+            background: rgba(255, 255, 255, 0.22);
+            border-radius: 10px;
+            letter-spacing: 0.5px;
+        }
 
-    /* Input Footer Area */
-    .medibot-input-area {
-        padding: 10px 14px;
-        border-top: 1px solid #e2e8f0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: #ffffff;
-        flex-shrink: 0;
-    }
-    #medibot-input {
-        flex: 1;
-        padding: 10px 14px;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 22px;
-        font-size: 13.5px;
-        outline: none;
-        font-family: inherit;
-        transition: border-color 0.2s, box-shadow 0.2s;
-        color: #1e293b;
-        background: #f8fafc;
-    }
-    #medibot-input:focus {
-        border-color: #0d9488;
-        background: #ffffff;
-        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
-    }
-    #medibot-mic {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #f1f5f9;
-        border: 1.5px solid #e2e8f0;
-        color: #64748b;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        transition: all 0.2s ease;
-    }
-    #medibot-mic:hover {
-        background: #e0f2fe;
-        color: #0284c7;
-        border-color: #7dd3fc;
-        transform: scale(1.06);
-    }
-    #medibot-mic.listening {
-        background: #ef4444;
-        border-color: #dc2626;
-        color: #ffffff;
-        animation: medibotMicGlow 1s infinite;
-    }
-    @keyframes medibotMicGlow {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
-        50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-    }
-    #medibot-send {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
-        color: #ffffff;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        transition: all 0.2s ease;
-    }
-    #medibot-send:hover {
-        transform: scale(1.08);
-        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
-    }
-    #medibot-send:active { transform: scale(0.96); }
+        .medibot-title-box p {
+            font-size: 11.5px;
+            opacity: 0.9;
+            margin: 2px 0 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: rgba(255, 255, 255, 0.9);
+        }
 
+        .medibot-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .medibot-icon-btn {
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .medibot-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.06);
+        }
+
+        .medibot-icon-btn.active {
+            background: #ffffff;
+            color: #0d9488;
+            border-color: #ffffff;
+        }
+
+        /* Message History Area */
+        .medibot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: #f8fafc;
+            scroll-behavior: smooth;
+        }
+
+        .medibot-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .medibot-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .medibot-messages::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Message Bubble Styles */
+        .medibot-msg-row {
+            display: flex;
+            width: 100%;
+        }
+
+        .medibot-msg-row.user {
+            justify-content: flex-end;
+        }
+
+        .medibot-msg-row.bot {
+            justify-content: flex-start;
+        }
+
+        .msg-bubble {
+            max-width: 86%;
+            padding: 11px 15px;
+            border-radius: 18px;
+            font-size: 13.5px;
+            line-height: 1.55;
+            position: relative;
+            word-break: break-word;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            animation: medibotBubblePop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes medibotBubblePop {
+            from {
+                transform: scale(0.9) translateY(8px);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .medibot-msg-row.bot .msg-bubble {
+            background: #ffffff;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 4px;
+        }
+
+        .medibot-msg-row.user .msg-bubble {
+            background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg-timestamp {
+            font-size: 10px;
+            opacity: 0.65;
+            margin-top: 4px;
+            display: block;
+            text-align: right;
+        }
+
+        .medibot-msg-row.bot .msg-timestamp {
+            text-align: left;
+        }
+
+        /* Bot Message Content Formatting */
+        .msg-bubble strong {
+            font-weight: 600;
+        }
+
+        .msg-bubble ul,
+        .msg-bubble ol {
+            margin: 6px 0 6px 18px;
+            padding: 0;
+        }
+
+        .msg-bubble li {
+            margin-bottom: 3px;
+        }
+
+        .msg-bubble p {
+            margin: 0 0 6px 0;
+        }
+
+        .msg-bubble p:last-child {
+            margin-bottom: 0;
+        }
+
+        .msg-bubble code {
+            background: rgba(15, 23, 42, 0.06);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        /* Bot Tables */
+        .medibot-table-wrap {
+            overflow-x: auto;
+            margin: 8px 0 4px 0;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .medibot-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: #ffffff;
+        }
+
+        .medibot-table th {
+            background: #0d9488;
+            color: #ffffff;
+            padding: 6px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11.5px;
+        }
+
+        .medibot-table td {
+            padding: 6px 10px;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+        }
+
+        .medibot-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        /* Action Buttons Under Bot Messages */
+        .msg-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px dashed #e2e8f0;
+        }
+
+        .msg-action-btn {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            color: #475569;
+            padding: 3px 9px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .msg-action-btn:hover {
+            background: #e0f2fe;
+            color: #0284c7;
+            border-color: #bae6fd;
+        }
+
+        .msg-action-btn.speaking {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fca5a5;
+            animation: medibotSpeakerPulse 1.2s infinite;
+        }
+
+        @keyframes medibotSpeakerPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.65;
+            }
+        }
+
+        /* Quick Action Chips */
+        .medibot-chips-bar {
+            padding: 8px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            max-height: 82px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .medibot-chips-bar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .medibot-chips-bar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .medibot-chip {
+            background: #ffffff;
+            border: 1px solid #ccfbf1;
+            color: #0f766e;
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .medibot-chip:hover {
+            background: #0d9488;
+            color: #ffffff;
+            border-color: #0d9488;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+        }
+
+        /* Live Voice Listening Bar */
+        .medibot-voice-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: #f0fdf4;
+            border-top: 1px solid #bbf7d0;
+            font-size: 12px;
+            color: #166534;
+            animation: medibotBubblePop 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .voice-waves {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .voice-bar-line {
+            width: 3px;
+            height: 14px;
+            background: #22c55e;
+            border-radius: 2px;
+            animation: medibotWave 0.7s ease-in-out infinite alternate;
+        }
+
+        .voice-bar-line:nth-child(1) {
+            animation-delay: 0.1s;
+            height: 8px;
+        }
+
+        .voice-bar-line:nth-child(2) {
+            animation-delay: 0.3s;
+            height: 18px;
+        }
+
+        .voice-bar-line:nth-child(3) {
+            animation-delay: 0.15s;
+            height: 12px;
+        }
+
+        .voice-bar-line:nth-child(4) {
+            animation-delay: 0.4s;
+            height: 16px;
+        }
+
+        .voice-bar-line:nth-child(5) {
+            animation-delay: 0.2s;
+            height: 10px;
+        }
+
+        @keyframes medibotWave {
+            0% {
+                transform: scaleY(0.3);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scaleY(1.4);
+                opacity: 1;
+            }
+        }
+
+        /* Typing Indicator */
+        .medibot-typing-bubble {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 16px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        }
+
+        .typing-dot {
+            width: 7px;
+            height: 7px;
+            background: #0d9488;
+            border-radius: 50%;
+            animation: medibotDotBounce 1.2s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes medibotDotBounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+
+            30% {
+                transform: translateY(-6px);
+                opacity: 1;
+            }
+        }
+
+        /* Input Footer Area */
+        .medibot-input-area {
+            padding: 10px 14px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            flex-shrink: 0;
+        }
+
+        #medibot-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 22px;
+            font-size: 13.5px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            color: #1e293b;
+            background: #f8fafc;
+        }
+
+        #medibot-input:focus {
+            border-color: #0d9488;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+        }
+
+        #medibot-mic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            border: 1.5px solid #e2e8f0;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        #medibot-mic:hover {
+            background: #e0f2fe;
+            color: #0284c7;
+            border-color: #7dd3fc;
+            transform: scale(1.06);
+        }
+
+        #medibot-mic.listening {
+            background: #ef4444;
+            border-color: #dc2626;
+            color: #ffffff;
+            animation: medibotMicGlow 1s infinite;
+        }
+
+        @keyframes medibotMicGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+            }
+        }
+
+        #medibot-send {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        #medibot-send:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+        }
+
+        #medibot-send:active {
+            transform: scale(0.96);
+        }
     </style>
 </head>
+
 <body>
     <!-- Sidebar Overlay (Mobile) -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-    
+
     <!-- Sidebar Navigation -->
     <aside class="sidebar" id="sidebar">
         <div class="p-6">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                     </svg>
                     PharmaCare
                 </h1>
                 <!-- Close button for mobile -->
-                <button onclick="toggleSidebar()" class="md:hidden text-white hover:bg-white hover:bg-opacity-10 p-2 rounded">
+                <button onclick="toggleSidebar()"
+                    class="md:hidden text-white hover:bg-white hover:bg-opacity-10 p-2 rounded">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
         </div>
-        
+
         <nav class="mt-6">
-            <a href="{% url 'dashboard' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" onclick="closeSidebarOnMobile()">
+            <a href="{% url 'dashboard' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
                 Dashboard
             </a>
-            
+
             {% if request.user.is_superuser or request.user.role == 'admin' or request.user.role == 'pharmacist' %}
-            <a href="{% url 'medicine_list' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'medicine_list' or request.resolver_match.url_name == 'add_medicine' or request.resolver_match.url_name == 'edit_medicine' %}active{% endif %}" onclick="closeSidebarOnMobile()">
+            <a href="{% url 'medicine_list' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'medicine_list' or request.resolver_match.url_name == 'add_medicine' or request.resolver_match.url_name == 'edit_medicine' %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                 </svg>
                 Medicines
             </a>
-            
-            <a href="{% url 'category_list' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if 'categories' in request.path %}active{% endif %}" onclick="closeSidebarOnMobile()">
+
+            <a href="{% url 'category_list' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'categories' in request.path %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
                 Categories
             </a>
             {% endif %}
-            
-            <a href="{% url 'sales_list' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if 'sales' in request.path %}active{% endif %}" onclick="closeSidebarOnMobile()">
+
+            <a href="{% url 'sales_list' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'sales' in request.path %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 Sales
             </a>
 
-            <a href="{% url 'purchase_order_list' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if 'purchase-orders' in request.path %}active{% endif %}" onclick="closeSidebarOnMobile()">
+            <a href="{% url 'purchase_order_list' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'purchase-orders' in request.path %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18" />
                 </svg>
                 Purchase Orders
             </a>
 
-            <a href="{% url 'invoice_history' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if 'billing' in request.path or request.resolver_match.url_name == 'invoice_detail' %}active{% endif %}" onclick="closeSidebarOnMobile()">
+            <a href="{% url 'invoice_history' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'billing' in request.path or request.resolver_match.url_name == 'invoice_detail' %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 2h12l4 4v16H7zM11 10h8M11 14h8M11 18h4M11 6h4"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 2h12l4 4v16H7zM11 10h8M11 14h8M11 18h4M11 6h4" />
                 </svg>
                 Billing
             </a>
-            
-            <a href="{% url 'customer_list' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if 'customer' in request.path and 'expiry-reminders' not in request.path %}active{% endif %}" onclick="closeSidebarOnMobile()">
+
+            <a href="{% url 'customer_list' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'customer' in request.path and 'expiry-reminders' not in request.path %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 Customers
             </a>
 
-            <a href="{% url 'expiry_reminder_list' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if 'expiry-reminders' in request.path %}active{% endif %}" onclick="closeSidebarOnMobile()">
+            <a href="{% url 'expiry_reminder_list' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'expiry-reminders' in request.path %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Expiry Reminders
                 {% if pending_expiry_alerts_count %}
-                <span class="ml-auto text-xs bg-red-500 text-white font-bold px-1.5 py-0.5 rounded-full">{{ pending_expiry_alerts_count }}</span>
+                <span class="ml-auto text-xs bg-red-500 text-white font-bold px-1.5 py-0.5 rounded-full">{{
+                    pending_expiry_alerts_count }}</span>
                 {% endif %}
             </a>
-            
+
             {% if request.user.is_superuser or request.user.role == 'admin' or request.user.role == 'pharmacist' %}
-            <a href="{% url 'supplier_list' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if 'supplier' in request.path %}active{% endif %}" onclick="closeSidebarOnMobile()">
+            <a href="{% url 'supplier_list' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'supplier' in request.path %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
                 </svg>
                 Suppliers
             </a>
             {% endif %}
-            
+
             {% if request.user.is_superuser or request.user.role == 'admin' or request.user.role == 'pharmacist' or request.user.role == 'assistant' %}
-            <a href="{% url 'reports_dashboard' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}" onclick="closeSidebarOnMobile()">
+            <a href="{% url 'reports_dashboard' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 Reports
             </a>
 
-            <a href="{% url 'profit_loss_report' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'profit_loss_report' %}active{% endif %}" onclick="closeSidebarOnMobile()">
+            <a href="{% url 'profit_loss_report' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'profit_loss_report' %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Profit & Loss
             </a>
 
 
-            <a href="{% url 'smart_analytics' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'smart_analytics' %}active{% endif %}" onclick="closeSidebarOnMobile()">
+            <a href="{% url 'smart_analytics' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'smart_analytics' %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 Smart Analytics
             </a>
 
-            <a href="{% url 'demand_forecasting' %}" class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'demand_forecasting' %}active{% endif %}" onclick="closeSidebarOnMobile()">
+            <a href="{% url 'demand_forecasting' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'demand_forecasting' %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                 </svg>
                 Demand Forecasting
-                <span class="ml-auto text-[10px] font-bold bg-cyan-500/20 text-cyan-200 border border-cyan-400/40 px-2 py-0.5 rounded-full">AI</span>
+                <span
+                    class="ml-auto text-[10px] font-bold bg-cyan-500/20 text-cyan-200 border border-cyan-400/40 px-2 py-0.5 rounded-full">AI</span>
             </a>
             {% endif %}
         </nav>
     </aside>
-    
+
     <!-- Main Content Area -->
     <div class="main-content" id="mainContent">
         <!-- Top Header -->
@@ -1008,17 +1219,19 @@
                         <span class="hamburger-line"></span>
                         <span class="hamburger-line"></span>
                     </button>
-                    
+
                     <div>
                         <h2 class="text-xl md:text-2xl font-semibold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h2>
                         <p class="text-xs md:text-sm text-gray-500 mt-1 hidden sm:block">{% block page_subtitle %}Welcome back, {{ request.user.get_full_name|default:request.user.username }}{% endblock %}</p>
                     </div>
                 </div>
-                
+
                 <!-- User Dropdown -->
                 <div class="user-dropdown">
-                    <button onclick="toggleDropdown()" class="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 rounded-lg hover:bg-gray-100 transition">
-                        <div class="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base">
+                    <button onclick="toggleDropdown()"
+                        class="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 rounded-lg hover:bg-gray-100 transition">
+                        <div
+                            class="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base">
                             {{ user.first_name.0 }}{{ user.last_name.0 }}
                         </div>
                         <div class="text-left hidden md:block">
@@ -1026,10 +1239,10 @@
                             <p class="text-xs text-gray-500">{{ user.get_role_display }}</p>
                         </div>
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    
+
                     <div id="userDropdown" class="dropdown-menu">
                         <div class="p-4 border-b">
                             <p class="font-semibold text-gray-800">{{ user.username }}</p>
@@ -1037,13 +1250,16 @@
                             {% if user.contact_number %}
                             <p class="text-sm text-gray-500">{{ user.contact_number }}</p>
                             {% endif %}
-                            <span class="inline-block mt-2 px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full text-xs font-semibold">
+                            <span
+                                class="inline-block mt-2 px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full text-xs font-semibold">
                                 {{ user.get_role_display }}
                             </span>
                         </div>
-                        <a href="{% url 'logout' %}" class="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 text-red-600">
+                        <a href="{% url 'logout' %}"
+                            class="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 text-red-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
                             Logout
                         </a>
@@ -1051,33 +1267,33 @@
                 </div>
             </div>
         </header>
-        
+
         <!-- Main Content Area -->
         <main class="flex-1 p-4 md:p-8">
             {% block content %}
             {% endblock %}
         </main>
     </div>
-    
+
     <!-- Alert Container -->
     <div id="alertContainer"></div>
-    
+
     <script>
         // Sidebar toggle for mobile
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
             const mainContent = document.getElementById('mainContent');
-            
+
             sidebar.classList.toggle('open');
             overlay.classList.toggle('active');
-            
+
             // Prevent body scroll when sidebar is open on mobile
             if (window.innerWidth < 768) {
                 document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
             }
         }
-        
+
         // Close sidebar on mobile when clicking a link
         function closeSidebarOnMobile() {
             if (window.innerWidth < 768) {
@@ -1088,47 +1304,47 @@
                 document.body.style.overflow = 'auto';
             }
         }
-        
+
         // Toggle user dropdown
         function toggleDropdown() {
             const dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('active');
         }
-        
+
         // Close dropdown when clicking outside
-        window.addEventListener('click', function(e) {
+        window.addEventListener('click', function (e) {
             const dropdown = document.getElementById('userDropdown');
             const button = e.target.closest('.user-dropdown button');
             if (!button && dropdown.classList.contains('active')) {
                 dropdown.classList.remove('active');
             }
         });
-        
+
         // Handle window resize
-        window.addEventListener('resize', function() {
+        window.addEventListener('resize', function () {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            
+
             if (window.innerWidth >= 768) {
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
                 document.body.style.overflow = 'auto';
             }
         });
-        
+
         // Alert system
         function showAlert(message, type = 'success') {
             const container = document.getElementById('alertContainer');
             const alert = document.createElement('div');
             alert.className = `alert alert-${type}`;
-            
+
             const icon = {
                 success: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
                 error: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
                 warning: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
                 info: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
             };
-            
+
             alert.innerHTML = `
                 ${icon[type]}
                 <span class="text-sm md:text-base">${message}</span>
@@ -1138,15 +1354,15 @@
                     </svg>
                 </button>
             `;
-            
+
             container.appendChild(alert);
-            
+
             setTimeout(() => {
                 alert.style.animation = 'slideIn 0.3s ease reverse';
                 setTimeout(() => alert.remove(), 300);
             }, 5000);
         }
-        
+
         // Show Django messages as alerts
         /* {% if messages %} */
         /* {% for message in messages %} */
@@ -1154,7 +1370,7 @@
         /* {% endfor %} */
         /* {% endif %} */
     </script>
-    
+
     {% block extra_js %}
     {% endblock %}
 
@@ -1164,7 +1380,8 @@
     ═══════════════════════════════════════════════ -->
 
     <!-- Floating Action Button -->
-    <button id="medibot-fab" onclick="medibotToggle()" title="MediBot — AI Pharmacy Assistant" aria-label="Open MediBot">
+    <button id="medibot-fab" onclick="medibotToggle()" title="MediBot — AI Pharmacy Assistant"
+        aria-label="Open MediBot">
         🤖
         <span class="fab-badge"></span>
     </button>
@@ -1182,16 +1399,19 @@
                 <p id="medibot-subtitle">Pharmacy Assistant • Online</p>
             </div>
             <div class="medibot-header-actions">
-                <button id="medibot-lang-btn" class="medibot-icon-btn" onclick="medibotToggleLang()" title="Toggle Language (English / हिन्दी)">
+                <button id="medibot-lang-btn" class="medibot-icon-btn" onclick="medibotToggleLang()"
+                    title="Toggle Language (English / हिन्दी)">
                     EN
                 </button>
-                <button id="medibot-sound-btn" class="medibot-icon-btn" onclick="medibotToggleAutoSpeak()" title="Voice Narration (Auto Read)">
+                <button id="medibot-sound-btn" class="medibot-icon-btn" onclick="medibotToggleAutoSpeak()"
+                    title="Voice Narration (Auto Read)">
                     🔇
                 </button>
                 <button class="medibot-icon-btn" onclick="medibotClearChat()" title="Clear Chat History">
                     🗑️
                 </button>
-                <button class="medibot-icon-btn" onclick="medibotToggle()" title="Close MediBot" style="font-size:16px;">
+                <button class="medibot-icon-btn" onclick="medibotToggle()" title="Close MediBot"
+                    style="font-size:16px;">
                     ✕
                 </button>
             </div>
@@ -1203,12 +1423,15 @@
                 <div class="msg-bubble">
                     👋 Namaste / Hello <strong>{{ request.user.first_name|default:request.user.username }}</strong>!<br>
                     I'm <strong>MediBot</strong>, your intelligent pharmacy assistant powered by AI.<br><br>
-                    How can I help you today? You can type or tap the <strong>Mic 🎤</strong> button to check stock, expiry dates, today's sales, medicine prices, or ask clinical questions.
+                    How can I help you today? You can type or tap the <strong>Mic 🎤</strong> button to check stock,
+                    expiry dates, today's sales, medicine prices, or ask clinical questions.
                     <div class="msg-actions">
-                        <button class="msg-action-btn" onclick="medibotSpeakText(this, `Namaste {{ request.user.first_name|default:request.user.username }}! I am MediBot, your pharmacy assistant. Ask me about medicine stock, prices, or sales.`)">
+                        <button class="msg-action-btn"
+                            onclick="medibotSpeakText(this, `Namaste {{ request.user.first_name|default:request.user.username }}! I am MediBot, your pharmacy assistant. Ask me about medicine stock, prices, or sales.`)">
                             🔊 Read
                         </button>
-                        <button class="msg-action-btn" onclick="medibotCopyText(this, `Namaste {{ request.user.first_name|default:request.user.username }}! I am MediBot, your pharmacy assistant.`)">
+                        <button class="msg-action-btn"
+                            onclick="medibotCopyText(this, `Namaste {{ request.user.first_name|default:request.user.username }}! I am MediBot, your pharmacy assistant.`)">
                             📋 Copy
                         </button>
                     </div>
@@ -1220,7 +1443,8 @@
         <!-- Quick Action Chips -->
         <div class="medibot-chips-bar" id="medibot-chips">
             <button class="medibot-chip" onclick='medibotSend("Show low stock")'>🔴 Low Stock</button>
-            <button class="medibot-chip" onclick='medibotSend("What medicines are expiring soon?")'>⏰ Expiring Soon</button>
+            <button class="medibot-chip" onclick='medibotSend("What medicines are expiring soon?")'>⏰ Expiring
+                Soon</button>
             <button class="medibot-chip" onclick='medibotSend("Top profitable medicines")'>💵 Profit Margins</button>
             <button class="medibot-chip" onclick='medibotSend("Patient refill alerts")'>🔔 Refill Alerts</button>
             <button class="medibot-chip" onclick='medibotSend("Demand forecast")'>📈 Demand Forecast</button>
@@ -1242,28 +1466,28 @@
                 </div>
                 <span id="medibot-voice-status-text">🎙️ Listening in English... Speak clearly</span>
             </div>
-            <button onclick="medibotStopVoice()" style="background:none; border:none; color:#166534; font-weight:700; cursor:pointer; font-size:12px; padding:2px 6px;">Stop ✕</button>
+            <button onclick="medibotStopVoice()"
+                style="background:none; border:none; color:#166534; font-weight:700; cursor:pointer; font-size:12px; padding:2px 6px;">Stop
+                ✕</button>
         </div>
 
         <!-- Input Area -->
         <div class="medibot-input-area">
-            <button id="medibot-mic" onclick="medibotMicToggle()" aria-label="Voice input" title="Click to speak (Voice Recognition)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                    <line x1="12" y1="19" x2="12" y2="23"/>
-                    <line x1="8" y1="23" x2="16" y2="23"/>
+            <button id="medibot-mic" onclick="medibotMicToggle()" aria-label="Voice input"
+                title="Click to speak (Voice Recognition)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" y1="19" x2="12" y2="23" />
+                    <line x1="8" y1="23" x2="16" y2="23" />
                 </svg>
             </button>
-            <input
-                type="text"
-                id="medibot-input"
-                placeholder="Ask MediBot or click 🎤 to speak…"
-                autocomplete="off"
-                onkeydown="if(event.key==='Enter') medibotSend()"
-            >
+            <input type="text" id="medibot-input" placeholder="Ask MediBot or click 🎤 to speak…" autocomplete="off"
+                onkeydown="if(event.key==='Enter') medibotSend()">
             <button id="medibot-send" onclick="medibotSend()" aria-label="Send query" title="Send (Enter)">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
@@ -1273,111 +1497,111 @@
 
     <!-- MediBot Application Logic -->
     <script>
-    (function () {
-        'use strict';
+        (function () {
+            'use strict';
 
-        // ── State ────────────────────────────────────────────────────────────
-        let isOpen = false;
-        let isAutoSpeakEnabled = false;
-        let currentLang = 'en-IN'; // 'en-IN' or 'hi-IN'
-        let isListening = false;
-        let speechRecognition = null;
-        let activeSpeakerButton = null;
-        let isAwaitingResponse = false;
+            // ── State ────────────────────────────────────────────────────────────
+            let isOpen = false;
+            let isAutoSpeakEnabled = false;
+            let currentLang = 'en-IN'; // 'en-IN' or 'hi-IN'
+            let isListening = false;
+            let speechRecognition = null;
+            let activeSpeakerButton = null;
+            let isAwaitingResponse = false;
 
-        // ── Format Helper ───────────────────────────────────────────────────
-        function getFormattedTime() {
-            const d = new Date();
-            let hours = d.getHours();
-            let minutes = d.getMinutes();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12;
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            return hours + ':' + minutes + ' ' + ampm;
-        }
+            // ── Format Helper ───────────────────────────────────────────────────
+            function getFormattedTime() {
+                const d = new Date();
+                let hours = d.getHours();
+                let minutes = d.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+                return hours + ':' + minutes + ' ' + ampm;
+            }
 
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
                     }
                 }
+                return cookieValue;
             }
-            return cookieValue;
-        }
 
-        // ── UI Control: Open/Close Panel ─────────────────────────────────────
-        window.medibotToggle = function () {
-            const panel = document.getElementById('medibot-panel');
-            const fab   = document.getElementById('medibot-fab');
-            isOpen = !isOpen;
-            if (isOpen) {
-                panel.classList.add('open');
-                if (fab) fab.style.transform = 'scale(0.85)';
-                setTimeout(() => {
-                    const input = document.getElementById('medibot-input');
-                    if (input) input.focus();
-                }, 300);
-            } else {
-                panel.classList.remove('open');
-                if (fab) fab.style.transform = '';
-                medibotStopVoice();
-                medibotStopSpeaking();
-            }
-        };
-
-        // ── Language Toggle (English <-> Hindi) ──────────────────────────────
-        window.medibotToggleLang = function () {
-            const btn = document.getElementById('medibot-lang-btn');
-            const sub = document.getElementById('medibot-subtitle');
-            const input = document.getElementById('medibot-input');
-            if (currentLang === 'en-IN') {
-                currentLang = 'hi-IN';
-                if (btn) { btn.innerText = 'HI'; btn.classList.add('active'); btn.title = 'Current Language: Hindi (Click for English)'; }
-                if (sub) sub.innerText = 'Pharmacy AI • Hindi (हिन्दी)';
-                if (input) input.placeholder = 'MediBot से पूछें या 🎤 दबाकर बोलें...';
-            } else {
-                currentLang = 'en-IN';
-                if (btn) { btn.innerText = 'EN'; btn.classList.remove('active'); btn.title = 'Current Language: English (Click for Hindi)'; }
-                if (sub) sub.innerText = 'Pharmacy AI • English';
-                if (input) input.placeholder = 'Ask MediBot or click 🎤 to speak…';
-            }
-            if (isListening) {
-                medibotStopVoice();
-                medibotStartVoice();
-            }
-        };
-
-        // ── Auto-Speak Toggle ────────────────────────────────────────────────
-        window.medibotToggleAutoSpeak = function () {
-            const btn = document.getElementById('medibot-sound-btn');
-            isAutoSpeakEnabled = !isAutoSpeakEnabled;
-            if (btn) {
-                if (isAutoSpeakEnabled) {
-                    btn.innerText = '🔊';
-                    btn.classList.add('active');
-                    btn.title = 'Voice Narration: ON (Click to Mute)';
+            // ── UI Control: Open/Close Panel ─────────────────────────────────────
+            window.medibotToggle = function () {
+                const panel = document.getElementById('medibot-panel');
+                const fab = document.getElementById('medibot-fab');
+                isOpen = !isOpen;
+                if (isOpen) {
+                    panel.classList.add('open');
+                    if (fab) fab.style.transform = 'scale(0.85)';
+                    setTimeout(() => {
+                        const input = document.getElementById('medibot-input');
+                        if (input) input.focus();
+                    }, 300);
                 } else {
-                    btn.innerText = '🔇';
-                    btn.classList.remove('active');
-                    btn.title = 'Voice Narration: OFF (Click to Enable)';
+                    panel.classList.remove('open');
+                    if (fab) fab.style.transform = '';
+                    medibotStopVoice();
                     medibotStopSpeaking();
                 }
-            }
-        };
+            };
 
-        // ── Clear Chat ───────────────────────────────────────────────────────
-        window.medibotClearChat = function () {
-            medibotStopSpeaking();
-            const container = document.getElementById('medibot-messages');
-            if (!container) return;
-            container.innerHTML = `
+            // ── Language Toggle (English <-> Hindi) ──────────────────────────────
+            window.medibotToggleLang = function () {
+                const btn = document.getElementById('medibot-lang-btn');
+                const sub = document.getElementById('medibot-subtitle');
+                const input = document.getElementById('medibot-input');
+                if (currentLang === 'en-IN') {
+                    currentLang = 'hi-IN';
+                    if (btn) { btn.innerText = 'HI'; btn.classList.add('active'); btn.title = 'Current Language: Hindi (Click for English)'; }
+                    if (sub) sub.innerText = 'Pharmacy AI • Hindi (हिन्दी)';
+                    if (input) input.placeholder = 'MediBot से पूछें या 🎤 दबाकर बोलें...';
+                } else {
+                    currentLang = 'en-IN';
+                    if (btn) { btn.innerText = 'EN'; btn.classList.remove('active'); btn.title = 'Current Language: English (Click for Hindi)'; }
+                    if (sub) sub.innerText = 'Pharmacy AI • English';
+                    if (input) input.placeholder = 'Ask MediBot or click 🎤 to speak…';
+                }
+                if (isListening) {
+                    medibotStopVoice();
+                    medibotStartVoice();
+                }
+            };
+
+            // ── Auto-Speak Toggle ────────────────────────────────────────────────
+            window.medibotToggleAutoSpeak = function () {
+                const btn = document.getElementById('medibot-sound-btn');
+                isAutoSpeakEnabled = !isAutoSpeakEnabled;
+                if (btn) {
+                    if (isAutoSpeakEnabled) {
+                        btn.innerText = '🔊';
+                        btn.classList.add('active');
+                        btn.title = 'Voice Narration: ON (Click to Mute)';
+                    } else {
+                        btn.innerText = '🔇';
+                        btn.classList.remove('active');
+                        btn.title = 'Voice Narration: OFF (Click to Enable)';
+                        medibotStopSpeaking();
+                    }
+                }
+            };
+
+            // ── Clear Chat ───────────────────────────────────────────────────────
+            window.medibotClearChat = function () {
+                medibotStopSpeaking();
+                const container = document.getElementById('medibot-messages');
+                if (!container) return;
+                container.innerHTML = `
                 <div class="medibot-msg-row bot">
                     <div class="msg-bubble">
                         ✨ Chat cleared. How can I assist you with your pharmacy inventory or sales today?
@@ -1385,416 +1609,417 @@
                     </div>
                 </div>
             `;
-        };
+            };
 
-        // ── Append Messages ──────────────────────────────────────────────────
-        function appendUserMessage(text) {
-            const container = document.getElementById('medibot-messages');
-            if (!container) return;
-            const row = document.createElement('div');
-            row.className = 'medibot-msg-row user';
-            
-            const bubble = document.createElement('div');
-            bubble.className = 'msg-bubble';
-            bubble.textContent = text;
+            // ── Append Messages ──────────────────────────────────────────────────
+            function appendUserMessage(text) {
+                const container = document.getElementById('medibot-messages');
+                if (!container) return;
+                const row = document.createElement('div');
+                row.className = 'medibot-msg-row user';
 
-            const time = document.createElement('span');
-            time.className = 'msg-timestamp';
-            time.textContent = getFormattedTime();
-            bubble.appendChild(time);
+                const bubble = document.createElement('div');
+                bubble.className = 'msg-bubble';
+                bubble.textContent = text;
 
-            row.appendChild(bubble);
-            container.appendChild(row);
-            container.scrollTop = container.scrollHeight;
-        }
+                const time = document.createElement('span');
+                time.className = 'msg-timestamp';
+                time.textContent = getFormattedTime();
+                bubble.appendChild(time);
 
-        function appendBotMessage(htmlContent, rawPlainText) {
-            const container = document.getElementById('medibot-messages');
-            if (!container) return;
-
-            const row = document.createElement('div');
-            row.className = 'medibot-msg-row bot';
-
-            const bubble = document.createElement('div');
-            bubble.className = 'msg-bubble';
-            bubble.innerHTML = htmlContent;
-
-            // Plain text for speech and copy
-            const textToRead = rawPlainText || bubble.innerText || bubble.textContent;
-
-            // Action toolbar
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'msg-actions';
-
-            const speakBtn = document.createElement('button');
-            speakBtn.className = 'msg-action-btn';
-            speakBtn.innerHTML = '🔊 Read';
-            speakBtn.onclick = function() { medibotSpeakText(speakBtn, textToRead); };
-            actionsDiv.appendChild(speakBtn);
-
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'msg-action-btn';
-            copyBtn.innerHTML = '📋 Copy';
-            copyBtn.onclick = function() { medibotCopyText(copyBtn, textToRead); };
-            actionsDiv.appendChild(copyBtn);
-
-            bubble.appendChild(actionsDiv);
-
-            const time = document.createElement('span');
-            time.className = 'msg-timestamp';
-            time.textContent = getFormattedTime();
-            bubble.appendChild(time);
-
-            row.appendChild(bubble);
-            container.appendChild(row);
-            container.scrollTop = container.scrollHeight;
-
-            // Auto-speak if enabled
-            if (isAutoSpeakEnabled) {
-                medibotSpeakText(speakBtn, textToRead);
+                row.appendChild(bubble);
+                container.appendChild(row);
+                container.scrollTop = container.scrollHeight;
             }
-        }
 
-        // ── Typing Indicator ────────────────────────────────────────────────
-        function showTypingIndicator() {
-            const container = document.getElementById('medibot-messages');
-            if (!container) return;
-            let existing = document.getElementById('medibot-typing-indicator');
-            if (existing) return;
+            function appendBotMessage(htmlContent, rawPlainText) {
+                const container = document.getElementById('medibot-messages');
+                if (!container) return;
 
-            const row = document.createElement('div');
-            row.className = 'medibot-msg-row bot';
-            row.id = 'medibot-typing-indicator';
+                const row = document.createElement('div');
+                row.className = 'medibot-msg-row bot';
 
-            row.innerHTML = `
+                const bubble = document.createElement('div');
+                bubble.className = 'msg-bubble';
+                bubble.innerHTML = htmlContent;
+
+                // Plain text for speech and copy
+                const textToRead = rawPlainText || bubble.innerText || bubble.textContent;
+
+                // Action toolbar
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'msg-actions';
+
+                const speakBtn = document.createElement('button');
+                speakBtn.className = 'msg-action-btn';
+                speakBtn.innerHTML = '🔊 Read';
+                speakBtn.onclick = function () { medibotSpeakText(speakBtn, textToRead); };
+                actionsDiv.appendChild(speakBtn);
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'msg-action-btn';
+                copyBtn.innerHTML = '📋 Copy';
+                copyBtn.onclick = function () { medibotCopyText(copyBtn, textToRead); };
+                actionsDiv.appendChild(copyBtn);
+
+                bubble.appendChild(actionsDiv);
+
+                const time = document.createElement('span');
+                time.className = 'msg-timestamp';
+                time.textContent = getFormattedTime();
+                bubble.appendChild(time);
+
+                row.appendChild(bubble);
+                container.appendChild(row);
+                container.scrollTop = container.scrollHeight;
+
+                // Auto-speak if enabled
+                if (isAutoSpeakEnabled) {
+                    medibotSpeakText(speakBtn, textToRead);
+                }
+            }
+
+            // ── Typing Indicator ────────────────────────────────────────────────
+            function showTypingIndicator() {
+                const container = document.getElementById('medibot-messages');
+                if (!container) return;
+                let existing = document.getElementById('medibot-typing-indicator');
+                if (existing) return;
+
+                const row = document.createElement('div');
+                row.className = 'medibot-msg-row bot';
+                row.id = 'medibot-typing-indicator';
+
+                row.innerHTML = `
                 <div class="medibot-typing-bubble">
                     <span class="typing-dot"></span>
                     <span class="typing-dot"></span>
                     <span class="typing-dot"></span>
                 </div>
             `;
-            container.appendChild(row);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function hideTypingIndicator() {
-            const el = document.getElementById('medibot-typing-indicator');
-            if (el) el.remove();
-        }
-
-        // ── Text-to-Speech (Read Aloud) ──────────────────────────────────────
-        window.medibotSpeakText = function (btn, rawText) {
-            if (!('speechSynthesis' in window)) {
-                alert('Speech synthesis is not supported in this browser.');
-                return;
+                container.appendChild(row);
+                container.scrollTop = container.scrollHeight;
             }
 
-            // If already speaking this button, stop it
-            if (btn && btn.classList.contains('speaking')) {
+            function hideTypingIndicator() {
+                const el = document.getElementById('medibot-typing-indicator');
+                if (el) el.remove();
+            }
+
+            // ── Text-to-Speech (Read Aloud) ──────────────────────────────────────
+            window.medibotSpeakText = function (btn, rawText) {
+                if (!('speechSynthesis' in window)) {
+                    alert('Speech synthesis is not supported in this browser.');
+                    return;
+                }
+
+                // If already speaking this button, stop it
+                if (btn && btn.classList.contains('speaking')) {
+                    medibotStopSpeaking();
+                    return;
+                }
+
                 medibotStopSpeaking();
-                return;
-            }
 
-            medibotStopSpeaking();
+                // Clean up text: remove table formatting markers, HTML tags, multiple spaces
+                let cleanText = (rawText || '')
+                    .replace(/<[^>]*>/g, ' ')
+                    .replace(/[|#*_`]/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
 
-            // Clean up text: remove table formatting markers, HTML tags, multiple spaces
-            let cleanText = (rawText || '')
-                .replace(/<[^>]*>/g, ' ')
-                .replace(/[|#*_`]/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
+                if (!cleanText) return;
 
-            if (!cleanText) return;
+                // Shorten if excessively long to avoid browser timeout
+                if (cleanText.length > 500) {
+                    cleanText = cleanText.substring(0, 497) + '...';
+                }
 
-            // Shorten if excessively long to avoid browser timeout
-            if (cleanText.length > 500) {
-                cleanText = cleanText.substring(0, 497) + '...';
-            }
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = currentLang === 'hi-IN' ? 'hi-IN' : 'en-IN';
+                utterance.rate = 1.02;
+                utterance.pitch = 1.0;
 
-            const utterance = new SpeechSynthesisUtterance(cleanText);
-            utterance.lang = currentLang === 'hi-IN' ? 'hi-IN' : 'en-IN';
-            utterance.rate = 1.02;
-            utterance.pitch = 1.0;
+                if (btn) {
+                    activeSpeakerButton = btn;
+                    btn.classList.add('speaking');
+                    btn.innerHTML = '⏹️ Stop';
+                }
 
-            if (btn) {
-                activeSpeakerButton = btn;
-                btn.classList.add('speaking');
-                btn.innerHTML = '⏹️ Stop';
-            }
+                utterance.onend = function () {
+                    medibotStopSpeaking();
+                };
+                utterance.onerror = function () {
+                    medibotStopSpeaking();
+                };
 
-            utterance.onend = function () {
-                medibotStopSpeaking();
+                window.speechSynthesis.speak(utterance);
             };
-            utterance.onerror = function () {
-                medibotStopSpeaking();
+
+            window.medibotStopSpeaking = function () {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                }
+                if (activeSpeakerButton) {
+                    activeSpeakerButton.classList.remove('speaking');
+                    activeSpeakerButton.innerHTML = '🔊 Read';
+                    activeSpeakerButton = null;
+                }
             };
 
-            window.speechSynthesis.speak(utterance);
-        };
+            // ── Copy Message to Clipboard ────────────────────────────────────────
+            window.medibotCopyText = function (btn, text) {
+                const cleanText = (text || '').replace(/<[^>]*>/g, '').trim();
+                if (!cleanText) return;
 
-        window.medibotStopSpeaking = function () {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
-            if (activeSpeakerButton) {
-                activeSpeakerButton.classList.remove('speaking');
-                activeSpeakerButton.innerHTML = '🔊 Read';
-                activeSpeakerButton = null;
-            }
-        };
-
-        // ── Copy Message to Clipboard ────────────────────────────────────────
-        window.medibotCopyText = function (btn, text) {
-            const cleanText = (text || '').replace(/<[^>]*>/g, '').trim();
-            if (!cleanText) return;
-
-            navigator.clipboard.writeText(cleanText).then(() => {
-                const orig = btn.innerHTML;
-                btn.innerHTML = '✅ Copied!';
-                setTimeout(() => {
-                    btn.innerHTML = orig;
-                }, 1500);
-            }).catch(() => {
-                btn.innerHTML = '❌ Failed';
-                setTimeout(() => { btn.innerHTML = '📋 Copy'; }, 1500);
-            });
-        };
-
-        // ── Send Message ─────────────────────────────────────────────────────
-        window.medibotSend = async function (overrideText) {
-            if (isAwaitingResponse) return;
-
-            const input = document.getElementById('medibot-input');
-            const text = (overrideText !== undefined ? overrideText : (input ? input.value : '')).trim();
-            if (!text) return;
-
-            if (input) input.value = '';
-            medibotStopVoice();
-            medibotStopSpeaking();
-
-            appendUserMessage(text);
-            showTypingIndicator();
-            isAwaitingResponse = true;
-
-            try {
-                const response = await fetch('/api/chatbot/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken') || ''
-                    },
-                    body: JSON.stringify({ message: text })
+                navigator.clipboard.writeText(cleanText).then(() => {
+                    const orig = btn.innerHTML;
+                    btn.innerHTML = '✅ Copied!';
+                    setTimeout(() => {
+                        btn.innerHTML = orig;
+                    }, 1500);
+                }).catch(() => {
+                    btn.innerHTML = '❌ Failed';
+                    setTimeout(() => { btn.innerHTML = '📋 Copy'; }, 1500);
                 });
+            };
 
-                hideTypingIndicator();
-                isAwaitingResponse = false;
+            // ── Send Message ─────────────────────────────────────────────────────
+            window.medibotSend = async function (overrideText) {
+                if (isAwaitingResponse) return;
 
-                if (!response.ok) {
-                    appendBotMessage(`⚠️ <strong>Server response error (${response.status}).</strong> Please try again.`);
-                    return;
-                }
+                const input = document.getElementById('medibot-input');
+                const text = (overrideText !== undefined ? overrideText : (input ? input.value : '')).trim();
+                if (!text) return;
 
-                const data = await response.json();
-                if (data.status === 'success' || data.reply) {
-                    appendBotMessage(data.reply, data.raw_reply || data.reply);
-                } else {
-                    appendBotMessage(`⚠️ ${data.message || 'Unable to process your request at this moment.'}`);
-                }
-            } catch (err) {
-                console.error('MediBot fetch error:', err);
-                hideTypingIndicator();
-                isAwaitingResponse = false;
-                appendBotMessage(`🔌 <strong>Connection error:</strong> Could not reach the MediBot server. Please check your network connection.`);
-            }
-        };
-
-        // ── Web Speech API Voice Recognition (English & Hindi) ───────────────
-        function isSpeechSupported() {
-            return ('SpeechRecognition' in window) || ('webkitSpeechRecognition' in window);
-        }
-
-        window.medibotMicToggle = function () {
-            console.log('[MediBot Speech] Mic button clicked. Currently listening:', isListening);
-            if (isListening) {
+                if (input) input.value = '';
                 medibotStopVoice();
-            } else {
-                medibotStartVoice();
-            }
-        };
+                medibotStopSpeaking();
 
-        window.medibotStartVoice = async function () {
-            console.log('[MediBot Speech] Starting voice recognition process...');
+                appendUserMessage(text);
+                showTypingIndicator();
+                isAwaitingResponse = true;
 
-            if (!isSpeechSupported()) {
-                console.error('[MediBot Speech ERROR] Web Speech API is not supported in this browser.');
-                appendBotMessage('⚠️ <strong>Voice input not supported:</strong> Your browser does not support the Web Speech API. Please use <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, or <strong>Safari</strong>.');
-                return;
-            }
-
-            medibotStopSpeaking();
-
-            // 1. Explicitly verify microphone hardware access via getUserMedia
-            let micPermissionGranted = false;
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 try {
-                    console.log('[MediBot Speech] Requesting microphone access via getUserMedia...');
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    micPermissionGranted = true;
-                    console.log('[MediBot Speech] Microphone permission granted.');
-                    // Release the test stream tracks immediately
-                    stream.getTracks().forEach(track => track.stop());
-                } catch (permErr) {
-                    console.error('[MediBot Speech ERROR] Microphone permission denied or failed:', permErr);
-                    appendBotMessage('🎤 <strong>Microphone Permission Blocked:</strong> Please allow microphone access for this site in your browser address bar (click the lock / tune icon next to the URL, then set Microphone to "Allow") and try again.');
+                    const response = await fetch('/api/chatbot/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken') || ''
+                        },
+                        body: JSON.stringify({ message: text })
+                    });
+
+                    hideTypingIndicator();
+                    isAwaitingResponse = false;
+
+                    if (!response.ok) {
+                        appendBotMessage(`⚠️ <strong>Server response error (${response.status}).</strong> Please try again.`);
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (data.status === 'success' || data.reply) {
+                        appendBotMessage(data.reply, data.raw_reply || data.reply);
+                    } else {
+                        appendBotMessage(`⚠️ ${data.message || 'Unable to process your request at this moment.'}`);
+                    }
+                } catch (err) {
+                    console.error('MediBot fetch error:', err);
+                    hideTypingIndicator();
+                    isAwaitingResponse = false;
+                    appendBotMessage(`🔌 <strong>Connection error:</strong> Could not reach the MediBot server. Please check your network connection.`);
+                }
+            };
+
+            // ── Web Speech API Voice Recognition (English & Hindi) ───────────────
+            function isSpeechSupported() {
+                return ('SpeechRecognition' in window) || ('webkitSpeechRecognition' in window);
+            }
+
+            window.medibotMicToggle = function () {
+                console.log('[MediBot Speech] Mic button clicked. Currently listening:', isListening);
+                if (isListening) {
+                    medibotStopVoice();
+                } else {
+                    medibotStartVoice();
+                }
+            };
+
+            window.medibotStartVoice = async function () {
+                console.log('[MediBot Speech] Starting voice recognition process...');
+
+                if (!isSpeechSupported()) {
+                    console.error('[MediBot Speech ERROR] Web Speech API is not supported in this browser.');
+                    appendBotMessage('⚠️ <strong>Voice input not supported:</strong> Your browser does not support the Web Speech API. Please use <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, or <strong>Safari</strong>.');
                     return;
                 }
-            }
 
-            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                medibotStopSpeaking();
 
-            try {
-                console.log('[MediBot Speech] Initializing SpeechRecognition instance. Language:', currentLang);
-                speechRecognition = new SpeechRec();
-                speechRecognition.lang = currentLang; // 'en-IN' or 'hi-IN'
-                speechRecognition.continuous = false;
-                speechRecognition.interimResults = true;
-                speechRecognition.maxAlternatives = 1;
+                // 1. Explicitly verify microphone hardware access via getUserMedia
+                let micPermissionGranted = false;
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    try {
+                        console.log('[MediBot Speech] Requesting microphone access via getUserMedia...');
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        micPermissionGranted = true;
+                        console.log('[MediBot Speech] Microphone permission granted.');
+                        // Release the test stream tracks immediately
+                        stream.getTracks().forEach(track => track.stop());
+                    } catch (permErr) {
+                        console.error('[MediBot Speech ERROR] Microphone permission denied or failed:', permErr);
+                        appendBotMessage('🎤 <strong>Microphone Permission Blocked:</strong> Please allow microphone access for this site in your browser address bar (click the lock / tune icon next to the URL, then set Microphone to "Allow") and try again.');
+                        return;
+                    }
+                }
 
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+                try {
+                    console.log('[MediBot Speech] Initializing SpeechRecognition instance. Language:', currentLang);
+                    speechRecognition = new SpeechRec();
+                    speechRecognition.lang = currentLang; // 'en-IN' or 'hi-IN'
+                    speechRecognition.continuous = false;
+                    speechRecognition.interimResults = true;
+                    speechRecognition.maxAlternatives = 1;
+
+                    const micBtn = document.getElementById('medibot-mic');
+                    const voiceBar = document.getElementById('medibot-voice-bar');
+                    const voiceStatus = document.getElementById('medibot-voice-status-text');
+                    const input = document.getElementById('medibot-input');
+
+                    let recordedTranscript = '';
+
+                    // 2. Attach all event handlers BEFORE calling .start()
+                    speechRecognition.onstart = function () {
+                        console.log('[MediBot Speech EVENT] onstart: Speech recognition service has started.');
+                        isListening = true;
+                        if (micBtn) {
+                            micBtn.classList.add('listening');
+                            micBtn.title = 'Listening... Click to Stop & Send';
+                        }
+                        if (voiceBar) voiceBar.style.display = 'flex';
+                        if (voiceStatus) {
+                            voiceStatus.innerText = currentLang === 'hi-IN'
+                                ? '🎙️ सुन रहा हूँ (हिन्दी)... बोलिए'
+                                : '🎙️ Listening in English... Speak now';
+                        }
+                        if (input) {
+                            input.placeholder = currentLang === 'hi-IN' ? 'सुन रहा हूँ... बोलिए' : 'Listening... Speak your query';
+                        }
+                    };
+
+                    speechRecognition.onaudiostart = function () {
+                        console.log('[MediBot Speech EVENT] onaudiostart: Audio hardware capturing.');
+                    };
+
+                    speechRecognition.onspeechstart = function () {
+                        console.log('[MediBot Speech EVENT] onspeechstart: Speech sound detected by microphone.');
+                    };
+
+                    speechRecognition.onresult = function (event) {
+                        console.log('[MediBot Speech EVENT] onresult triggered with results length:', event.results.length);
+                        let fullTranscript = '';
+                        for (let i = 0; i < event.results.length; i++) {
+                            fullTranscript += event.results[i][0].transcript;
+                        }
+                        fullTranscript = fullTranscript.trim();
+                        recordedTranscript = fullTranscript;
+
+                        const isFinal = event.results[event.results.length - 1].isFinal;
+                        console.log(`[MediBot Speech] Transcript [${isFinal ? 'FINAL' : 'INTERIM'}]: "${fullTranscript}"`);
+
+                        if (input && fullTranscript) {
+                            input.value = fullTranscript;
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    };
+
+                    speechRecognition.onerror = function (event) {
+                        console.error('[MediBot Speech ERROR] onerror triggered:', event.error, event);
+                        isListening = false;
+
+                        let errorMsg = '';
+                        switch (event.error) {
+                            case 'not-allowed':
+                            case 'service-not-allowed':
+                                errorMsg = '🎤 <strong>Microphone Access Denied:</strong> Permission was not granted to use the microphone. Please allow microphone access in your browser settings (look for the lock or microphone icon in the address bar).';
+                                break;
+                            case 'no-speech':
+                                errorMsg = '🎤 <strong>No Speech Detected:</strong> MediBot did not hear any audio. Please check that your microphone is unmuted and speak clearly into your mic.';
+                                break;
+                            case 'network':
+                                errorMsg = '🌐 <strong>Voice Recognition Network Error:</strong> Could not connect to the cloud speech recognition service (ensure you are connected to the internet or type your query in the text box).';
+                                break;
+                            case 'audio-capture':
+                                errorMsg = '🎤 <strong>Microphone Hardware Error:</strong> No microphone was detected or it is in use by another application.';
+                                break;
+                            case 'aborted':
+                                console.log('[MediBot Speech] Recognition was cancelled/aborted by user.');
+                                break;
+                            default:
+                                errorMsg = `⚠️ <strong>Voice Recognition Error:</strong> ${event.error}. Please try again or type your message.`;
+                        }
+
+                        if (errorMsg) {
+                            appendBotMessage(errorMsg);
+                        }
+                        medibotStopVoice();
+                    };
+
+                    speechRecognition.onend = function () {
+                        console.log('[MediBot Speech EVENT] onend: Speech recognition session ended.');
+                        const finalCapturedText = input ? input.value.trim() : recordedTranscript;
+                        medibotStopVoice();
+
+                        if (finalCapturedText) {
+                            console.log('[MediBot Speech] Auto-submitting recognized speech query:', finalCapturedText);
+                            medibotSend(finalCapturedText);
+                        } else {
+                            console.log('[MediBot Speech] Session ended with no text captured.');
+                        }
+                    };
+
+                    // 3. Call .start() and verify execution
+                    speechRecognition.start();
+                    console.log('[MediBot Speech] speechRecognition.start() fired successfully.');
+
+                } catch (err) {
+                    console.error('[MediBot Speech FATAL ERROR] Exception during speech recognition init/start:', err);
+                    appendBotMessage(`⚠️ <strong>Could not start voice recognition:</strong> ${err.message || err}. Please try typing your question.`);
+                    medibotStopVoice();
+                }
+            };
+
+            window.medibotStopVoice = function () {
+                console.log('[MediBot Speech] Stopping voice recognition...');
+                isListening = false;
+                if (speechRecognition) {
+                    try {
+                        speechRecognition.stop();
+                    } catch (e) {
+                        console.warn('[MediBot Speech] Note on stopping recognition:', e);
+                    }
+                    speechRecognition = null;
+                }
                 const micBtn = document.getElementById('medibot-mic');
                 const voiceBar = document.getElementById('medibot-voice-bar');
-                const voiceStatus = document.getElementById('medibot-voice-status-text');
                 const input = document.getElementById('medibot-input');
 
-                let recordedTranscript = '';
-
-                // 2. Attach all event handlers BEFORE calling .start()
-                speechRecognition.onstart = function () {
-                    console.log('[MediBot Speech EVENT] onstart: Speech recognition service has started.');
-                    isListening = true;
-                    if (micBtn) {
-                        micBtn.classList.add('listening');
-                        micBtn.title = 'Listening... Click to Stop & Send';
-                    }
-                    if (voiceBar) voiceBar.style.display = 'flex';
-                    if (voiceStatus) {
-                        voiceStatus.innerText = currentLang === 'hi-IN'
-                            ? '🎙️ सुन रहा हूँ (हिन्दी)... बोलिए'
-                            : '🎙️ Listening in English... Speak now';
-                    }
-                    if (input) {
-                        input.placeholder = currentLang === 'hi-IN' ? 'सुन रहा हूँ... बोलिए' : 'Listening... Speak your query';
-                    }
-                };
-
-                speechRecognition.onaudiostart = function () {
-                    console.log('[MediBot Speech EVENT] onaudiostart: Audio hardware capturing.');
-                };
-
-                speechRecognition.onspeechstart = function () {
-                    console.log('[MediBot Speech EVENT] onspeechstart: Speech sound detected by microphone.');
-                };
-
-                speechRecognition.onresult = function (event) {
-                    console.log('[MediBot Speech EVENT] onresult triggered with results length:', event.results.length);
-                    let fullTranscript = '';
-                    for (let i = 0; i < event.results.length; i++) {
-                        fullTranscript += event.results[i][0].transcript;
-                    }
-                    fullTranscript = fullTranscript.trim();
-                    recordedTranscript = fullTranscript;
-
-                    const isFinal = event.results[event.results.length - 1].isFinal;
-                    console.log(`[MediBot Speech] Transcript [${isFinal ? 'FINAL' : 'INTERIM'}]: "${fullTranscript}"`);
-
-                    if (input && fullTranscript) {
-                        input.value = fullTranscript;
-                        input.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                };
-
-                speechRecognition.onerror = function (event) {
-                    console.error('[MediBot Speech ERROR] onerror triggered:', event.error, event);
-                    isListening = false;
-
-                    let errorMsg = '';
-                    switch (event.error) {
-                        case 'not-allowed':
-                        case 'service-not-allowed':
-                            errorMsg = '🎤 <strong>Microphone Access Denied:</strong> Permission was not granted to use the microphone. Please allow microphone access in your browser settings (look for the lock or microphone icon in the address bar).';
-                            break;
-                        case 'no-speech':
-                            errorMsg = '🎤 <strong>No Speech Detected:</strong> MediBot did not hear any audio. Please check that your microphone is unmuted and speak clearly into your mic.';
-                            break;
-                        case 'network':
-                            errorMsg = '🌐 <strong>Voice Recognition Network Error:</strong> Could not connect to the cloud speech recognition service (ensure you are connected to the internet or type your query in the text box).';
-                            break;
-                        case 'audio-capture':
-                            errorMsg = '🎤 <strong>Microphone Hardware Error:</strong> No microphone was detected or it is in use by another application.';
-                            break;
-                        case 'aborted':
-                            console.log('[MediBot Speech] Recognition was cancelled/aborted by user.');
-                            break;
-                        default:
-                            errorMsg = `⚠️ <strong>Voice Recognition Error:</strong> ${event.error}. Please try again or type your message.`;
-                    }
-
-                    if (errorMsg) {
-                        appendBotMessage(errorMsg);
-                    }
-                    medibotStopVoice();
-                };
-
-                speechRecognition.onend = function () {
-                    console.log('[MediBot Speech EVENT] onend: Speech recognition session ended.');
-                    const finalCapturedText = input ? input.value.trim() : recordedTranscript;
-                    medibotStopVoice();
-
-                    if (finalCapturedText) {
-                        console.log('[MediBot Speech] Auto-submitting recognized speech query:', finalCapturedText);
-                        medibotSend(finalCapturedText);
-                    } else {
-                        console.log('[MediBot Speech] Session ended with no text captured.');
-                    }
-                };
-
-                // 3. Call .start() and verify execution
-                speechRecognition.start();
-                console.log('[MediBot Speech] speechRecognition.start() fired successfully.');
-
-            } catch (err) {
-                console.error('[MediBot Speech FATAL ERROR] Exception during speech recognition init/start:', err);
-                appendBotMessage(`⚠️ <strong>Could not start voice recognition:</strong> ${err.message || err}. Please try typing your question.`);
-                medibotStopVoice();
-            }
-        };
-
-        window.medibotStopVoice = function () {
-            console.log('[MediBot Speech] Stopping voice recognition...');
-            isListening = false;
-            if (speechRecognition) {
-                try {
-                    speechRecognition.stop();
-                } catch(e) {
-                    console.warn('[MediBot Speech] Note on stopping recognition:', e);
+                if (micBtn) {
+                    micBtn.classList.remove('listening');
+                    micBtn.title = 'Click to speak (Voice Recognition)';
                 }
-                speechRecognition = null;
-            }
-            const micBtn = document.getElementById('medibot-mic');
-            const voiceBar = document.getElementById('medibot-voice-bar');
-            const input = document.getElementById('medibot-input');
+                if (voiceBar) voiceBar.style.display = 'none';
+                if (input && !input.value) {
+                    input.placeholder = currentLang === 'hi-IN' ? 'MediBot से पूछें या 🎤 दबाकर बोलें...' : 'Ask MediBot or click 🎤 to speak…';
+                }
+            };
 
-            if (micBtn) {
-                micBtn.classList.remove('listening');
-                micBtn.title = 'Click to speak (Voice Recognition)';
-            }
-            if (voiceBar) voiceBar.style.display = 'none';
-            if (input && !input.value) {
-                input.placeholder = currentLang === 'hi-IN' ? 'MediBot से पूछें या 🎤 दबाकर बोलें...' : 'Ask MediBot or click 🎤 to speak…';
-            }
-        };
-
-    })();
+        })();
     </script>
     {% endif %}
 </body>
+
 </html>

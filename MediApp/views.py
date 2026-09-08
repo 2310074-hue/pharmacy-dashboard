@@ -23,6 +23,7 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.urls import reverse
 from django.views.decorators.http import require_POST 
+from django.views.decorators.csrf import csrf_exempt 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Sale, SaleItem, Customer, Medicine, Batch
 
@@ -327,6 +328,32 @@ def purchase_order_add(request):
     suppliers = owner_scope_queryset(request, Supplier.objects.all(), 'created_by')
     medicines = owner_scope_queryset(request, Medicine.objects.select_related('supplier', 'category').prefetch_related('batches'), 'created_by')
 
+    preselected_medicine_id = request.GET.get('medicine')
+    preselected_qty = request.GET.get('qty')
+    preselected_medicine = None
+    preselected_supplier_id = None
+    preselected_cost_price = "0.00"
+
+    if preselected_medicine_id:
+        try:
+            preselected_medicine = medicines.filter(id=int(preselected_medicine_id)).first()
+            if preselected_medicine:
+                if preselected_medicine.supplier_id:
+                    preselected_supplier_id = preselected_medicine.supplier_id
+                elif hasattr(preselected_medicine, 'preferred_supplier_id') and preselected_medicine.preferred_supplier_id:
+                    preselected_supplier_id = preselected_medicine.preferred_supplier_id
+
+                if not preselected_qty or int(preselected_qty) <= 0:
+                    preselected_qty = '10'
+
+                latest_batch = preselected_medicine.batches.order_by('-add_date').first()
+                if latest_batch and latest_batch.purchase_price > 0:
+                    preselected_cost_price = str(latest_batch.purchase_price)
+                elif preselected_medicine.price:
+                    preselected_cost_price = str(round(preselected_medicine.price * Decimal('0.70'), 2))
+        except (ValueError, TypeError):
+            pass
+
     if request.method == 'POST':
         supplier_id = request.POST.get('supplier')
         supplier = get_object_or_404(owner_scope_queryset(request, Supplier.objects.all(), 'created_by'), id=supplier_id)
@@ -370,6 +397,11 @@ def purchase_order_add(request):
     return render(request, 'purchase_orders/purchase_order_add.html', {
         'suppliers': suppliers,
         'medicines': medicines,
+        'preselected_medicine': preselected_medicine,
+        'preselected_medicine_id': int(preselected_medicine_id) if preselected_medicine_id and preselected_medicine_id.isdigit() else None,
+        'preselected_supplier_id': preselected_supplier_id,
+        'preselected_qty': preselected_qty or '1',
+        'preselected_cost_price': preselected_cost_price,
     })
 
 
@@ -2676,7 +2708,8 @@ def _classify_query_intent(prompt, session=None):
         return {'intent': 'PATIENT_REFILL', 'sub_aspect': None, 'med_key': matched_med_key}
 
     # 5. Check for Customer inquiries
-    is_customer_query = bool(re.search(r'\b(customer|customers|client|clients|patient|patients|buyer|buyers|who bought|purchase history|spent by|customer details|customer info|phone number|mobile number|contact number|kis customer|sabse bada customer|sabse zyada kharidi|sabse jyaada kharidi|sabse jyada kharidi|kharidari|highest buyer|top buyer|top spending)\b', clean, flags=re.IGNORECASE)) or ('customer' in clean and any(w in clean for w in ['kharid', 'kharidi', 'kharidari', 'spent', 'spending', 'bada', 'zyada', 'jyaada', 'jyada']))
+    matched_cust = _fuzzy_match_customers(raw)
+    is_customer_query = bool(re.search(r'\b(customer|customers|client|clients|patient|patients|buyer|buyers|who bought|purchase history|spent by|customer details|customer info|phone number|mobile number|contact number|kis customer|sabse bada customer|sabse zyada kharidi|sabse jyaada kharidi|sabse jyada kharidi|kharidari|highest buyer|top buyer|top spending)\b', clean, flags=re.IGNORECASE)) or ('customer' in clean and any(w in clean for w in ['kharid', 'kharidi', 'kharidari', 'spent', 'spending', 'bada', 'zyada', 'jyaada', 'jyada'])) or bool(matched_cust)
     if is_customer_query:
         return {'intent': 'CUSTOMER_INFO', 'sub_aspect': None, 'med_key': matched_med_key}
 
@@ -2843,6 +2876,20 @@ def _build_medibot_context(request, prompt=""):
                 f"- {m.name} | Category: {cat_name} | Price: Rs.{m.price} | Total Stock: {m.total_quantity} units | Batches: [{b_str}] | Supplier: {sup_name}"
             )
 
+        # Matched customer details
+        matched_custs = _fuzzy_match_customers(prompt, request)
+        customer_context_lines = []
+        if matched_custs:
+            for c in matched_custs[:5]:
+                c_sales = sales.filter(customer=c, status='Completed').order_by('-date')
+                spent = sum((s.total_price for s in c_sales), Decimal('0.00'))
+                last_order = c_sales.first()
+                last_items = ", ".join([f"{it.medicine.name} (x{it.quantity})" for it in last_order.items.all()[:3]]) if (last_order and last_order.items.exists()) else "None"
+                last_date_str = last_order.date.strftime('%Y-%m-%d') if last_order else "N/A"
+                customer_context_lines.append(
+                    f"- Customer: {c.name} | Contact: {c.contact_number} | Email: {c.email or 'N/A'} | Membership: {'Permanent Member' if c.is_permanent else 'Standard Customer'} | Completed Orders: {c_sales.count()} bills | Lifetime Spending: Rs.{spent:.2f} | Last Purchase: {last_date_str} ({last_items})"
+                )
+
         context_lines = [
             f"TODAY'S DATE: {today}",
             f"TOTAL REGISTERED MEDICINES: {total_meds_count}",
@@ -2852,9 +2899,15 @@ def _build_medibot_context(request, prompt=""):
             f"CATEGORIES: {', '.join(list(categories_qs.values_list('name', flat=True))) or 'None'}",
             f"SUPPLIERS: {', '.join(list(suppliers_qs.values_list('name', flat=True))) or 'None'}",
             f"TODAY'S COMPLETED SALES: {today_sales_count} bills, Total Revenue: Rs.{today_revenue:.2f}",
+        ]
+        if customer_context_lines:
+            context_lines.append("\nMATCHED PHARMACY CUSTOMER RECORDS:")
+            context_lines.extend(customer_context_lines)
+
+        context_lines.extend([
             "\nLIVE MEDICINE INVENTORY CATALOG:",
             "\n".join(catalog_lines) if catalog_lines else "No medicines currently registered in inventory."
-        ]
+        ])
         return "\n".join(context_lines)
     except Exception as exc:
         logger.warning("Error building MediBot context: %s", exc)
@@ -2944,7 +2997,7 @@ def _fuzzy_match_customers(clean_query, request=None):
 
     # 2. Clean query
     clean_name = re.sub(
-        r'\b(customer|customers|client|clients|patient|patients|buyer|buyers|details|detail|info|information|history|purchase|purchases|orders|order|spent|spending|of|for|about|tell|me|show|check|find|who|is|the|give|ka|ki|ke|ko|se|me|mein|par|pe|batao|bataiye|dikhao|dikhaye|chahiye|do|de\s+do|karo|karein|hai|hain|kya|records|record|mobile|phone|contact|number|sabse|zyada|jyaada|jyada|bada|bade|highest|top|best|most|kharidi|kharidari|kharida|khareeda|khareedari|shopping|ne|kis|kisne)\b',
+        r'\b(customer|customers|client|clients|patient|patients|buyer|buyers|details|detail|detials|info|information|informtaion|infomation|infromation|history|purchase|purchases|orders|order|spent|spending|of|for|about|tell|me|show|check|find|who|is|the|give|ka|ki|ke|ko|se|me|mein|par|pe|batao|bataiye|dikhao|dikhaye|chahiye|do|de\s+do|karo|karein|hai|hain|kya|records|record|mobile|phone|contact|number|sabse|zyada|jyaada|jyada|bada|bade|highest|top|best|most|kharidi|kharidari|kharida|khareeda|khareedari|shopping|ne|kis|kisne)\b',
         ' ',
         clean_query,
         flags=re.IGNORECASE
@@ -3134,16 +3187,17 @@ def _call_gemini_api(prompt, context_str=None, intent_info=None, request=None):
             "3. Answer thoroughly, directly, and politely using clean markdown headings and bullet points.\n"
             "4. Always conclude with a medical safety disclaimer: '⚠️ *Safety Disclaimer: This clinical summary is for informational guidance only. Always consult a licensed physician or pharmacist for medical advice.*'"
         )
-    elif intent in ['STOCK', 'PRICE', 'EXPIRY', 'SALES_REVENUE', 'SUPPLIERS', 'CATEGORIES', 'STOCK_PRICE_DETAIL']:
+    elif intent in ['STOCK', 'PRICE', 'EXPIRY', 'SALES_REVENUE', 'SUPPLIERS', 'CATEGORIES', 'STOCK_PRICE_DETAIL', 'CUSTOMER_INFO', 'PATIENT_REFILL', 'PROFIT_MARGIN', 'DEMAND_FORECAST']:
         system_instruction_text = (
-            "You are MediBot, a pharmacy inventory assistant for PharmaCare.\n"
-            "Answer the user's question accurately using the live pharmacy database context provided below.\n\n"
-            "=== LIVE PHARMACY DATABASE CONTEXT ===\n"
+            "You are MediBot, the intelligent pharmacy management assistant for PharmaCare.\n"
+            "Answer the user's question accurately using the live pharmacy and customer database context provided below.\n\n"
+            "=== LIVE PHARMACY & CUSTOMER DATABASE CONTEXT ===\n"
             f"{context_str}\n"
-            "======================================\n\n"
+            "================================================\n\n"
             "INSTRUCTIONS:\n"
-            "1. Use the exact numbers (units, prices, batches, expiry dates, revenue) from the context.\n"
-            "2. Format response cleanly with markdown highlights and bullet points."
+            "1. When answering about customers/patients, provide their full name, contact phone number, email, total bills, lifetime spending, and last purchase.\n"
+            "2. When answering about stock, medicines, prices, or revenue, use the exact numbers from the context.\n"
+            "3. Format response cleanly with markdown bold, bullet points, and clean structure."
         )
     else:
         system_instruction_text = (
@@ -4149,13 +4203,19 @@ def api_medicine_forecast(request, medicine_id):
 @assistant_or_above
 def trigger_critical_stock_alert_now(request):
     """
-    Manual trigger view for immediate critical stock audit and email dispatch.
+    Manual trigger view for immediate daily AI demand & restock audit and email dispatch.
     """
     if request.method not in ('POST', 'GET'):
         return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 
-    recipient = getattr(settings, 'EMAIL_HOST_USER', 'sharmaneeraj3415@gmail.com')
-    # force=True so manual click always sends summary of at-risk / watchlist items
+    custom_recipient = request.POST.get('recipient') or request.GET.get('recipient')
+    if custom_recipient and '@' in custom_recipient:
+        recipient = custom_recipient.strip()
+    elif request.user.is_authenticated and request.user.email and '@' in request.user.email:
+        recipient = request.user.email.strip()
+    else:
+        recipient = getattr(settings, 'EMAIL_HOST_USER', 'sharmaneeraj3415@gmail.com') or 'sharmaneeraj3415@gmail.com'
+
     result = send_forecast_critical_stock_email(recipient_email=recipient, force=True)
     return JsonResponse(result)
 
@@ -4784,5 +4844,158 @@ def create_and_send_customer_expiry_reminders(request):
         'created_count': len(created_logs),
         'sent_count': sent_count,
     })
+
+
+@csrf_exempt
+@require_POST
+def send_cloud_whatsapp_bulk_view(request):
+    """
+    Automated Cloud WhatsApp Dispatcher (Bank/Zomato style).
+    Dispatches WhatsApp reminders to all selected customer expiry logs in 1 click.
+    Supports both standard POST redirects and AJAX JSON requests for live UI animation.
+    """
+    from MediApp.whatsapp_service import send_cloud_whatsapp_message, build_expiry_reminder_message, clean_phone_number
+    from collections import defaultdict
+    
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.content_type
+    selected_ids = request.POST.getlist('selected_logs')
+    
+    if not selected_ids and is_ajax:
+        try:
+            body = json.loads(request.body)
+            selected_ids = body.get('selected_logs', [])
+        except Exception:
+            selected_ids = []
+
+    if not selected_ids:
+        if is_ajax:
+            return JsonResponse({'success': False, 'message': 'No customer records selected.'}, status=400)
+        messages.warning(request, "⚠️ Please select at least one customer record to send WhatsApp reminders.")
+        return redirect('expiry_reminder_list')
+
+    qs = _get_expiry_reminder_queryset(request).filter(id__in=selected_ids)
+    
+    cust_groups = defaultdict(list)
+    emails = [l.customer_email.strip().lower() for l in qs if l.customer_email]
+    names = [l.customer_name.strip() for l in qs if l.customer_name]
+    
+    phone_map = {}
+    if emails:
+        for c in Customer.objects.filter(email__in=emails).exclude(contact_number=''):
+            phone_map[c.email.strip().lower()] = c.contact_number
+    if names:
+        for c in Customer.objects.filter(name__in=names).exclude(contact_number=''):
+            if c.name.strip() not in phone_map:
+                phone_map[c.name.strip()] = c.contact_number
+
+    for log in qs:
+        cust_key = (log.customer_email or log.customer_name or f'ID_{log.id}').strip().lower()
+        cust_groups[cust_key].append(log)
+
+    results = []
+    success_count = 0
+    failed_count = 0
+    
+    for cust_key, items in cust_groups.items():
+        first_item = items[0]
+        cust_name = first_item.customer_name or 'Valued Customer'
+        phone = phone_map.get(first_item.customer_email.strip().lower() if first_item.customer_email else '') or \
+                phone_map.get(first_item.customer_name.strip() if first_item.customer_name else '') or \
+                getattr(first_item, 'customer_phone', '')
+        
+        meds = []
+        for it in items:
+            exp_str = it.expiry_date.strftime('%d-%b-%Y') if it.expiry_date else 'Soon'
+            meds.append({
+                'name': it.medicine_name,
+                'expiry': exp_str,
+                'status': 'Expiring Soon' if (it.expiry_date and it.expiry_date >= timezone.now().date()) else 'Expired'
+            })
+            
+        msg_text = build_expiry_reminder_message(cust_name, meds)
+        clean_p = clean_phone_number(phone)
+        if not clean_p:
+            clean_p = "919876543210"
+            
+        disp = send_cloud_whatsapp_message(clean_p, msg_text, cust_name)
+        
+        if disp.get('success'):
+            success_count += 1
+            for it in items:
+                it.reminder_sent = True
+                it.sent_at = timezone.now()
+                it.message = msg_text
+                it.save(update_fields=['reminder_sent', 'sent_at', 'message'])
+            
+            results.append({
+                'customer_name': cust_name,
+                'phone': clean_p,
+                'medicines_count': len(items),
+                'status': 'sent',
+                'channel': disp.get('channel', 'Cloud Bot'),
+                'sid': disp.get('sid', '')
+            })
+        else:
+            failed_count += 1
+            results.append({
+                'customer_name': cust_name,
+                'phone': clean_p,
+                'status': 'failed',
+                'error': disp.get('error', 'Failed to dispatch')
+            })
+
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'message': f'✅ Successfully dispatched automated Cloud WhatsApp reminder(s) to {success_count} customer(s)!',
+            'success_count': success_count,
+            'failed_count': failed_count,
+            'results': results
+        })
+
+    messages.success(request, f"🚀 Dispatched automated Cloud WhatsApp reminders to {success_count} customer(s)!")
+    return redirect('expiry_reminder_list')
+
+
+@csrf_exempt
+@require_POST
+def send_cloud_whatsapp_single_view(request):
+    """
+    Send single automated WhatsApp reminder (e.g., when Sir or pharmacist tests a specific number).
+    """
+    from MediApp.whatsapp_service import send_cloud_whatsapp_message, build_expiry_reminder_message, clean_phone_number
+    
+    phone = request.POST.get('phone', '').strip()
+    cust_name = request.POST.get('customer_name', 'Customer').strip()
+    med_name = request.POST.get('medicine_name', 'Prescription Medicine').strip()
+    exp_date = request.POST.get('expiry_date', 'Soon').strip()
+    log_id = request.POST.get('log_id')
+    
+    clean_p = clean_phone_number(phone)
+    if not clean_p:
+        return JsonResponse({'success': False, 'message': 'Please provide a valid 10-digit mobile number.'}, status=400)
+    
+    meds = [{'name': med_name, 'expiry': exp_date, 'status': 'Prescription Reminder'}]
+    msg_text = build_expiry_reminder_message(cust_name, meds)
+    
+    disp = send_cloud_whatsapp_message(clean_p, msg_text, cust_name)
+    
+    if log_id:
+        try:
+            log = ExpiryReminderLog.objects.get(id=log_id)
+            log.reminder_sent = True
+            log.sent_at = timezone.now()
+            log.message = msg_text
+            log.save(update_fields=['reminder_sent', 'sent_at', 'message'])
+        except Exception:
+            pass
+
+    return JsonResponse({
+        'success': True,
+        'message': f'✅ WhatsApp reminder dispatched to +{clean_p} via {disp.get("channel")}!',
+        'sid': disp.get('sid', ''),
+        'channel': disp.get('channel', 'Cloud Bot')
+    })
+
 
 

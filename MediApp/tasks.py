@@ -23,6 +23,14 @@ def send_expiry_reminders(self):
     return {'sent': sent}
 
 
+@shared_task(bind=True)
+def check_critical_stock_task(self):
+    """Daily automated AI demand & restock alert task for admin."""
+    from .forecasting import send_forecast_critical_stock_email
+    return send_forecast_critical_stock_email(force=False)
+
+
+
 @shared_task
 def send_reminder_to_customer(batch_id, customer_email):
     try:

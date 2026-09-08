@@ -14,12 +14,16 @@
     <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
       <div>
-        <div class="flex items-center gap-3 mb-2">
+        <div class="flex items-center gap-2.5 mb-2 flex-wrap">
           <span class="px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 text-xs font-bold rounded-full tracking-wider uppercase flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
             Predictive AI Engine
           </span>
-          <span class="text-xs text-slate-300">Model: Holt-Winters Exponential Smoothing + Seasonality</span>
+          <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-xs font-bold rounded-full tracking-wider uppercase flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            Daily Auto-Dispatch: Active (08:00 AM)
+          </span>
+          <span class="text-xs text-slate-300">Model: Holt-Winters Smoothing</span>
         </div>
         <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Pharmacy Demand Forecasting & Stockout Risk</h1>
         <p class="text-slate-300 text-sm mt-1 max-w-2xl">
@@ -30,11 +34,11 @@
       <!-- Actions: Manual Alert Trigger & Quick Medicine Selector -->
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <!-- Manual Alert Trigger Button -->
-        <button onclick="sendCriticalAlertNow()" id="btn-send-alert" class="px-4 py-3 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-900/30 border border-red-400/30 flex items-center justify-center gap-2 transition-all active:scale-95 whitespace-nowrap cursor-pointer">
+        <button onclick="sendCriticalAlertNow()" id="btn-send-alert" class="px-4 py-3 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-900/30 border border-red-400/30 flex items-center justify-center gap-2 transition-all active:scale-95 whitespace-nowrap cursor-pointer" title="Send full predicted demand & restock report to Admin Mail">
           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
           </svg>
-          <span id="btn-alert-text">Send Critical Stock Alert Now</span>
+          <span id="btn-alert-text">📧 Send Daily AI Restock Alert</span>
         </button>
 
         <!-- Quick Medicine Selector -->
@@ -153,7 +157,7 @@
         </div>
       </div>
 
-      <!-- Live Metric Badges -->
+      <!-- Live Metric Badges & 1-Click PO Action -->
       <div class="flex items-center gap-3 flex-wrap">
         <div class="bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-center shadow-xs">
           <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Current Stock</span>
@@ -171,6 +175,16 @@
           <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Suggested Reorder</span>
           <span class="text-base font-extrabold text-amber-600" id="card-reorder-qty">{{ selected_forecast.recommended_reorder_qty }} units</span>
         </div>
+
+        <!-- ⚡ 1-Click Purchase Order Action Button -->
+        <a id="card-create-po-btn" 
+           href="{% url 'purchase_order_add' %}?medicine={{ selected_forecast.medicine_id }}&qty={{ selected_forecast.recommended_reorder_qty }}" 
+           class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-700 hover:to-cyan-700 text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all duration-200 group">
+          <svg class="w-4 h-4 text-amber-300 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
+          </svg>
+          <span>⚡ 1-Click Purchase Order</span>
+        </a>
       </div>
     </div>
 
@@ -182,7 +196,7 @@
           <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-slate-300"></span> Actual Historical Sales</span>
           <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-indigo-600"></span> 7-Day Moving Average</span>
           <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-cyan-500 border-t border-dashed border-cyan-500"></span> AI Forecast (Next 30 Days)</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-cyan-500/15 border border-cyan-300"></span> Confidence Band (±25%)</span>
+          <span class="flex items-center gap-3"><span class="w-3 h-3 bg-cyan-500/15 border border-cyan-300"></span> Confidence Band (±25%)</span>
         </div>
         <div class="text-slate-400 text-xs">
           Projected Stockout: <strong class="text-slate-700" id="card-stockout-date">{{ selected_forecast.projected_stockout_date }}</strong>
@@ -294,13 +308,19 @@
                 <span class="text-emerald-600 font-semibold">Adequate</span>
               {% endif %}
             </td>
-            <td class="py-3.5 px-5 text-center">
+            <td class="py-3.5 px-5 text-center whitespace-nowrap space-x-1">
               <button onclick="switchMedicineForecast({{ item.medicine_id }})" class="px-3 py-1 bg-white hover:bg-cyan-600 text-cyan-700 hover:text-white border border-cyan-300 hover:border-cyan-600 rounded-lg text-xs font-bold transition shadow-2xs inline-flex items-center gap-1">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
                 Inspect
               </button>
+              <a href="{% url 'purchase_order_add' %}?medicine={{ item.medicine_id }}&qty={{ item.recommended_reorder_qty }}" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 hover:border-indigo-600 rounded-lg text-xs font-bold transition shadow-2xs inline-flex items-center gap-1" title="Create Purchase Order">
+                <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
+                </svg>
+                1-Click PO
+              </a>
             </td>
           </tr>
           {% endfor %}
@@ -365,6 +385,11 @@
     document.getElementById('card-days-left').innerText = data.days_of_stock_left + ' days';
     document.getElementById('card-reorder-qty').innerText = data.recommended_reorder_qty + ' units';
     document.getElementById('card-stockout-date').innerText = data.projected_stockout_date;
+
+    const poBtn = document.getElementById('card-create-po-btn');
+    if (poBtn) {
+      poBtn.href = `{% url 'purchase_order_add' %}?medicine=${data.medicine_id}&qty=${data.recommended_reorder_qty}`;
+    }
 
     if (data.chart_data && data.chart_data.weekly_forecast) {
       const wf = data.chart_data.weekly_forecast;
@@ -554,7 +579,7 @@
 
     btn.disabled = true;
     btn.classList.add('opacity-75', 'cursor-not-allowed');
-    btnText.innerHTML = `<span>⏳ Auditing & Sending Email...</span>`;
+    btnText.innerHTML = `<span>⏳ Auditing Demand & Sending Mail...</span>`;
 
     fetch('{% url "trigger_critical_stock_alert_now" %}', {
       method: 'POST',
@@ -570,11 +595,15 @@
       btnText.innerHTML = origHtml;
 
       if (data.success && data.email_sent) {
-        alert("✅ " + data.message + "\n\nAn executive critical inventory report has been dispatched to your email address (sharmaneeraj3415@gmail.com).");
+        alert(`✅ Daily AI Restock Alert Dispatched!\n\n` +
+              `📧 Sent to: ${data.recipient || 'sharmaneeraj3415@gmail.com'}\n` +
+              `📦 Medicines Requiring Refill: ${data.total_at_risk || 0}\n` +
+              `⚡ Total Suggested Units: ${data.total_reorder_qty || 0} units\n\n` +
+              `The email includes full stock forecasts and direct 1-Click Purchase Order links for each medicine.`);
       } else if (data.success && !data.email_sent) {
         alert("ℹ️ " + data.message);
       } else {
-        alert("❌ " + (data.message || data.error || "Failed to send alert email."));
+        alert("❌ " + (data.message || data.error || "Failed to send alert email. Check SMTP/Resend configuration."));
       }
     })
     .catch(err => {
