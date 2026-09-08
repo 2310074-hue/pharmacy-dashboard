@@ -176,6 +176,7 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=config('EMAIL_HOST_USE
 # Resend HTTPS API Configuration (Port 443 - 100% unblocked on Render cloud)
 RESEND_API_KEY = config('RESEND_API_KEY', default='')
 RESEND_FROM_EMAIL = config('RESEND_FROM_EMAIL', default='PharmaCare <onboarding@resend.dev>')
+BREVO_API_KEY = config('BREVO_API_KEY', default='')
 
 # Celery broker (use Redis locally)
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
