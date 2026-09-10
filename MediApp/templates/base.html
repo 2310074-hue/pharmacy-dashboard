@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Pharmacy Dashboard{% endblock %}</title>
 
-    <!-- Google Fonts - Poppins -->
+    <!-- Google Fonts - Plus Jakarta Sans & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
     <!-- Tailwind CSS CDN -->
@@ -17,35 +17,57 @@
 
     <style>
         * {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         :root {
-            --primary-color: #0891b2;
-            --primary-dark: #0e7490;
-            --secondary-color: #6366f1;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #44bfef;
+            --primary-color: #0284c7;
+            --primary-dark: #0369a1;
+            --secondary-color: #4f46e5;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --danger-color: #e11d48;
         }
 
         body {
-            background-color: #f3f4f6;
+            background-color: #f8fafc;
+            color: #0f172a;
         }
 
-        /* Sidebar Styles */
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Sidebar Styles - Luxury Midnight Navy */
         .sidebar {
             position: fixed;
             top: 0;
             left: 0;
             height: 100vh;
-            width: 16rem;
-            background: linear-gradient(to bottom, #0891b2, #0e7490);
-            color: white;
+            width: 16.5rem;
+            background: #090e1a;
+            background-image: radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.12), transparent 50%),
+                              radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.08), transparent 60%);
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+            color: #f8fafc;
             transform: translateX(0);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1000;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar.closed {
@@ -73,11 +95,12 @@
 
         /* Main content area */
         .main-content {
-            margin-left: 16rem;
-            transition: margin-left 0.3s ease;
+            margin-left: 16.5rem;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            background-color: #f8fafc;
         }
 
         .main-content.full-width {
@@ -92,6 +115,7 @@
 
             .sidebar.open {
                 transform: translateX(0);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             }
 
             .main-content {
@@ -99,102 +123,151 @@
             }
         }
 
+        /* Navigation Links - Luxury Obsidian Style */
         .nav-link {
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            margin: 2px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #94a3b8;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
 
         .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(3px);
         }
 
         .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-left: 4px solid white;
+            color: #38bdf8;
+            background: linear-gradient(90deg, rgba(14, 165, 233, 0.15), rgba(99, 102, 241, 0.08));
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.12);
         }
 
+        .nav-section-title {
+            padding: 18px 24px 6px 24px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+        }
+
+        /* Modern Glass Cards */
         .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
         }
 
+        /* Buttons */
         .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             cursor: pointer;
-            border: none;
+            border: 1px solid transparent;
         }
 
         .btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         }
 
         .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            border-color: #0284c7;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
         }
 
         .btn-secondary {
-            background-color: var(--secondary-color);
-            color: white;
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a;
         }
 
         .btn-success {
-            background-color: var(--success-color);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
             color: white;
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
         }
 
         .btn-danger {
-            background-color: var(--danger-color);
+            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
             color: white;
+            box-shadow: 0 2px 6px rgba(225, 29, 72, 0.25);
         }
 
         .form-input,
         .form-select,
         .form-textarea {
             width: 100%;
-            padding: 10px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            font-size: 14px;
+            padding: 9px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background-color: #ffffff;
+            color: #0f172a;
+            transition: all 0.2s ease;
+            font-size: 13px;
         }
 
         .form-input:focus,
         .form-select:focus,
         .form-textarea:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
         }
 
         .alert {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 16px 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            padding: 14px 20px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.18);
             z-index: 9999;
             display: flex;
             align-items: center;
             gap: 12px;
-            animation: slideIn 0.3s ease;
-            min-width: 300px;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            min-width: 320px;
             max-width: 90%;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
         }
 
         @keyframes slideIn {
@@ -1041,253 +1114,287 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar Navigation -->
-    <aside class="sidebar" id="sidebar">
-        <div class="p-6">
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold flex items-center gap-2">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+    <aside class="sidebar shadow-2xl" id="sidebar">
+        <!-- Brand Header -->
+        <div class="p-5 border-b border-white/[0.08] flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/25 border border-white/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
                             d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                     </svg>
-                    PharmaCare
-                </h1>
-                <!-- Close button for mobile -->
-                <button onclick="toggleSidebar()"
-                    class="md:hidden text-white hover:bg-white hover:bg-opacity-10 p-2 rounded">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                </div>
+                <div>
+                    <h1 class="text-base font-extrabold text-white tracking-tight leading-none flex items-center gap-1.5">
+                        PharmaCare
+                        <span class="text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 px-1.5 py-0.5 rounded-md uppercase tracking-wider">PRO</span>
+                    </h1>
+                    <p class="text-[11px] font-medium text-slate-400 mt-0.5">Enterprise Cloud v2.4</p>
+                </div>
             </div>
+            <!-- Close button for mobile -->
+            <button onclick="toggleSidebar()"
+                class="md:hidden text-slate-400 hover:text-white hover:bg-white/10 p-2 rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
 
-        <nav class="mt-6">
+        <!-- Navigation Links -->
+        <nav class="flex-1 py-4 overflow-y-auto">
+            <!-- GROUP: CORE -->
+            <div class="nav-section-title">Core Overview</div>
             <a href="{% url 'dashboard' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
-                Dashboard
+                <span>Dashboard</span>
             </a>
 
+            <!-- GROUP: INVENTORY & PROCUREMENT -->
+            <div class="nav-section-title">Inventory & Supply</div>
             {% if request.user.is_superuser or request.user.role == 'admin' or request.user.role == 'pharmacist' %}
             <a href="{% url 'medicine_list' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'medicine_list' or request.resolver_match.url_name == 'add_medicine' or request.resolver_match.url_name == 'edit_medicine' %}active{% endif %}"
+                class="nav-link {% if request.resolver_match.url_name == 'medicine_list' or request.resolver_match.url_name == 'add_medicine' or request.resolver_match.url_name == 'edit_medicine' %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                 </svg>
-                Medicines
+                <span>Medicines</span>
             </a>
 
             <a href="{% url 'category_list' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'categories' in request.path %}active{% endif %}"
+                class="nav-link {% if 'categories' in request.path %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
-                Categories
+                <span>Categories</span>
             </a>
             {% endif %}
 
-            <a href="{% url 'sales_list' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'sales' in request.path %}active{% endif %}"
-                onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Sales
-            </a>
-
-            <!-- Module 2: Digital Want-Book (Shortage Register) -->
+            <!-- Digital Want-Book -->
             <a href="{% url 'want_book_list' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'want-book' in request.path %}active{% endif %}"
+                class="nav-link {% if 'want-book' in request.path %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
-                Want-Book
-                <span class="ml-auto text-[10px] font-bold bg-amber-400/20 text-amber-200 border border-amber-400/30 px-1.5 py-0.5 rounded-md">Shortage</span>
+                <span>Want-Book</span>
+                <span class="ml-auto text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 px-1.5 py-0.5 rounded-md">Shortage</span>
             </a>
 
-            <!-- Module 1: Distributor Purchase Bill Auto-Import -->
+            <!-- Import Purchase Bill -->
             <a href="{% url 'purchase_bill_import' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'purchase-bill' in request.path %}active{% endif %}"
+                class="nav-link {% if 'purchase-bill' in request.path %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                Import Purchase Bill
-                <span class="ml-auto text-[10px] font-bold bg-cyan-400/20 text-cyan-200 border border-cyan-400/30 px-1.5 py-0.5 rounded-md">Excel/CSV</span>
+                <span>Import Bill</span>
+                <span class="ml-auto text-[10px] font-bold bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 px-1.5 py-0.5 rounded-md">Excel</span>
             </a>
 
             <a href="{% url 'purchase_order_list' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'purchase-orders' in request.path %}active{% endif %}"
+                class="nav-link {% if 'purchase-orders' in request.path %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18" />
                 </svg>
-                Purchase Orders
+                <span>Purchase Orders</span>
             </a>
 
+            <!-- GROUP: POINT OF SALE & BILLING -->
+            <div class="nav-section-title">Sales & Customers</div>
+            <a href="{% url 'sales_list' %}"
+                class="nav-link {% if 'sales' in request.path %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span>Sales Counter</span>
+            </a>
 
             <a href="{% url 'invoice_history' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'billing' in request.path or request.resolver_match.url_name == 'invoice_detail' %}active{% endif %}"
+                class="nav-link {% if 'billing' in request.path or request.resolver_match.url_name == 'invoice_detail' %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M7 2h12l4 4v16H7zM11 10h8M11 14h8M11 18h4M11 6h4" />
                 </svg>
-                Billing
+                <span>Invoices & Billing</span>
             </a>
 
             <a href="{% url 'customer_list' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'customer' in request.path and 'expiry-reminders' not in request.path %}active{% endif %}"
+                class="nav-link {% if 'customer' in request.path and 'expiry-reminders' not in request.path %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                Customers
+                <span>Customers</span>
             </a>
 
             <a href="{% url 'expiry_reminder_list' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'expiry-reminders' in request.path %}active{% endif %}"
+                class="nav-link {% if 'expiry-reminders' in request.path %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Expiry Reminders
+                <span>Expiry Reminders</span>
                 {% if pending_expiry_alerts_count %}
-                <span class="ml-auto text-xs bg-red-500 text-white font-bold px-1.5 py-0.5 rounded-full">{{
-                    pending_expiry_alerts_count }}</span>
+                <span class="ml-auto text-[10px] bg-rose-500 text-white font-extrabold px-1.5 py-0.5 rounded-full shadow-sm">{{ pending_expiry_alerts_count }}</span>
                 {% endif %}
             </a>
 
             {% if request.user.is_superuser or request.user.role == 'admin' or request.user.role == 'pharmacist' %}
             <a href="{% url 'supplier_list' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'supplier' in request.path %}active{% endif %}"
+                class="nav-link {% if 'supplier' in request.path %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
                 </svg>
-                Suppliers
+                <span>Suppliers</span>
             </a>
             {% endif %}
 
+            <!-- GROUP: ANALYTICS & INTELLIGENCE -->
             {% if request.user.is_superuser or request.user.role == 'admin' or request.user.role == 'pharmacist' or request.user.role == 'assistant' %}
+            <div class="nav-section-title">Analytics & AI</div>
             <a href="{% url 'reports_dashboard' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}"
+                class="nav-link {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                Reports
+                <span>Analytics Reports</span>
             </a>
 
             <a href="{% url 'profit_loss_report' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'profit_loss_report' %}active{% endif %}"
+                class="nav-link {% if request.resolver_match.url_name == 'profit_loss_report' %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Profit & Loss
+                <span>Profit & Loss</span>
             </a>
 
-
             <a href="{% url 'smart_analytics' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'smart_analytics' %}active{% endif %}"
+                class="nav-link {% if request.resolver_match.url_name == 'smart_analytics' %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                Smart Analytics
+                <span>Smart Insights</span>
             </a>
 
             <a href="{% url 'demand_forecasting' %}"
-                class="nav-link flex items-center gap-3 px-6 py-3 {% if request.resolver_match.url_name == 'demand_forecasting' %}active{% endif %}"
+                class="nav-link {% if request.resolver_match.url_name == 'demand_forecasting' %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                 </svg>
-                Demand Forecasting
-                <span
-                    class="ml-auto text-[10px] font-bold bg-cyan-500/20 text-cyan-200 border border-cyan-400/40 px-2 py-0.5 rounded-full">AI</span>
+                <span>AI Forecasting</span>
+                <span class="ml-auto text-[10px] font-extrabold bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full shadow-xs">AI</span>
             </a>
             {% endif %}
         </nav>
+
+        <!-- Sidebar User Profile Footer -->
+        <div class="p-3.5 mx-3 mb-3 bg-white/[0.04] border border-white/[0.08] rounded-2xl flex items-center justify-between">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-sm border border-white/20">
+                    {{ user.first_name.0|default:user.username.0|upper }}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold text-white truncate">{{ user.get_full_name|default:user.username }}</p>
+                    <p class="text-[10px] font-medium text-slate-400 truncate">{{ user.get_role_display|default:"User" }}</p>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" title="Logout" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-white/[0.06] rounded-xl transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+            </a>
+        </div>
     </aside>
 
     <!-- Main Content Area -->
     <div class="main-content" id="mainContent">
-        <!-- Top Header -->
-        <header class="bg-white shadow-sm px-4 md:px-8 py-4 sticky top-0 z-50">
+        <!-- Top Glass Header -->
+        <header class="bg-white/85 backdrop-blur-md border-b border-slate-200/80 px-4 md:px-8 py-3.5 sticky top-0 z-40 transition-all">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-4">
                     <!-- Hamburger Menu for Mobile -->
-                    <button onclick="toggleSidebar()" class="md:hidden hamburger">
-                        <span class="hamburger-line"></span>
-                        <span class="hamburger-line"></span>
-                        <span class="hamburger-line"></span>
-                    </button>
-
-                    <div>
-                        <h2 class="text-xl md:text-2xl font-semibold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h2>
-                        <p class="text-xs md:text-sm text-gray-500 mt-1 hidden sm:block">{% block page_subtitle %}Welcome back, {{ request.user.get_full_name|default:request.user.username }}{% endblock %}</p>
-                    </div>
-                </div>
-
-                <!-- User Dropdown -->
-                <div class="user-dropdown">
-                    <button onclick="toggleDropdown()"
-                        class="flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 rounded-lg hover:bg-gray-100 transition">
-                        <div
-                            class="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base">
-                            {{ user.first_name.0 }}{{ user.last_name.0 }}
-                        </div>
-                        <div class="text-left hidden md:block">
-                            <p class="font-semibold text-gray-800 text-sm">{{ user.get_full_name }}</p>
-                            <p class="text-xs text-gray-500">{{ user.get_role_display }}</p>
-                        </div>
-                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    <button onclick="toggleSidebar()" class="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
 
-                    <div id="userDropdown" class="dropdown-menu">
-                        <div class="p-4 border-b">
-                            <p class="font-semibold text-gray-800">{{ user.username }}</p>
-                            <p class="text-sm text-gray-500">{{ user.email }}</p>
-                            {% if user.contact_number %}
-                            <p class="text-sm text-gray-500">{{ user.contact_number }}</p>
-                            {% endif %}
-                            <span
-                                class="inline-block mt-2 px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full text-xs font-semibold">
-                                {{ user.get_role_display }}
-                            </span>
-                        </div>
-                        <a href="{% url 'logout' %}"
-                            class="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 text-red-600">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    <div>
+                        <h2 class="text-lg md:text-xl font-extrabold text-slate-900 tracking-tight">{% block page_title %}Dashboard{% endblock %}</h2>
+                        <p class="text-xs font-medium text-slate-500 hidden sm:block">{% block page_subtitle %}Overview of your pharmacy operations{% endblock %}</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- Live Server Pulse Chip -->
+                    <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/70 rounded-full text-xs font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Cloud Active</span>
+                    </div>
+
+                    <!-- User Dropdown -->
+                    <div class="user-dropdown relative">
+                        <button onclick="toggleDropdown()"
+                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition border border-transparent hover:border-slate-200">
+                            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-xs">
+                                {{ user.first_name.0|default:user.username.0|upper }}
+                            </div>
+                            <div class="text-left hidden md:block">
+                                <p class="font-bold text-slate-800 text-xs leading-none">{{ user.get_full_name|default:user.username }}</p>
+                                <p class="text-[10px] font-medium text-slate-500 mt-0.5">{{ user.get_role_display }}</p>
+                            </div>
+                            <svg class="w-3.5 h-3.5 text-slate-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
-                            Logout
-                        </a>
+                        </button>
+
+                        <div id="userDropdown" class="dropdown-menu absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50">
+                            <div class="p-3 border-b border-slate-100">
+                                <p class="font-bold text-slate-900 text-sm">{{ user.get_full_name|default:user.username }}</p>
+                                <p class="text-xs text-slate-500 truncate">{{ user.email|default:"No email registered" }}</p>
+                                <span class="inline-block mt-2 px-2.5 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200/80 rounded-full text-[10px] font-bold">
+                                    {{ user.get_role_display|default:"Pharmacist" }}
+                                </span>
+                            </div>
+                            <div class="p-1">
+                                <a href="{% url 'logout' %}"
+                                    class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-600 text-xs font-bold transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    Sign Out
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
