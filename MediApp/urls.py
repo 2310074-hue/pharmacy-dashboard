@@ -91,6 +91,7 @@ urlpatterns = [
 
     # Reports
     path('reports/', views.reports_dashboard, name='reports_dashboard'),
+    path('reports/executive-dossier/', views.executive_dossier_report, name='executive_dossier_report'),
     path('profit-loss/', views.profit_loss_report, name='profit_loss_report'),
     path('payment-mode/', views.payment_mode_report, name='payment_mode_report'),
     path('reports/api/payment-mode/', views.payment_mode_data, name='payment_mode_data'),
@@ -114,5 +115,25 @@ urlpatterns = [
     path('forecast/', views.demand_forecasting_view, name='demand_forecasting'),
     path('forecast/send-alert/', views.trigger_critical_stock_alert_now, name='trigger_critical_stock_alert_now'),
     path('api/forecast/<int:medicine_id>/', views.api_medicine_forecast, name='api_medicine_forecast'),
+
+    # Module 1: Distributor Purchase Bill Auto-Import
+    path('purchase-bill/import/', views.purchase_bill_import_view, name='purchase_bill_import'),
+    path('purchase-bill/preview/', views.purchase_bill_preview_ajax, name='purchase_bill_preview_ajax'),
+    path('purchase-bill/confirm/', views.purchase_bill_confirm_ajax, name='purchase_bill_confirm_ajax'),
+    path('purchase-bill/<int:import_id>/details/', views.purchase_bill_detail_ajax, name='purchase_bill_detail_ajax'),
+    path('purchase-bill/template/', views.download_purchase_template, name='download_purchase_template'),
+
+    # Module 2: Digital Want-Book (Shortage Register) & WhatsApp PO
+    path('want-book/', views.want_book_list, name='want_book_list'),
+    path('want-book/add/', views.want_book_add_ajax, name='want_book_add_ajax'),
+    path('want-book/auto-sync/', views.want_book_auto_sync_low_stock, name='want_book_auto_sync_low_stock'),
+    path('want-book/broadcast-all/', views.want_book_broadcast_all_pos_ajax, name='want_book_broadcast_all_pos_ajax'),
+    path('want-book/<int:item_id>/status/', views.want_book_update_status, name='want_book_update_status'),
+    path('want-book/<int:item_id>/delete/', views.want_book_delete, name='want_book_delete'),
+    path('want-book/supplier/<int:supplier_id>/whatsapp/', views.want_book_send_whatsapp, name='want_book_send_whatsapp'),
+
+    # Customer WhatsApp Broadcast Marketing Tool
+    path('customers/broadcast-whatsapp/', views.customer_broadcast_whatsapp_ajax, name='customer_broadcast_whatsapp_ajax'),
 ]
+
 

@@ -1,0 +1,502 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_list %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        /* ── Modern Executive Enterprise Admin Index Styles ─────────── */
+        .admin-dashboard-hero {
+            background: linear-gradient(135deg, #091e3a 0%, #0f2e4e 50%, #0891b2 100%);
+            border-radius: 16px;
+            padding: 24px 28px;
+            color: #ffffff;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .admin-dashboard-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .hero-title-group h1,
+        #content .hero-title-group h1,
+        #content-main .hero-title-group h1 {
+            font-size: 22px !important;
+            font-weight: 800 !important;
+            color: #ffffff !important;
+            margin: 0 0 6px 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            letter-spacing: -0.02em !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+        }
+        .hero-title-group p,
+        #content .hero-title-group p,
+        #content-main .hero-title-group p {
+            font-size: 13.5px !important;
+            color: #f1f5f9 !important;
+            margin: 0 !important;
+            max-width: 600px !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important;
+            opacity: 1 !important;
+        }
+        .hero-quick-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 2;
+        }
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hero-btn-primary {
+            background: #ffffff;
+            color: #0f2e4e !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .hero-btn-primary:hover {
+            background: #f0fdfa;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            color: #0891b2 !important;
+        }
+        .hero-btn-outline {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(4px);
+        }
+        .hero-btn-outline:hover {
+            background: rgba(255, 255, 255, 0.22);
+            transform: translateY(-2px);
+        }
+
+        /* ── Two Column Master Layout ────────────────────────────────── */
+        .admin-main-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            align-items: start;
+        }
+        @media (max-width: 1024px) {
+            .admin-main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── App Section Cards ───────────────────────────────────────── */
+        .app-section-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .app-section-card:hover {
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
+        }
+        .app-section-header {
+            background: linear-gradient(90deg, #091e3a 0%, #0f2e4e 100%);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #1e3a5f;
+        }
+        .app-section-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #ffffff !important;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+        .app-section-title i {
+            color: #38bdf8;
+            font-size: 16px;
+        }
+        .app-section-badge {
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(56, 189, 248, 0.2);
+            color: #67e8f9;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        /* ── Grid of Model Cards inside App Section ─────────────────── */
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 14px;
+            padding: 18px;
+            background: #f8fafc;
+        }
+        .model-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .model-card:hover {
+            border-color: #0891b2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(8, 145, 178, 0.12);
+        }
+        .model-info-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .model-icon-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(8, 145, 178, 0.12), rgba(6, 182, 212, 0.2));
+            color: #0891b2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            border: 1px solid rgba(8, 145, 178, 0.2);
+        }
+        .model-name-link {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a !important;
+            text-decoration: none !important;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.15s;
+        }
+        .model-name-link:hover {
+            color: #0891b2 !important;
+        }
+        .model-actions-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .btn-model-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-decoration: none !important;
+            transition: all 0.15s ease;
+        }
+        .btn-model-add {
+            background: #ecfdf5;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0;
+        }
+        .btn-model-add:hover {
+            background: #10b981;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+        }
+        .btn-model-view {
+            background: #f1f5f9;
+            color: #475569 !important;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-model-view:hover {
+            background: #0891b2;
+            color: #ffffff !important;
+            border-color: #0891b2;
+            box-shadow: 0 2px 6px rgba(8, 145, 178, 0.3);
+        }
+
+        /* ── Recent Actions Activity Stream (Right Column) ───────────── */
+        .recent-actions-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            overflow: hidden;
+            position: sticky;
+            top: 75px;
+        }
+        .recent-actions-header {
+            background: linear-gradient(90deg, #091e3a 0%, #0f2e4e 100%);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #1e3a5f;
+        }
+        .recent-actions-header h3 {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #ffffff !important;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .recent-actions-header h3 i {
+            color: #38bdf8;
+        }
+        .recent-actions-body {
+            padding: 16px;
+            max-height: 540px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f8fafc;
+        }
+        .action-item-card {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #f1f5f9;
+            background: #f8fafc;
+            margin-bottom: 10px;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+        .action-item-card:hover {
+            background: #f0fdfa;
+            border-color: #99f6e4;
+            transform: translateX(2px);
+        }
+        .action-item-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .action-type-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .action-type-add { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .action-type-change { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .action-type-delete { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+        .action-content-type {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: #334155 !important;
+            background: #e2e8f0 !important;
+            padding: 2px 7px !important;
+            border-radius: 4px !important;
+        }
+        .action-item-title {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.4 !important;
+            margin: 0 !important;
+            word-break: break-word !important;
+        }
+        .action-item-title a {
+            color: #0369a1 !important;
+            text-decoration: none !important;
+        }
+        .action-item-title a:hover {
+            text-decoration: underline !important;
+            color: #0284c7 !important;
+        }
+        .empty-actions-msg {
+            text-align: center;
+            padding: 24px 12px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .empty-actions-msg i {
+            font-size: 28px;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+            display: block;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+
+    <!-- Hero Header Banner -->
+    <div class="admin-dashboard-hero">
+        <div class="hero-title-group">
+            <h1><i class="fa-solid fa-hospital-user text-cyan-400"></i> PharmaCare Enterprise Management Console</h1>
+            <p>Direct system access to central pharmaceutical models, inventory batches, POS transactions, customer logs, and clinical alerts.</p>
+        </div>
+        <div class="hero-quick-actions">
+            <a href="/dashboard/" class="hero-btn hero-btn-primary" target="_blank">
+                <i class="fa-solid fa-gauge-high"></i> Open Live Dashboard
+            </a>
+            <a href="/want-book/" class="hero-btn hero-btn-outline" target="_blank">
+                <i class="fa-solid fa-truck-ramp-box"></i> Want-Book Shortages
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Grid Layout -->
+    <div class="admin-main-container">
+        
+        <!-- Left Side: Categorized Application Modules -->
+        <div class="admin-apps-column">
+            {% if app_list %}
+                {% for app in app_list %}
+                    <div class="app-section-card" id="app_{{ app.app_label }}">
+                        <div class="app-section-header">
+                            <h2 class="app-section-title">
+                                {% if app.app_label == 'auth' %}
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                {% elif app.app_label == 'MediApp' %}
+                                    <i class="fa-solid fa-pills"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-cubes"></i>
+                                {% endif %}
+                                {{ app.name }}
+                            </h2>
+                            <span class="app-section-badge">{{ app.models|length }} Models Active</span>
+                        </div>
+
+                        <div class="models-grid">
+                            {% for model in app.models %}
+                                <div class="model-card">
+                                    <div class="model-info-left">
+                                        <div class="model-icon-box">
+                                            {% if 'medicine' in model.object_name|lower %}
+                                                <i class="fa-solid fa-capsules"></i>
+                                            {% elif 'batch' in model.object_name|lower %}
+                                                <i class="fa-solid fa-boxes-stacked"></i>
+                                            {% elif 'customer' in model.object_name|lower or 'user' in model.object_name|lower %}
+                                                <i class="fa-solid fa-users"></i>
+                                            {% elif 'supplier' in model.object_name|lower %}
+                                                <i class="fa-solid fa-truck-field"></i>
+                                            {% elif 'sale' in model.object_name|lower or 'bill' in model.object_name|lower %}
+                                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                                            {% elif 'category' in model.object_name|lower %}
+                                                <i class="fa-solid fa-folder-tree"></i>
+                                            {% elif 'want' in model.object_name|lower %}
+                                                <i class="fa-solid fa-cart-flatbed"></i>
+                                            {% elif 'reminder' in model.object_name|lower or 'expiry' in model.object_name|lower %}
+                                                <i class="fa-solid fa-bell"></i>
+                                            {% elif 'group' in model.object_name|lower %}
+                                                <i class="fa-solid fa-user-shield"></i>
+                                            {% else %}
+                                                <i class="fa-solid fa-table-list"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            {% if model.admin_url %}
+                                                <a href="{{ model.admin_url }}" class="model-name-link" title="Manage {{ model.name }}">
+                                                    {{ model.name }}
+                                                </a>
+                                            {% else %}
+                                                <span class="model-name-link">{{ model.name }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="model-actions-right">
+                                        {% if model.add_url %}
+                                            <a href="{{ model.add_url }}" class="btn-model-action btn-model-add" title="Add new {{ model.name }}">
+                                                <i class="fa-solid fa-plus"></i> Add
+                                            </a>
+                                        {% endif %}
+                                        {% if model.admin_url %}
+                                            <a href="{{ model.admin_url }}" class="btn-model-action btn-model-view" title="View all {{ model.name }}">
+                                                <i class="fa-solid fa-pen-to-square"></i> Change
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="app-section-card p-6 text-center text-slate-500">
+                    <p>{% translate "You don't have permission to view or edit anything." %}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Side: Recent Actions / Activity Stream -->
+        <div class="admin-sidebar-column">
+            <div class="recent-actions-card">
+                <div class="recent-actions-header">
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Activity Stream</h3>
+                </div>
+                <div class="recent-actions-body">
+                    {% load log %}
+                    {% get_admin_log 12 as admin_log for_user user %}
+                    {% if not admin_log %}
+                        <div class="empty-actions-msg">
+                            <i class="fa-regular fa-folder-open"></i>
+                            <p>No recent activity recorded yet.</p>
+                        </div>
+                    {% else %}
+                        {% for entry in admin_log %}
+                            <div class="action-item-card">
+                                <div class="action-item-top">
+                                    <span class="action-type-badge {% if entry.is_addition %}action-type-add{% elif entry.is_change %}action-type-change{% elif entry.is_deletion %}action-type-delete{% endif %}">
+                                        {% if entry.is_addition %}<i class="fa-solid fa-plus"></i> Added{% elif entry.is_change %}<i class="fa-solid fa-pen"></i> Edited{% elif entry.is_deletion %}<i class="fa-solid fa-trash"></i> Deleted{% endif %}
+                                    </span>
+                                    <span class="action-content-type">{{ entry.content_type }}</span>
+                                </div>
+                                <p class="action-item-title">
+                                    {% if entry.is_deletion or not entry.get_admin_url %}
+                                        {{ entry.object_repr }}
+                                    {% else %}
+                                        <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,707 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Want-Book (Shortage Register) - PharmaCare{% endblock %}
+{% block page_title %}Want-Book (Shortage Register){% endblock %}
+{% block page_subtitle %}Track out-of-stock items, customer requests & dispatch 1-click supplier WhatsApp orders{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-gray-800">Shortage & Procurement Register</h2>
+            <p class="text-xs text-gray-500 mt-0.5">Manage daily medicine shortages, patient demands & automated wholesaler purchase orders</p>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+            <button type="button" onclick="autoScanLowStock()" id="auto-scan-btn" class="btn btn-primary text-xs flex items-center gap-2 shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>⚡ Auto-Scan Low Stock</span>
+            </button>
+            <button type="button" onclick="openAddModal()" class="btn btn-secondary text-xs flex items-center gap-2 shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span>+ Punch Shortage Item</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 4 KPI Metric Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="card p-5 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                📋
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active Want-Book</p>
+                <h4 class="text-2xl font-bold text-gray-800 mt-0.5">{{ total_active_count }}</h4>
+            </div>
+        </div>
+
+        <div class="card p-5 flex items-center gap-4 {% if urgent_count > 0 %}border-l-4 border-red-500 bg-red-50/20{% endif %}">
+            <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                🚨
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-red-600 uppercase tracking-wider">Urgent / Patient Waiting</p>
+                <h4 class="text-2xl font-bold text-red-700 mt-0.5">{{ urgent_count }}</h4>
+            </div>
+        </div>
+
+        <div class="card p-5 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                ⚠️
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Low Stock in Catalog</p>
+                <h4 class="text-2xl font-bold text-amber-600 mt-0.5">{{ low_stock_count }}</h4>
+            </div>
+        </div>
+
+        <div class="card p-5 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                ✅
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Fulfilled Shortages</p>
+                <h4 class="text-2xl font-bold text-green-600 mt-0.5">{{ fulfilled_count }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Ready-to-Send WhatsApp Purchase Orders (Grouped by Distributor) -->
+    {% if supplier_groups %}
+    <div class="card p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-4 border-b border-gray-100">
+            <div>
+                <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                    </svg>
+                    1-Click WhatsApp Purchase Orders (Grouped by Distributor)
+                </h3>
+                <p class="text-xs text-gray-500">Shortage items automatically grouped by distributor for instant purchase order dispatch</p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs bg-gray-100 text-gray-700 font-semibold px-2.5 py-1 rounded-lg w-fit">
+                    {{ supplier_groups|length }} Active Distributors
+                </span>
+                <button type="button" onclick="openBulkPoModal()" class="btn btn-success text-xs px-3.5 py-1.5 font-bold flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <span>🚀 1-Click Send All POs (Cloud)</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for group in supplier_groups %}
+            <div class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden flex flex-col justify-between hover:border-cyan-400 transition">
+                <div>
+                    <!-- Supplier Header -->
+                    <div class="p-3.5 bg-white border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">{{ group.supplier.name }}</h4>
+                            <p class="text-[11px] text-gray-500 mt-0.5">📞 {{ group.supplier.contact_number|default:"No Phone" }}</p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800">
+                            {{ group.items|length }} items
+                        </span>
+                    </div>
+
+                    <!-- Items Preview -->
+                    <div class="p-3.5 space-y-1.5 max-h-44 overflow-y-auto">
+                        {% for itm in group.items %}
+                        <div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 last:border-0">
+                            <span class="font-medium text-gray-700 truncate pr-2">{{ itm.display_name }}</span>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <span class="font-bold text-cyan-700">{{ itm.quantity }} {{ itm.unit }}</span>
+                                {% if itm.priority == 'urgent' %}
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-red-100 text-red-700 border border-red-200">URGENT</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Card Footer Action -->
+                <div class="p-3 bg-white border-t border-gray-200 flex items-center justify-between gap-2">
+                    <span class="text-[11px] text-gray-500">
+                        {% if group.urgent_count > 0 %}
+                        <strong class="text-red-600 font-bold">🚨 {{ group.urgent_count }} Urgent</strong>
+                        {% else %}
+                        Normal Reorder
+                        {% endif %}
+                    </span>
+                    <button type="button" onclick="dispatchWhatsAppOrder({{ group.supplier.id }}, '{{ group.supplier.name|escapejs }}')" class="btn btn-success text-xs px-3 py-1.5 font-bold flex items-center gap-1.5 shadow-sm">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                        </svg>
+                        <span>Send WhatsApp PO</span>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Section 2: Complete Shortage Register Log Table -->
+    <div class="card p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div>
+                <h3 class="text-base font-bold text-gray-800">Shortage Register Log</h3>
+                <p class="text-xs text-gray-500">Track all medicine shortages, customer requests & fulfillment status</p>
+            </div>
+
+            <!-- Filter Controls -->
+            <form method="get" class="flex flex-wrap items-center gap-2">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search medicine, customer..." class="form-input text-xs w-44 py-1.5">
+                
+                <select name="status" onchange="this.form.submit()" class="form-select text-xs py-1.5 w-36">
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active (Pending+Ordered)</option>
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Records</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="ordered" {% if status_filter == 'ordered' %}selected{% endif %}>Ordered</option>
+                    <option value="fulfilled" {% if status_filter == 'fulfilled' %}selected{% endif %}>Fulfilled</option>
+                </select>
+
+                <select name="priority" onchange="this.form.submit()" class="form-select text-xs py-1.5 w-32">
+                    <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>All Priorities</option>
+                    <option value="urgent" {% if priority_filter == 'urgent' %}selected{% endif %}>Urgent Only</option>
+                    <option value="normal" {% if priority_filter == 'normal' %}selected{% endif %}>Normal</option>
+                    <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+                </select>
+
+                <select name="supplier" onchange="this.form.submit()" class="form-select text-xs py-1.5 w-36">
+                    <option value="all">All Distributors</option>
+                    {% for supp in suppliers %}
+                    <option value="{{ supp.id }}" {% if supplier_filter == supp.id|stringformat:"i" %}selected{% endif %}>{{ supp.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="btn btn-secondary text-xs px-3 py-1.5">Filter</button>
+            </form>
+        </div>
+
+        <!-- Table Container -->
+        <div class="overflow-x-auto rounded-xl border border-gray-100">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200 uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-3 w-10">#</th>
+                        <th class="py-3 px-3 min-w-[200px]">Medicine / Item</th>
+                        <th class="py-3 px-3">Distributor</th>
+                        <th class="py-3 px-3 text-center font-bold">Qty</th>
+                        <th class="py-3 px-3 text-center">Priority</th>
+                        <th class="py-3 px-3 text-center">Status</th>
+                        <th class="py-3 px-3 min-w-[180px]">Patient / Request Notes</th>
+                        <th class="py-3 px-3">Added On</th>
+                        <th class="py-3 px-3 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-gray-700">
+                    {% for item in items %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="py-3 px-3 text-gray-400 font-mono">{{ forloop.counter }}</td>
+                        <td class="py-3 px-3">
+                            <div class="font-bold text-gray-900 text-sm">{{ item.display_name }}</div>
+                            {% if item.medicine %}
+                            <div class="text-[11px] text-gray-400">Current Stock: <span class="font-bold text-gray-600">{{ item.medicine.total_quantity }} units</span></div>
+                            {% else %}
+                            <div class="text-[11px] text-amber-600 font-medium">Custom Request (Uncataloged)</div>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="font-semibold text-gray-800">{{ item.supplier.name|default:"Not Assigned" }}</span>
+                        </td>
+                        <td class="py-3 px-3 text-center font-bold text-cyan-700 text-sm">
+                            {{ item.quantity }} <span class="text-xs font-normal text-gray-500">{{ item.unit }}</span>
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            {% if item.priority == 'urgent' %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-700 border border-red-200">URGENT</span>
+                            {% elif item.priority == 'normal' %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">Normal</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600">Low</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            <select onchange="updateItemStatus({{ item.id }}, this.value)" class="text-[11px] font-semibold rounded-lg px-2 py-1 outline-none border cursor-pointer {% if item.status == 'pending' %}bg-amber-50 text-amber-800 border-amber-200{% elif item.status == 'ordered' %}bg-blue-50 text-blue-800 border-blue-200{% elif item.status == 'fulfilled' %}bg-green-50 text-green-800 border-green-200{% else %}bg-gray-50 text-gray-600 border-gray-200{% endif %}">
+                                <option value="pending" {% if item.status == 'pending' %}selected{% endif %}>⏳ Pending</option>
+                                <option value="ordered" {% if item.status == 'ordered' %}selected{% endif %}>📦 Ordered</option>
+                                <option value="fulfilled" {% if item.status == 'fulfilled' %}selected{% endif %}>✅ Fulfilled</option>
+                                <option value="cancelled" {% if item.status == 'cancelled' %}selected{% endif %}>❌ Cancelled</option>
+                            </select>
+                        </td>
+                        <td class="py-3 px-3 text-gray-600">
+                            {% if item.customer_name %}
+                            <div class="font-semibold text-gray-800">👤 {{ item.customer_name }} {% if item.customer_contact %}({{ item.customer_contact }}){% endif %}</div>
+                            {% endif %}
+                            {% if item.notes %}
+                            <div class="text-[11px] text-gray-500 italic mt-0.5">"{{ item.notes }}"</div>
+                            {% elif not item.customer_name %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-3 text-gray-500 font-mono text-[11px]">
+                            {{ item.created_at|date:"d M, H:i" }}
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                {% if item.status != 'fulfilled' %}
+                                <button type="button" onclick="updateItemStatus({{ item.id }}, 'fulfilled')" class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition" title="Mark as Stock Received / Fulfilled">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </button>
+                                {% endif %}
+                                <button type="button" onclick="deleteItem({{ item.id }})" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete record">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="py-12 text-center text-gray-400">
+                            <div class="text-3xl mb-2">📋</div>
+                            <p class="font-semibold text-gray-600 text-sm">No shortage items found.</p>
+                            <p class="text-xs text-gray-400 mt-1">Punch a new shortage item or click '⚡ Auto-Scan Low Stock' to check inventory.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Add Shortage Item Modal -->
+<div id="add-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100">
+        <div class="p-5 bg-cyan-700 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">📝</span>
+                <h3 class="font-bold text-base">Punch New Shortage Item</h3>
+            </div>
+            <button type="button" onclick="closeAddModal()" class="text-white/80 hover:text-white text-xl font-bold">×</button>
+        </div>
+
+        <form id="add-wantbook-form" onsubmit="submitAddItem(event)" class="p-6 space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Select Existing Medicine (Catalog)</label>
+                <select id="modal_medicine_id" class="form-select text-xs w-full">
+                    <option value="">-- Choose from Catalog --</option>
+                    {% for med in medicines %}
+                    <option value="{{ med.id }}">{{ med.name }} (Stock: {{ med.total_quantity }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Or Enter Custom Medicine / Item Name</label>
+                <input type="text" id="modal_custom_name" placeholder="e.g. Augmentin 625 Duo Tablet" class="form-input text-xs w-full">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Required Quantity *</label>
+                    <input type="number" id="modal_quantity" value="10" min="1" required class="form-input text-xs font-bold w-full">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Packaging Unit</label>
+                    <input type="text" id="modal_unit" value="Boxes" placeholder="Boxes / Strips / Bottles" class="form-input text-xs w-full">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Distributor / Supplier</label>
+                    <select id="modal_supplier_id" class="form-select text-xs w-full">
+                        <option value="">-- Auto Match / Select --</option>
+                        {% for supp in suppliers %}
+                        <option value="{{ supp.id }}">{{ supp.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Priority</label>
+                    <select id="modal_priority" class="form-select text-xs font-bold w-full text-gray-800">
+                        <option value="urgent" class="text-red-600 font-bold">🚨 Urgent (Patient Waiting)</option>
+                        <option value="normal" selected>Normal Reorder</option>
+                        <option value="low">Low Priority</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Customer / Patient Name (Optional)</label>
+                    <input type="text" id="modal_customer_name" placeholder="e.g. Ramesh Sharma" class="form-input text-xs w-full">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Customer Phone</label>
+                    <input type="text" id="modal_customer_contact" placeholder="e.g. 9876543210" class="form-input text-xs w-full">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Notes / Instructions</label>
+                <textarea id="modal_notes" rows="2" placeholder="e.g. Patient needs 2 strips urgently before evening" class="form-textarea text-xs w-full"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                <button type="button" onclick="closeAddModal()" class="btn btn-secondary text-xs px-4 py-2">
+                    Cancel
+                </button>
+                <button type="submit" id="modal-submit-btn" class="btn btn-primary text-xs px-5 py-2 font-bold shadow-sm">
+                    + Add to Want-Book
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- WhatsApp Order Preview & Dispatch Modal -->
+<div id="wa-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100">
+        <div class="p-5 bg-green-700 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                </svg>
+                <h3 class="font-bold text-base" id="wa-modal-title">Dispatch WhatsApp Purchase Order</h3>
+            </div>
+            <button type="button" onclick="closeWaModal()" class="text-white/80 hover:text-white text-xl font-bold">×</button>
+        </div>
+
+        <div class="p-6 space-y-4">
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <div class="flex items-center justify-between text-xs mb-2">
+                    <span class="text-gray-600 font-medium">Distributor: <strong id="wa-supp-name" class="text-gray-800"></strong></span>
+                    <span class="text-green-700 font-semibold" id="wa-supp-phone"></span>
+                </div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Generated WhatsApp Message Slip</label>
+                <div id="wa-msg-preview" class="p-3 bg-white rounded-lg border border-gray-200 text-xs font-mono text-gray-800 whitespace-pre-wrap max-h-56 overflow-y-auto leading-relaxed select-all"></div>
+            </div>
+
+            <div class="p-3 bg-green-50 rounded-xl border border-green-200 flex items-center gap-2 text-xs text-green-800">
+                <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span>Items will be automatically marked as <strong>'Ordered'</strong> upon dispatch.</span>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button type="button" onclick="closeWaModal()" class="btn btn-secondary text-xs px-4 py-2">
+                    Done
+                </button>
+                <a id="wa-direct-btn" href="#" target="_blank" class="btn btn-success text-xs px-5 py-2 font-bold flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                    </svg>
+                    <span>Open in WhatsApp Web / App</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Multi-Distributor PO Broadcast Modal -->
+<div id="bulk-po-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-200">
+        <div class="p-5 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <span class="text-xl">🚀</span>
+                <div>
+                    <h3 class="font-bold text-base">Bulk Cloud WhatsApp Dispatcher</h3>
+                    <p class="text-xs text-emerald-100">Send POs to all distributors without opening WhatsApp Web</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeBulkPoModal()" class="text-white/80 hover:text-white text-2xl font-bold">×</button>
+        </div>
+
+        <div class="p-6 space-y-4">
+            <!-- Safety Alert Notice -->
+            <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
+                <span class="text-base">🛡️</span>
+                <span><strong>Safety Check:</strong> Messages will only be dispatched when you click the confirmation button below.</span>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-2">
+                <div class="flex justify-between font-semibold text-gray-700">
+                    <span>Active Wholesalers:</span>
+                    <span class="text-cyan-700 font-bold">{{ supplier_groups|length }} Distributors</span>
+                </div>
+                <div class="flex justify-between font-semibold text-gray-700">
+                    <span>Total Shortage Items:</span>
+                    <span class="text-gray-900 font-bold">{{ total_active_count }} Medicines</span>
+                </div>
+                <div class="flex justify-between font-semibold text-gray-700">
+                    <span>Dispatch Channel:</span>
+                    <span class="text-green-700 font-bold">WhatsApp Cloud Gateway (Automated)</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar (Hidden Initially) -->
+            <div id="bulk-progress-box" class="hidden space-y-2">
+                <div class="flex justify-between text-xs font-semibold text-gray-700">
+                    <span id="bulk-progress-label">Dispatching to wholesalers...</span>
+                    <span id="bulk-progress-pct" class="text-cyan-700">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
+                    <div id="bulk-progress-bar" class="bg-gradient-to-r from-cyan-500 to-green-500 h-2.5 rounded-full transition-all duration-300 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Per-Distributor Delivery Status Logs -->
+            <div id="bulk-logs-container" class="hidden space-y-1.5 max-h-48 overflow-y-auto p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <button type="button" onclick="closeBulkPoModal()" class="btn btn-secondary text-xs px-4 py-2">
+                    Cancel
+                </button>
+                <button type="button" id="bulk-dispatch-btn" onclick="executeBroadcastAllPos()" class="btn btn-success text-xs px-5 py-2 font-bold shadow-sm flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <span>⚡ Confirm & Dispatch to All Wholesalers</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const csrfToken = '{{ csrf_token }}';
+
+function openBulkPoModal() {
+    document.getElementById('bulk-po-modal').classList.remove('hidden');
+}
+
+function closeBulkPoModal() {
+    document.getElementById('bulk-po-modal').classList.add('hidden');
+}
+
+async function executeBroadcastAllPos() {
+    const btn = document.getElementById('bulk-dispatch-btn');
+    const progBox = document.getElementById('bulk-progress-box');
+    const progBar = document.getElementById('bulk-progress-bar');
+    const progPct = document.getElementById('bulk-progress-pct');
+    const logsBox = document.getElementById('bulk-logs-container');
+
+    btn.disabled = true;
+    progBox.classList.remove('hidden');
+    logsBox.classList.remove('hidden');
+    logsBox.innerHTML = '<p class="text-gray-500 italic">Initiating Cloud WhatsApp Gateway...</p>';
+
+    progBar.style.width = '30%';
+    progPct.textContent = '30%';
+
+    try {
+        const response = await fetch("{% url 'want_book_broadcast_all_pos_ajax' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const res = await response.json();
+
+        progBar.style.width = '100%';
+        progPct.textContent = '100%';
+
+        if (res.success) {
+            logsBox.innerHTML = '';
+            res.results.forEach(r => {
+                logsBox.innerHTML += `
+                    <div class="flex items-center justify-between p-1.5 bg-white rounded border border-gray-100">
+                        <span class="font-bold text-gray-800">🏢 ${r.supplier_name}</span>
+                        <span class="text-[10px] font-mono text-green-700 font-bold bg-green-50 px-2 py-0.5 rounded-full">✅ ${r.status} (${r.items_count} items)</span>
+                    </div>
+                `;
+            });
+
+            btn.innerHTML = `<span>✅ Dispatched Successfully!</span>`;
+            setTimeout(() => {
+                alert(`🎉 ${res.message}`);
+                window.location.reload();
+            }, 1200);
+        } else {
+            alert("Error: " + res.error);
+            btn.disabled = false;
+        }
+    } catch (err) {
+        btn.disabled = false;
+        alert("Network error: " + err.message);
+    }
+}
+
+function openAddModal() {
+    document.getElementById('add-modal').classList.remove('hidden');
+}
+
+function closeAddModal() {
+    document.getElementById('add-modal').classList.add('hidden');
+}
+
+function closeWaModal() {
+    document.getElementById('wa-modal').classList.add('hidden');
+    window.location.reload();
+}
+
+// 1-Click Auto Scan Low Stock
+async function autoScanLowStock() {
+    const btn = document.getElementById('auto-scan-btn');
+    btn.disabled = true;
+    btn.innerHTML = `
+        <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>Scanning Stock...</span>
+    `;
+
+    try {
+        const response = await fetch("{% url 'want_book_auto_sync_low_stock' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const res = await response.json();
+        btn.disabled = false;
+        btn.innerHTML = `<span>⚡ Auto-Scan Low Stock</span>`;
+
+        if (res.success) {
+            alert(`🎉 ${res.message}`);
+            window.location.href = "{% url 'want_book_list' %}";
+        } else {
+            alert("Error: " + res.error);
+        }
+    } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `<span>⚡ Auto-Scan Low Stock</span>`;
+        alert("Network error: " + err.message);
+    }
+}
+
+// Submit Add Modal
+async function submitAddItem(e) {
+    e.preventDefault();
+    const btn = document.getElementById('modal-submit-btn');
+    btn.disabled = true;
+
+    const payload = {
+        medicine_id: document.getElementById('modal_medicine_id').value || null,
+        custom_medicine_name: document.getElementById('modal_custom_name').value.trim(),
+        quantity: parseInt(document.getElementById('modal_quantity').value) || 1,
+        unit: document.getElementById('modal_unit').value.trim() || 'Boxes',
+        supplier_id: document.getElementById('modal_supplier_id').value || null,
+        priority: document.getElementById('modal_priority').value,
+        customer_name: document.getElementById('modal_customer_name').value.trim(),
+        customer_contact: document.getElementById('modal_customer_contact').value.trim(),
+        notes: document.getElementById('modal_notes').value.trim(),
+    };
+
+    try {
+        const response = await fetch("{% url 'want_book_add_ajax' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const res = await response.json();
+        btn.disabled = false;
+
+        if (res.success) {
+            alert(`✅ Added '${res.display_name}' (${res.quantity} ${res.unit}) to Want-Book!`);
+            closeAddModal();
+            window.location.href = "{% url 'want_book_list' %}";
+        } else {
+            alert("Error: " + res.error);
+        }
+    } catch (err) {
+        btn.disabled = false;
+        alert("Network error: " + err.message);
+    }
+}
+
+// Update Status (Pending, Ordered, Fulfilled, Cancelled)
+async function updateItemStatus(itemId, newStatus) {
+    try {
+        const response = await fetch(`/want-book/${itemId}/status/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        const res = await response.json();
+        if (res.success) {
+            window.location.reload();
+        } else {
+            alert("Error updating status: " + res.error);
+        }
+    } catch (err) {
+        alert("Network error: " + err.message);
+    }
+}
+
+// Delete Item
+async function deleteItem(itemId) {
+    if (!confirm("Are you sure you want to remove this item from the Want-Book?")) return;
+
+    try {
+        const response = await fetch(`/want-book/${itemId}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const res = await response.json();
+        if (res.success) {
+            window.location.reload();
+        } else {
+            alert("Error: " + res.error);
+        }
+    } catch (err) {
+        alert("Network error: " + err.message);
+    }
+}
+
+// Dispatch WhatsApp Order
+async function dispatchWhatsAppOrder(supplierId, supplierName) {
+    try {
+        const response = await fetch(`/want-book/supplier/${supplierId}/whatsapp/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const res = await response.json();
+
+        if (res.success) {
+            document.getElementById('wa-supp-name').textContent = res.supplier_name;
+            document.getElementById('wa-supp-phone').textContent = res.supplier_phone ? `📞 ${res.supplier_phone}` : '';
+            document.getElementById('wa-msg-preview').textContent = res.message_text;
+            document.getElementById('wa-direct-btn').href = res.whatsapp_url;
+            document.getElementById('wa-modal').classList.remove('hidden');
+
+            // Open WhatsApp in new tab
+            window.open(res.whatsapp_url, '_blank');
+        } else {
+            alert("Could not generate order: " + res.error);
+        }
+    } catch (err) {
+        alert("Network error: " + err.message);
+    }
+}
+</script>
+{% endblock %}

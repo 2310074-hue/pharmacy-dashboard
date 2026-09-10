@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaCare Executive Audit & Demand Forecasting Dossier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #e0f2fe;
+            --dark: #0f172a;
+            --gray-900: #0f172a;
+            --gray-800: #1e293b;
+            --gray-700: #334155;
+            --gray-600: #475569;
+            --gray-500: #64748b;
+            --gray-400: #94a3b8;
+            --gray-200: #e2e8f0;
+            --gray-100: #f1f5f9;
+            --gray-50: #f8fafc;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --orange: #f97316;
+            --orange-light: #fff7ed;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --purple: #8b5cf6;
+            --purple-light: #f5f3ff;
+            --radius: 12px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: var(--gray-800);
+            line-height: 1.5;
+            font-size: 14px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px 20px 60px 20px;
+        }
+
+        /* Floating Top Action Bar */
+        .top-action-bar {
+            position: sticky;
+            top: 16px;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .brand-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: -0.02em;
+        }
+
+        .btn-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 9999px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s ease-in-out;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35);
+        }
+        .btn-primary:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-emerald {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+        }
+        .btn-emerald:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Dossier Document Container */
+        .dossier-paper {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-lg);
+            padding: 40px;
+        }
+
+        /* Executive Header */
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--gray-200);
+            padding-bottom: 28px;
+            margin-bottom: 32px;
+            gap: 20px;
+        }
+
+        .doc-title-box h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--dark);
+            letter-spacing: -0.03em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .doc-subtitle {
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-top: 6px;
+        }
+
+        .meta-pill-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .meta-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Store Health Widget */
+        .health-card {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #fff;
+            padding: 20px 24px;
+            border-radius: 14px;
+            min-width: 280px;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
+            text-align: right;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .health-score-val {
+            font-size: 38px;
+            font-weight: 900;
+            line-height: 1;
+            color: #38bdf8;
+            letter-spacing: -0.03em;
+        }
+
+        .health-status-badge {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+        }
+
+        /* Section Headings */
+        .section-block {
+            margin-bottom: 38px;
+            page-break-inside: avoid;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1.5px solid var(--gray-200);
+        }
+
+        .section-header h2 {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+        }
+
+        .section-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 3px 10px;
+            border-radius: 9999px;
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            padding: 16px 18px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+        }
+
+        .kpi-card.emerald::before { background: var(--success); }
+        .kpi-card.purple::before { background: var(--purple); }
+        .kpi-card.orange::before { background: var(--orange); }
+        .kpi-card.danger::before { background: var(--danger); }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--dark);
+            margin: 6px 0 2px 0;
+            letter-spacing: -0.02em;
+        }
+
+        .kpi-sub {
+            font-size: 12px;
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Risk 4-Tier Grid Summary */
+        .risk-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .risk-kpi-box {
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--gray-200);
+            background: #fff;
+            text-align: center;
+        }
+        .risk-kpi-box.critical { background: var(--danger-light); border-color: #fca5a5; color: #991b1b; }
+        .risk-kpi-box.high { background: var(--orange-light); border-color: #fdba74; color: #9a3412; }
+        .risk-kpi-box.moderate { background: var(--warning-light); border-color: #fde047; color: #854d0e; }
+        .risk-kpi-box.safe { background: var(--success-light); border-color: #86efac; color: #166534; }
+
+        .risk-kpi-num {
+            font-size: 28px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .risk-kpi-text {
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Tables */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--gray-200);
+            background: #fff;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--gray-200);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--gray-200);
+            color: var(--gray-800);
+            vertical-align: middle;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .badge-critical { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+        .badge-high { background: #ffedd5; color: #9a3412; border: 1px solid #fb923c; }
+        .badge-moderate { background: #fef9c3; color: #854d0e; border: 1px solid #facc15; }
+        .badge-safe { background: #dcfce7; color: #166534; border: 1px solid #4ade80; }
+
+        /* Action Recommendation List */
+        .action-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .action-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            padding: 14px 18px;
+            border-radius: 10px;
+        }
+
+        .action-tag {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .action-content h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 2px;
+        }
+
+        .action-content p {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        /* Filter Controls in Live View */
+        .table-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gray-100);
+            border: 1px solid var(--gray-200);
+            padding: 6px 14px;
+            border-radius: 8px;
+            width: 280px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 13px;
+            width: 100%;
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 6px;
+        }
+
+        .chip-btn {
+            border: 1px solid var(--gray-200);
+            background: #fff;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .chip-btn.active, .chip-btn:hover {
+            background: var(--dark);
+            color: #fff;
+            border-color: var(--dark);
+        }
+
+        /* Seasonality Bar */
+        .dow-bar-container {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 9999px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .dow-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 9999px;
+        }
+        .dow-bar-fill.peak {
+            background: var(--orange);
+        }
+
+        /* Print Media Styles */
+        @media print {
+            body {
+                background: #ffffff !important;
+                font-size: 11pt;
+                color: #000;
+            }
+
+            .container {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .no-print, .top-action-bar, .table-toolbar {
+                display: none !important;
+            }
+
+            .dossier-paper {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+
+            .section-block {
+                page-break-inside: avoid;
+                margin-bottom: 24px;
+            }
+
+            .data-table th {
+                background: #f1f5f9 !important;
+                color: #000 !important;
+            }
+
+            .health-card {
+                border: 1px solid #cbd5e1 !important;
+                background: #f8fafc !important;
+                color: #000 !important;
+                box-shadow: none !important;
+            }
+            .health-score-val { color: #0284c7 !important; }
+
+            @page {
+                size: A4 portrait;
+                margin: 12mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- Top Action Bar (Hidden during Print) -->
+        <div class="top-action-bar no-print">
+            <div class="brand-badge">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
+                <span>PharmaCare Intelligence Dossier</span>
+            </div>
+
+            <div class="btn-group">
+                <a href="{% url 'reports_dashboard' %}" class="btn btn-outline">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Reports Hub
+                </a>
+                <a href="?download=1" class="btn btn-emerald">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Download HTML File
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    Print / Save PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Dossier Document Body -->
+        <div class="dossier-paper">
+
+            <!-- Executive Header & Metadata -->
+            <header class="doc-header">
+                <div class="doc-title-box">
+                    <h1>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        PharmaCare Healthcare — Executive Audit & Demand Dossier
+                    </h1>
+                    <p class="doc-subtitle">Integrated Past Sales Velocity, Seasonality Breakdown, AI 30-Day Forward Demand Forecast & Inventory Risk Matrix</p>
+                    
+                    <div class="meta-pill-group">
+                        <span class="meta-pill">📅 Generated: <strong>{{ now_str }}</strong></span>
+                        <span class="meta-pill">👤 Prepared For: <strong>{{ user_name }} ({{ user_role }})</strong></span>
+                        <span class="meta-pill">🏥 Store Status: <strong>Operational Active</strong></span>
+                        <span class="meta-pill">💱 Currency: <strong>INR (₹)</strong></span>
+                    </div>
+                </div>
+
+                <div class="health-card">
+                    <div class="health-score-val">{{ health_score }}/100</div>
+                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-top: 2px;">Inventory Health Index</div>
+                    <span class="health-status-badge">{{ health_status }}</span>
+                </div>
+            </header>
+
+
+            <!-- SECTION 1: Financial & Store Performance KPIs -->
+            <section class="section-block">
+                <div class="section-header">
+                    <h2>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        1. Financial Performance & Store Valuation
+                    </h2>
+                    <span class="section-badge">Master Financials</span>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card emerald">
+                        <div class="kpi-label">Total Realized Revenue</div>
+                        <div class="kpi-value">₹{{ total_revenue|floatformat:2 }}</div>
+                        <div class="kpi-sub">Across {{ total_invoices }} completed invoices</div>
+                    </div>
+                    <div class="kpi-card purple">
+                        <div class="kpi-label">Gross Net Profit</div>
+                        <div class="kpi-value">₹{{ net_profit|floatformat:2 }}</div>
+                        <div class="kpi-sub">Overall Margin: <strong>{{ profit_margin }}%</strong></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Current Stock Valuation</div>
+                        <div class="kpi-value">₹{{ total_inventory_valuation|floatformat:2 }}</div>
+                        <div class="kpi-sub">{{ total_stock_units }} total units in shelf</div>
+                    </div>
+                    <div class="kpi-card orange">
+                        <div class="kpi-label">Active Catalog & Clients</div>
+                        <div class="kpi-value">{{ total_catalog_count }} Drugs</div>
+                        <div class="kpi-sub">{{ total_customers }} registered patients</div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SECTION 2: Day-of-Week Seasonality & Sales Velocity -->
+            <section class="section-block">
+                <div class="section-header">
+                    <h2>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        2. Day-of-Week Sales Seasonality Distribution (Past 180 Days)
+                    </h2>
+                    <span class="section-badge">Cyclical Patterns</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Day of Week</th>
+                                <th>Total Units Sold</th>
+                                <th>Realized Revenue</th>
+                                <th>Volume Share (%)</th>
+                                <th>Weekly Demand Distribution Bar</th>
+                                <th>Peak Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in seasonality_data %}
+                            <tr>
+                                <td><strong>{{ d.day }}</strong></td>
+                                <td>{{ d.units }} units</td>
+                                <td>₹{{ d.revenue|floatformat:2 }}</td>
+                                <td><strong>{{ d.percentage }}%</strong></td>
+                                <td style="width: 250px;">
+                                    <div class="dow-bar-container">
+                                        <div class="dow-bar-fill {% if d.is_peak %}peak{% endif %}" style="width: {{ d.bar_width }}%;"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if d.is_peak %}
+                                    <span class="badge badge-high">🔥 Peak Sales Day</span>
+                                    {% else %}
+                                    <span style="color: var(--gray-500); font-size: 12px;">Regular</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+
+            <!-- SECTION 3: AI 30-Day Demand Forecasting & 4-Tier Inventory Risk Matrix -->
+            <section class="section-block">
+                <div class="section-header">
+                    <h2>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        3. AI 30-Day Demand Forecasting & 4-Tier Risk Matrix
+                    </h2>
+                    <span class="section-badge">Time-Series Machine Learning (Holt's DES)</span>
+                </div>
+
+                <!-- 4-Tier Risk Summary Cards -->
+                <div class="risk-kpi-grid">
+                    <div class="risk-kpi-box critical">
+                        <div class="risk-kpi-num">{{ critical_count }}</div>
+                        <div class="risk-kpi-text">🔴 Critical / Stockout (< 7d)</div>
+                    </div>
+                    <div class="risk-kpi-box high">
+                        <div class="risk-kpi-num">{{ high_risk_count }}</div>
+                        <div class="risk-kpi-text">🟠 High Risk (8-15d)</div>
+                    </div>
+                    <div class="risk-kpi-box moderate">
+                        <div class="risk-kpi-num">{{ moderate_risk_count }}</div>
+                        <div class="risk-kpi-text">🟡 Moderate Watch (16-30d)</div>
+                    </div>
+                    <div class="risk-kpi-box safe">
+                        <div class="risk-kpi-num">{{ safe_count }}</div>
+                        <div class="risk-kpi-text">🟢 Safe / Adequate (30d+)</div>
+                    </div>
+                </div>
+
+                <!-- Interactive Search and Filter Bar (Screen Only) -->
+                <div class="table-toolbar no-print">
+                    <div class="search-box">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" id="medSearchInput" placeholder="Filter medicines by name or category..." onkeyup="filterForecastTable()">
+                    </div>
+
+                    <div class="filter-chips">
+                        <button class="chip-btn active" onclick="filterByRisk('ALL', this)">All Items ({{ all_forecasts|length }})</button>
+                        <button class="chip-btn" onclick="filterByRisk('CRITICAL', this)">Critical Only ({{ critical_count }})</button>
+                        <button class="chip-btn" onclick="filterByRisk('HIGH', this)">High Risk ({{ high_risk_count }})</button>
+                        <button class="chip-btn" onclick="filterByRisk('REORDER', this)">Reorder Needed</button>
+                    </div>
+                </div>
+
+                <!-- Comprehensive Forecast Table -->
+                <div class="table-responsive">
+                    <table class="data-table" id="forecastMasterTable">
+                        <thead>
+                            <tr>
+                                <th>Medicine & Category</th>
+                                <th>Current Stock</th>
+                                <th>30-Day Predicted Demand</th>
+                                <th>Daily Velocity</th>
+                                <th>Days Left (DOI)</th>
+                                <th>Stockout Runway</th>
+                                <th>Risk Tier</th>
+                                <th>Recommended Reorder</th>
+                                <th>W1-W4 Milestones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in all_forecasts %}
+                            <tr data-risk="{{ f.risk_level }}" data-name="{{ f.medicine_name|lower }}" data-cat="{{ f.category|lower }}" data-reorder="{{ f.recommended_reorder_qty }}">
+                                <td>
+                                    <strong>{{ f.medicine_name }}</strong>
+                                    <div style="font-size: 11px; color: var(--gray-500);">{{ f.category }} • ₹{{ f.unit_price|floatformat:2 }}</div>
+                                </td>
+                                <td>
+                                    <strong>{{ f.current_stock }} units</strong>
+                                </td>
+                                <td>
+                                    <span style="font-weight: 800; color: var(--primary-dark);">{{ f.total_30_day_demand }} units</span>
+                                </td>
+                                <td>{{ f.avg_daily_demand }} / day</td>
+                                <td>
+                                    {% if f.days_of_stock_left < 900 %}
+                                    <strong>{{ f.days_of_stock_left }} days</strong>
+                                    {% else %}
+                                    <span style="color: var(--gray-400);">Adequate</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size: 12px; font-weight: 600;">
+                                    {{ f.projected_stockout_date }}
+                                </td>
+                                <td>
+                                    {% if f.risk_level == 'CRITICAL' or f.risk_level == 'OUT_OF_STOCK' %}
+                                    <span class="badge badge-critical">{{ f.risk_badge }}</span>
+                                    {% elif f.risk_level == 'HIGH' %}
+                                    <span class="badge badge-high">{{ f.risk_badge }}</span>
+                                    {% elif f.risk_level == 'MODERATE' %}
+                                    <span class="badge badge-moderate">{{ f.risk_badge }}</span>
+                                    {% else %}
+                                    <span class="badge badge-safe">{{ f.risk_badge }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if f.recommended_reorder_qty > 0 %}
+                                    <strong style="color: var(--orange);">+{{ f.recommended_reorder_qty }} units</strong>
+                                    {% else %}
+                                    <span style="color: var(--success); font-weight: 600;">Optimal</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size: 11px; color: var(--gray-600);">
+                                    {% if f.chart_data.weekly_forecast %}
+                                    {{ f.chart_data.weekly_forecast|join:", " }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+
+            <!-- SECTION 4: Reorder & Procurement Schedule -->
+            <section class="section-block">
+                <div class="section-header">
+                    <h2>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        4. Automated Procurement & Reorder Master Schedule
+                    </h2>
+                    <span class="section-badge">Total Suggested Units: {{ total_reorder_units }}</span>
+                </div>
+
+                <div class="kpi-grid" style="margin-bottom: 16px;">
+                    <div class="kpi-card orange">
+                        <div class="kpi-label">Total Reorder Units Needed</div>
+                        <div class="kpi-value">{{ total_reorder_units }} units</div>
+                        <div class="kpi-sub">Across critical, high & moderate items</div>
+                    </div>
+                    <div class="kpi-card emerald">
+                        <div class="kpi-label">Estimated Procurement Cost</div>
+                        <div class="kpi-value">₹{{ total_reorder_investment|floatformat:2 }}</div>
+                        <div class="kpi-sub">Estimated trade cost to maintain 45d safety buffer</div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SECTION 5: Top Selling Medicines & Category Revenue Ranking -->
+            <section class="section-block">
+                <div class="section-header">
+                    <h2>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        5. Top Selling Medicines & Category Breakdown
+                    </h2>
+                    <span class="section-badge">Revenue Drivers</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- Top 8 Products -->
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Units Sold</th>
+                                    <th>Revenue (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in top_selling_list %}
+                                <tr>
+                                    <td><strong>#{{ p.rank }}</strong></td>
+                                    <td><strong>{{ p.name }}</strong></td>
+                                    <td style="font-size: 11px; color: var(--gray-500);">{{ p.category }}</td>
+                                    <td>{{ p.units }} units</td>
+                                    <td><strong>₹{{ p.revenue|floatformat:2 }}</strong></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" style="text-align: center; color: var(--gray-400);">No sales recorded yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Category Breakdown -->
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Drugs</th>
+                                    <th>Current Stock</th>
+                                    <th>Total Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cat in category_summary %}
+                                <tr>
+                                    <td><strong>{{ cat.name }}</strong></td>
+                                    <td>{{ cat.medicine_count }} items</td>
+                                    <td>{{ cat.stock_units }} units</td>
+                                    <td><strong>₹{{ cat.revenue|floatformat:2 }}</strong></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" style="text-align: center; color: var(--gray-400);">No category data found.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- SECTION 6: Batch Expiry Alert Watchlist -->
+            <section class="section-block">
+                <div class="section-header">
+                    <h2>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        6. Batch-Level Expiry Alert Watchlist (Next 30 Days)
+                    </h2>
+                    <span class="section-badge" style="color: var(--danger); background: var(--danger-light);">Loss At Risk: ₹{{ total_at_risk_expiry_val|floatformat:2 }}</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Batch No.</th>
+                                <th>Quantity on Shelf</th>
+                                <th>Expiry Date</th>
+                                <th>Status / Days Remaining</th>
+                                <th>Estimated Value at Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in expiry_watchlist %}
+                            <tr>
+                                <td><strong>{{ b.medicine_name }}</strong></td>
+                                <td><code>{{ b.batch_name }}</code></td>
+                                <td>{{ b.quantity }} units</td>
+                                <td>{{ b.expiry_date }}</td>
+                                <td>
+                                    {% if b.is_expired %}
+                                    <span class="badge badge-critical">⛔ Expired ({{ b.status_label }})</span>
+                                    {% elif b.is_urgent %}
+                                    <span class="badge badge-high">⚠️ Critical ({{ b.status_label }})</span>
+                                    {% else %}
+                                    <span class="badge badge-moderate">⏰ Expiring Soon ({{ b.status_label }})</span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>₹{{ b.loss_value|floatformat:2 }}</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--success); padding: 18px;">
+                                    ✅ <strong>Excellent Inventory Health!</strong> No batches in shelf are expiring within the next 30 days.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+
+            <!-- SECTION 7: Automated Executive Recommendations -->
+            <section class="section-block">
+                <div class="section-header">
+                    <h2>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        7. Automated Executive Action Plan & Owner Recommendations
+                    </h2>
+                    <span class="section-badge">Actionable AI Insights</span>
+                </div>
+
+                <div class="action-list">
+                    {% for a in action_items %}
+                    <div class="action-item">
+                        <span class="action-tag" style="background: {{ a.badge_color }};">{{ a.priority }}</span>
+                        <div class="action-content">
+                            <h4>{{ a.title }}</h4>
+                            <p>{{ a.desc }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Document Footer -->
+            <footer style="margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center; color: var(--gray-500); font-size: 11px;">
+                <div>
+                    PharmaCare Healthcare System • Confidential Executive Audit Dossier • Page 1 of 1
+                </div>
+                <div>
+                    Generated via Holt's Time-Series Intelligence Engine • <strong>Verified Accurate</strong>
+                </div>
+            </footer>
+
+        </div>
+
+    </div>
+
+    <!-- Client-side Interactive Filter Script -->
+    <script>
+        function filterForecastTable() {
+            const query = document.getElementById('medSearchInput').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#forecastMasterTable tbody tr');
+
+            rows.forEach(row => {
+                const name = row.getAttribute('data-name') || '';
+                const cat = row.getAttribute('data-cat') || '';
+                if (name.includes(query) || cat.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function filterByRisk(riskType, btn) {
+            // Update active chip button
+            document.querySelectorAll('.filter-chips .chip-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            const rows = document.querySelectorAll('#forecastMasterTable tbody tr');
+            rows.forEach(row => {
+                const risk = row.getAttribute('data-risk') || '';
+                const reorder = parseInt(row.getAttribute('data-reorder') || '0', 10);
+
+                if (riskType === 'ALL') {
+                    row.style.display = '';
+                } else if (riskType === 'CRITICAL' && (risk === 'CRITICAL' || risk === 'OUT_OF_STOCK')) {
+                    row.style.display = '';
+                } else if (riskType === 'HIGH' && risk === 'HIGH') {
+                    row.style.display = '';
+                } else if (riskType === 'REORDER' && reorder > 0) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,688 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Import Purchase Bill - PharmaCare{% endblock %}
+{% block page_title %}Import Purchase Bill{% endblock %}
+{% block page_subtitle %}Instant batch stock inward via Excel, CSV, or WhatsApp text without manual entry{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-gray-800">Distributor Purchase Bill Inward</h2>
+            <p class="text-xs text-gray-500 mt-0.5">Upload wholesaler invoices or paste text to auto-create batches, MRPs, cost rates & purchase orders</p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="{% url 'download_purchase_template' %}?format=xlsx" class="btn btn-secondary text-xs flex items-center gap-2 shadow-sm">
+                <svg class="w-4 h-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                <span>Excel Template (.xlsx)</span>
+            </a>
+            <a href="{% url 'download_purchase_template' %}?format=csv" class="btn btn-secondary text-xs flex items-center gap-2 shadow-sm">
+                <svg class="w-4 h-4 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>CSV Template</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Step 1: Upload & Parser Card -->
+    <div class="card p-6">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 mb-4 border-b border-gray-100">
+            <div>
+                <h4 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold text-xs">1</span>
+                    Select Invoice File or Paste Raw Text
+                </h4>
+                <p class="text-xs text-gray-500 mt-0.5">Supports Marg ERP, Vyapar, Busy, Tally, and custom distributor spreadsheets</p>
+            </div>
+
+            <!-- Tab Switcher -->
+            <div class="inline-flex p-1 bg-gray-100 rounded-lg">
+                <button type="button" id="tab-file-btn" onclick="switchInputTab('file')" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-cyan-700 shadow-sm transition">
+                    📁 Upload File
+                </button>
+                <button type="button" id="tab-text-btn" onclick="switchInputTab('text')" class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-600 hover:text-gray-900 transition">
+                    📋 Paste Text / WhatsApp
+                </button>
+            </div>
+        </div>
+
+        <form id="purchase-import-form" class="space-y-4">
+            {% csrf_token %}
+            
+            <!-- Metadata Details: Supplier & Invoice No -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Distributor / Supplier *</label>
+                    <select id="supplier_id" name="supplier_id" class="form-select text-xs w-full">
+                        <option value="">-- Select Distributor --</option>
+                        {% for supp in suppliers %}
+                        <option value="{{ supp.id }}">{{ supp.name }} ({{ supp.location|default:'Wholesaler' }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Invoice / Bill Number</label>
+                    <input type="text" id="invoice_number" name="invoice_number" placeholder="e.g. GST-2026/8941" class="form-input text-xs w-full">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Invoice Date</label>
+                    <input type="date" id="invoice_date" name="invoice_date" value="{% now 'Y-m-d' %}" class="form-input text-xs w-full">
+                </div>
+            </div>
+
+            <!-- Tab 1: File Dropzone -->
+            <div id="file-input-pane" class="block">
+                <div id="dropzone" class="border-2 border-dashed border-cyan-300 hover:border-cyan-500 bg-cyan-50/30 hover:bg-cyan-50/60 rounded-xl p-8 text-center transition cursor-pointer flex flex-col items-center justify-center">
+                    <input type="file" id="invoice_file" name="invoice_file" accept=".xlsx, .xls, .csv" class="hidden">
+                    <div class="w-12 h-12 bg-cyan-100 text-cyan-700 rounded-xl flex items-center justify-center mb-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                    </div>
+                    <p class="text-xs font-semibold text-gray-700">Click to browse or drag & drop distributor invoice file</p>
+                    <p class="text-[11px] text-gray-500 mt-0.5">Excel (.xlsx, .xls) or CSV files up to 10MB</p>
+                    <div id="selected-file-badge" class="hidden mt-3 inline-flex items-center gap-2 px-3 py-1 bg-cyan-700 text-white text-xs font-medium rounded-lg">
+                        <span id="selected-file-name">filename.xlsx</span>
+                        <button type="button" onclick="clearSelectedFile(event)" class="text-white hover:text-red-200">×</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Pasted Text -->
+            <div id="text-input-pane" class="hidden">
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Paste Invoice Table (Copied from WhatsApp / Email / Excel)</label>
+                <textarea id="invoice_text" name="invoice_text" rows="5" placeholder="Paste table text here...&#10;Medicine Name	Batch No	Expiry Date	Quantity	Free Qty	Purchase Rate	MRP&#10;Augmentin 625 Duo Tablet	AG881	2027-12-31	10	1	120.50	210.00&#10;Dolo 650mg Tablet	DL901	2026-11-30	50	5	18.00	32.00" class="form-textarea text-xs font-mono w-full"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end pt-2">
+                <button type="button" id="parse-btn" onclick="parseInvoice()" class="btn btn-primary text-xs flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"/>
+                    </svg>
+                    <span>⚡ Parse & Preview Bill</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Step 2: Interactive Review & Reconciliation Table -->
+    <div id="preview-container" class="hidden space-y-4">
+        <div class="card p-6">
+            <!-- Header with KPI Badges -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 mb-4 border-b border-gray-100">
+                <div>
+                    <h4 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-green-100 text-green-800 flex items-center justify-center font-bold text-xs">2</span>
+                        Reconcile & Verify Parsed Items
+                    </h4>
+                    <p class="text-xs text-gray-500 mt-0.5">Edit any batch, expiry, quantity or purchase rate inline before saving into stock</p>
+                </div>
+
+                <!-- KPI Metric Pills -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="px-3 py-1 bg-gray-100 rounded-lg text-xs">
+                        <span class="text-gray-500">Items:</span>
+                        <strong id="kpi-total-items" class="text-gray-800 ml-1">0</strong>
+                    </div>
+                    <div class="px-3 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-semibold">
+                        <span>Total Units:</span>
+                        <strong id="kpi-total-units" class="ml-1">0</strong>
+                    </div>
+                    <div class="px-3 py-1 bg-cyan-50 text-cyan-800 rounded-lg text-xs font-bold">
+                        <span>Total Inward Cost:</span>
+                        <strong id="kpi-total-cost" class="ml-1">₹0.00</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto rounded-xl border border-gray-100">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200 uppercase tracking-wider">
+                        <tr>
+                            <th class="py-3 px-3 w-10">#</th>
+                            <th class="py-3 px-3 min-w-[180px]">Medicine / Item Name</th>
+                            <th class="py-3 px-3 min-w-[110px]">Batch No</th>
+                            <th class="py-3 px-3 min-w-[120px]">Expiry Date</th>
+                            <th class="py-3 px-3 text-center">Billed Qty</th>
+                            <th class="py-3 px-3 text-center">Free Qty</th>
+                            <th class="py-3 px-3 text-center font-bold text-cyan-700">Total Units</th>
+                            <th class="py-3 px-3 text-right">Cost Rate (₹)</th>
+                            <th class="py-3 px-3 text-right">MRP (₹)</th>
+                            <th class="py-3 px-3 text-right font-bold">Line Total (₹)</th>
+                            <th class="py-3 px-3 text-center">Status</th>
+                            <th class="py-3 px-3 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview-tbody" class="divide-y divide-gray-100 text-gray-700">
+                        <!-- Populated dynamically by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Action Footer -->
+            <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-xs text-gray-500">
+                    ℹ️ Clicking confirm will automatically create batches, inventory logs, and received purchase orders.
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="resetParser()" class="btn btn-secondary text-xs px-4 py-2">
+                        Cancel / Reset
+                    </button>
+                    <button type="button" id="confirm-import-btn" onclick="commitPurchaseImport()" class="btn btn-success text-xs px-5 py-2 font-bold flex items-center gap-2 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>Confirm & Import Stock into Inventory</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Imports History -->
+    <div class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Recent Distributor Bill Imports
+            </h3>
+            <span class="text-xs text-gray-500 font-medium">Last 10 Imports</span>
+        </div>
+
+        {% if recent_imports %}
+        <div class="overflow-x-auto rounded-xl border border-gray-100">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200 uppercase tracking-wider">
+                    <tr>
+                        <th class="py-2.5 px-3">Import Date</th>
+                        <th class="py-2.5 px-3">Distributor</th>
+                        <th class="py-2.5 px-3">Invoice No</th>
+                        <th class="py-2.5 px-3 text-center">Items</th>
+                        <th class="py-2.5 px-3 text-right">Total Cost</th>
+                        <th class="py-2.5 px-3">Imported By</th>
+                        <th class="py-2.5 px-3 text-center">Status</th>
+                        <th class="py-2.5 px-3 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-gray-700">
+                    {% for imp in recent_imports %}
+                    <tr class="hover:bg-gray-50 transition cursor-pointer" onclick="openImportDetailModal({{ imp.id }})">
+                        <td class="py-2.5 px-3 font-medium">{{ imp.created_at|date:"d M Y, h:i A" }}</td>
+                        <td class="py-2.5 px-3 font-semibold text-gray-800">{{ imp.supplier.name|default:"General Supplier" }}</td>
+                        <td class="py-2.5 px-3 font-mono text-cyan-700 font-bold hover:underline">{{ imp.invoice_number|default:"-" }}</td>
+                        <td class="py-2.5 px-3 text-center font-bold">
+                            <span class="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-[11px] font-bold">
+                                {{ imp.total_items }} items
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3 text-right font-bold text-gray-900">₹{{ imp.total_amount }}</td>
+                        <td class="py-2.5 px-3 text-gray-500">{{ imp.imported_by.get_full_name|default:imp.imported_by.username }}</td>
+                        <td class="py-2.5 px-3 text-center">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800">
+                                {{ imp.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3 text-center" onclick="event.stopPropagation()">
+                            <button type="button" onclick="openImportDetailModal({{ imp.id }})" class="btn btn-secondary text-[11px] py-1 px-2.5 flex items-center gap-1 shadow-sm">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <span>View Medicines</span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-400 text-xs">
+            No previous imports found. Upload your first distributor bill above!
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal: Distributor Bill Imported Medicines Detail -->
+<div id="import-detail-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+        <!-- Modal Header -->
+        <div class="p-5 bg-cyan-700 text-white flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold text-base">
+                    📦
+                </div>
+                <div>
+                    <h3 class="font-bold text-base" id="modal-bill-title">Distributor Bill Inward Details</h3>
+                    <p class="text-xs text-cyan-100" id="modal-bill-subtitle">Medicines imported in this purchase bill</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeImportDetailModal()" class="text-white/80 hover:text-white text-2xl font-bold">×</button>
+        </div>
+
+        <!-- Modal KPI Info Bar -->
+        <div class="p-4 bg-gray-50 border-b border-gray-200 grid grid-cols-2 sm:grid-cols-4 gap-3 flex-shrink-0 text-xs">
+            <div class="bg-white p-2.5 rounded-lg border border-gray-200">
+                <span class="text-gray-400 block text-[10px] uppercase font-bold">Distributor</span>
+                <strong id="modal-supp-name" class="text-gray-800 text-xs truncate block">-</strong>
+            </div>
+            <div class="bg-white p-2.5 rounded-lg border border-gray-200">
+                <span class="text-gray-400 block text-[10px] uppercase font-bold">Invoice / Date</span>
+                <strong id="modal-inv-no" class="text-cyan-700 text-xs truncate block font-mono">-</strong>
+            </div>
+            <div class="bg-white p-2.5 rounded-lg border border-gray-200">
+                <span class="text-gray-400 block text-[10px] uppercase font-bold">Total Inward Units</span>
+                <strong id="modal-total-units" class="text-green-700 text-xs block font-bold">-</strong>
+            </div>
+            <div class="bg-white p-2.5 rounded-lg border border-gray-200">
+                <span class="text-gray-400 block text-[10px] uppercase font-bold">Total Bill Amount</span>
+                <strong id="modal-total-cost" class="text-gray-900 text-xs block font-bold">-</strong>
+            </div>
+        </div>
+
+        <!-- Modal Medicines Table (Scrollable) -->
+        <div class="p-4 overflow-y-auto flex-1">
+            <div class="overflow-x-auto rounded-xl border border-gray-200">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200 uppercase tracking-wider">
+                        <tr>
+                            <th class="py-2.5 px-3 w-8">#</th>
+                            <th class="py-2.5 px-3 min-w-[180px]">Medicine / Item</th>
+                            <th class="py-2.5 px-3">Category</th>
+                            <th class="py-2.5 px-3 font-mono">Batch No</th>
+                            <th class="py-2.5 px-3">Expiry</th>
+                            <th class="py-2.5 px-3 text-center font-bold">Inward Qty</th>
+                            <th class="py-2.5 px-3 text-right">Cost Rate (₹)</th>
+                            <th class="py-2.5 px-3 text-right font-bold">Total (₹)</th>
+                            <th class="py-2.5 px-3 text-center">Catalog</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-items-tbody" class="divide-y divide-gray-100 text-gray-700">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between flex-shrink-0">
+            <span class="text-[11px] text-gray-500" id="modal-imported-meta"></span>
+            <div class="flex items-center gap-2">
+                <a id="modal-po-link" href="{% url 'purchase_order_list' %}" class="btn btn-secondary text-xs px-3 py-1.5 flex items-center gap-1">
+                    <span>📋 View in Purchase Orders</span>
+                </a>
+                <button type="button" onclick="closeImportDetailModal()" class="btn btn-primary text-xs px-4 py-1.5">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript Logic -->
+<script>
+let parsedItemsState = [];
+
+function switchInputTab(tab) {
+    const fileBtn = document.getElementById('tab-file-btn');
+    const textBtn = document.getElementById('tab-text-btn');
+    const filePane = document.getElementById('file-input-pane');
+    const textPane = document.getElementById('text-input-pane');
+
+    if (tab === 'file') {
+        fileBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-cyan-700 shadow-sm transition";
+        textBtn.className = "px-3 py-1.5 text-xs font-medium rounded-md text-gray-600 hover:text-gray-900 transition";
+        filePane.classList.remove('hidden');
+        textPane.classList.add('hidden');
+    } else {
+        textBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-cyan-700 shadow-sm transition";
+        fileBtn.className = "px-3 py-1.5 text-xs font-medium rounded-md text-gray-600 hover:text-gray-900 transition";
+        textPane.classList.remove('hidden');
+        filePane.classList.add('hidden');
+    }
+}
+
+// Drag and drop handling
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('invoice_file');
+
+dropzone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+    if (fileInput.files.length > 0) {
+        showSelectedFile(fileInput.files[0].name);
+    }
+});
+
+dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('border-cyan-600', 'bg-cyan-100/50');
+});
+
+dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove('border-cyan-600', 'bg-cyan-100/50');
+});
+
+dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('border-cyan-600', 'bg-cyan-100/50');
+    if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        showSelectedFile(e.dataTransfer.files[0].name);
+    }
+});
+
+function showSelectedFile(name) {
+    document.getElementById('selected-file-name').textContent = name;
+    document.getElementById('selected-file-badge').classList.remove('hidden');
+}
+
+function clearSelectedFile(e) {
+    e.stopPropagation();
+    fileInput.value = '';
+    document.getElementById('selected-file-badge').classList.add('hidden');
+}
+
+// Parse Invoice Function
+async function parseInvoice() {
+    const parseBtn = document.getElementById('parse-btn');
+    const file = fileInput.files[0];
+    const text = document.getElementById('invoice_text').value.trim();
+
+    if (!file && !text) {
+        alert("Please select an Excel/CSV file or paste invoice text first.");
+        return;
+    }
+
+    const formData = new FormData();
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    formData.append('csrfmiddlewaretoken', csrfToken);
+
+    if (file) {
+        formData.append('invoice_file', file);
+    } else {
+        formData.append('invoice_text', text);
+    }
+
+    parseBtn.disabled = true;
+    parseBtn.innerHTML = `
+        <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>Parsing Invoice...</span>
+    `;
+
+    try {
+        const response = await fetch("{% url 'purchase_bill_preview_ajax' %}", {
+            method: 'POST',
+            body: formData
+        });
+
+        const res = await response.json();
+        parseBtn.disabled = false;
+        parseBtn.innerHTML = `<span>⚡ Parse & Preview Bill</span>`;
+
+        if (!res.success) {
+            alert("Parser Error: " + (res.error || "Could not parse bill."));
+            return;
+        }
+
+        parsedItemsState = res.items || [];
+        renderPreviewTable(parsedItemsState);
+        document.getElementById('preview-container').classList.remove('hidden');
+        document.getElementById('preview-container').scrollIntoView({ behavior: 'smooth' });
+
+    } catch (err) {
+        parseBtn.disabled = false;
+        parseBtn.innerHTML = `<span>⚡ Parse & Preview Bill</span>`;
+        alert("Network or server error during parsing: " + err.message);
+    }
+}
+
+// Render Preview Table
+function renderPreviewTable(items) {
+    const tbody = document.getElementById('preview-tbody');
+    tbody.innerHTML = '';
+
+    let totalUnits = 0;
+    let totalCost = 0;
+
+    items.forEach((item, idx) => {
+        const billed = parseInt(item.quantity) || 1;
+        const free = parseInt(item.free_quantity) || 0;
+        const total = billed + free;
+        const rate = parseFloat(item.purchase_price) || 0;
+        const mrp = parseFloat(item.mrp) || 0;
+        const lineTotal = (rate * billed).toFixed(2);
+
+        totalUnits += total;
+        totalCost += (rate * billed);
+
+        const isNew = item.match_status === 'New Item';
+        const badgeClass = isNew ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800';
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50 transition";
+        tr.innerHTML = `
+            <td class="py-2.5 px-3 text-gray-400 font-mono">${idx + 1}</td>
+            <td class="py-2.5 px-3">
+                <input type="text" value="${escapeHtml(item.medicine_name)}" onchange="updateItemRow(${idx}, 'medicine_name', this.value)" class="form-input text-xs w-full py-1 font-semibold text-gray-800">
+            </td>
+            <td class="py-2.5 px-3">
+                <input type="text" value="${escapeHtml(item.batch_name)}" onchange="updateItemRow(${idx}, 'batch_name', this.value)" class="form-input text-xs w-full py-1 font-mono text-gray-700">
+            </td>
+            <td class="py-2.5 px-3">
+                <input type="date" value="${item.expiry_date}" onchange="updateItemRow(${idx}, 'expiry_date', this.value)" class="form-input text-xs w-full py-1 text-gray-700">
+            </td>
+            <td class="py-2.5 px-3 text-center">
+                <input type="number" min="1" value="${billed}" onchange="updateItemRow(${idx}, 'quantity', this.value)" class="form-input text-xs w-16 text-center py-1 font-semibold text-gray-800">
+            </td>
+            <td class="py-2.5 px-3 text-center">
+                <input type="number" min="0" value="${free}" onchange="updateItemRow(${idx}, 'free_quantity', this.value)" class="form-input text-xs w-16 text-center py-1 text-gray-600">
+            </td>
+            <td class="py-2.5 px-3 text-center font-bold text-cyan-700">
+                ${total}
+            </td>
+            <td class="py-2.5 px-3 text-right">
+                <input type="number" step="0.01" value="${rate.toFixed(2)}" onchange="updateItemRow(${idx}, 'purchase_price', this.value)" class="form-input text-xs w-20 text-right py-1 text-gray-800">
+            </td>
+            <td class="py-2.5 px-3 text-right">
+                <input type="number" step="0.01" value="${mrp.toFixed(2)}" onchange="updateItemRow(${idx}, 'mrp', this.value)" class="form-input text-xs w-20 text-right py-1 text-gray-800">
+            </td>
+            <td class="py-2.5 px-3 text-right font-bold text-gray-900">
+                ₹${lineTotal}
+            </td>
+            <td class="py-2.5 px-3 text-center">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeClass}">${item.match_status}</span>
+            </td>
+            <td class="py-2.5 px-3 text-center">
+                <button type="button" onclick="removeItemRow(${idx})" class="p-1 text-gray-400 hover:text-red-600 rounded hover:bg-red-50 transition" title="Delete row">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('kpi-total-items').textContent = items.length;
+    document.getElementById('kpi-total-units').textContent = totalUnits;
+    document.getElementById('kpi-total-cost').textContent = `₹${totalCost.toFixed(2)}`;
+}
+
+function updateItemRow(index, field, value) {
+    if (parsedItemsState[index]) {
+        parsedItemsState[index][field] = value;
+        renderPreviewTable(parsedItemsState);
+    }
+}
+
+function removeItemRow(index) {
+    parsedItemsState.splice(index, 1);
+    renderPreviewTable(parsedItemsState);
+    if (parsedItemsState.length === 0) {
+        document.getElementById('preview-container').classList.add('hidden');
+    }
+}
+
+function resetParser() {
+    parsedItemsState = [];
+    document.getElementById('preview-container').classList.add('hidden');
+    fileInput.value = '';
+    document.getElementById('invoice_text').value = '';
+    document.getElementById('selected-file-badge').classList.add('hidden');
+}
+
+// Commit Purchase Import to DB
+async function commitPurchaseImport() {
+    if (!parsedItemsState || parsedItemsState.length === 0) {
+        alert("No parsed items to import.");
+        return;
+    }
+
+    const supplierId = document.getElementById('supplier_id').value;
+    const invoiceNumber = document.getElementById('invoice_number').value.trim();
+    const invoiceDate = document.getElementById('invoice_date').value;
+    const fileName = fileInput.files[0] ? fileInput.files[0].name : "Pasted Text";
+
+    const confirmBtn = document.getElementById('confirm-import-btn');
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = `
+        <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>Importing Stock...</span>
+    `;
+
+    const payload = {
+        supplier_id: supplierId || null,
+        invoice_number: invoiceNumber,
+        invoice_date: invoiceDate,
+        file_name: fileName,
+        items: parsedItemsState
+    };
+
+    try {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const response = await fetch("{% url 'purchase_bill_confirm_ajax' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const res = await response.json();
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = `<span>Confirm & Import Stock into Inventory</span>`;
+
+        if (!res.success) {
+            alert("Import failed: " + (res.error || "Unknown server error"));
+            return;
+        }
+
+        alert(`🎉 Success! ${res.message}\nTotal Inward Units: ${res.total_units}\nPurchase Order: ${res.po_number}`);
+        window.location.reload();
+
+    } catch (err) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = `<span>Confirm & Import Stock into Inventory</span>`;
+        alert("Network error: " + err.message);
+    }
+}
+
+// Open Import Detail Modal (Shows list of all medicines imported in that bill)
+async function openImportDetailModal(importId) {
+    const modal = document.getElementById('import-detail-modal');
+    const tbody = document.getElementById('modal-items-tbody');
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="9" class="py-8 text-center text-gray-500">
+                <svg class="animate-spin h-6 w-6 mx-auto text-cyan-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading medicines in this bill...
+            </td>
+        </tr>
+    `;
+    modal.classList.remove('hidden');
+
+    try {
+        const response = await fetch(`/purchase-bill/${importId}/details/`);
+        const res = await response.json();
+
+        if (!res.success) {
+            alert("Could not load details: " + res.error);
+            modal.classList.add('hidden');
+            return;
+        }
+
+        document.getElementById('modal-bill-title').textContent = `Inward Bill: ${res.invoice_number}`;
+        document.getElementById('modal-supp-name').textContent = res.supplier_name;
+        document.getElementById('modal-inv-no').textContent = `${res.invoice_number} (${res.invoice_date})`;
+        document.getElementById('modal-total-units').textContent = `${res.total_units} Units (${res.total_items} Medicines)`;
+        document.getElementById('modal-total-cost').textContent = `₹${res.total_amount.toFixed(2)}`;
+        document.getElementById('modal-imported-meta').textContent = `Imported on ${res.created_at} by ${res.imported_by}`;
+
+        tbody.innerHTML = '';
+        if (res.items && res.items.length > 0) {
+            res.items.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition";
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 text-gray-400 font-mono">${idx + 1}</td>
+                    <td class="py-2.5 px-3">
+                        <strong class="text-gray-900 block">${escapeHtml(item.medicine_name)}</strong>
+                        <span class="text-[10px] text-gray-400">Current Stock: <b class="text-cyan-700">${item.current_stock}</b></span>
+                    </td>
+                    <td class="py-2.5 px-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] bg-gray-100 text-gray-700 font-medium">${escapeHtml(item.category_name)}</span>
+                    </td>
+                    <td class="py-2.5 px-3 font-mono font-semibold text-gray-800">${escapeHtml(item.batch_name)}</td>
+                    <td class="py-2.5 px-3 text-gray-600">${escapeHtml(item.expiry_date)}</td>
+                    <td class="py-2.5 px-3 text-center font-bold text-cyan-700 text-xs">${item.quantity}</td>
+                    <td class="py-2.5 px-3 text-right text-gray-700">₹${item.cost_price.toFixed(2)}</td>
+                    <td class="py-2.5 px-3 text-right font-bold text-gray-900">₹${item.line_total.toFixed(2)}</td>
+                    <td class="py-2.5 px-3 text-center">
+                        <a href="/medicine/?search=${encodeURIComponent(item.medicine_name)}" target="_blank" class="text-cyan-600 hover:text-cyan-800 font-bold hover:underline" title="Open medicine card">
+                            Catalog ↗
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-gray-400">No items found for this record.</td></tr>`;
+        }
+
+    } catch (err) {
+        alert("Network error: " + err.message);
+        modal.classList.add('hidden');
+    }
+}
+
+function closeImportDetailModal() {
+    document.getElementById('import-detail-modal').classList.add('hidden');
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+</script>
+{% endblock %}

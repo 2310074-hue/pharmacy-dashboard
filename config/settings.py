@@ -80,17 +80,24 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # Use PostgreSQL on Render when DATABASE_URL is provided, fallback to SQLite for local development.
-import dj_database_url
-
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
+    try:
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+    except ImportError:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 else:
     DATABASES = {
         'default': {
@@ -98,6 +105,7 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
 
 
 
@@ -185,4 +193,7 @@ CELERY_TIMEZONE = os.environ.get('CELERY_TIMEZONE', 'UTC')
 # Gemini chatbot configuration
 GEMINI_API_KEY = config('GEMINI_API_KEY', default=os.environ.get('GEMINI_API_KEY', ''))
 GEMINI_MODEL = config('GEMINI_MODEL', default=os.environ.get('GEMINI_MODEL', 'gemini-flash-lite-latest'))
+
+# Pharmacy Helpline & Contact
+PHARMACY_PHONE = config('PHARMACY_PHONE', default=os.environ.get('PHARMACY_PHONE', '+91 99060 06872'))
 

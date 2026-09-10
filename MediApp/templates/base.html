@@ -1105,6 +1105,30 @@
                 Sales
             </a>
 
+            <!-- Module 2: Digital Want-Book (Shortage Register) -->
+            <a href="{% url 'want_book_list' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'want-book' in request.path %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
+                <svg class="w-5 h-5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                Want-Book
+                <span class="ml-auto text-[10px] font-bold bg-amber-400/20 text-amber-200 border border-amber-400/30 px-1.5 py-0.5 rounded-md">Shortage</span>
+            </a>
+
+            <!-- Module 1: Distributor Purchase Bill Auto-Import -->
+            <a href="{% url 'purchase_bill_import' %}"
+                class="nav-link flex items-center gap-3 px-6 py-3 {% if 'purchase-bill' in request.path %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
+                <svg class="w-5 h-5 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Import Purchase Bill
+                <span class="ml-auto text-[10px] font-bold bg-cyan-400/20 text-cyan-200 border border-cyan-400/30 px-1.5 py-0.5 rounded-md">Excel/CSV</span>
+            </a>
+
             <a href="{% url 'purchase_order_list' %}"
                 class="nav-link flex items-center gap-3 px-6 py-3 {% if 'purchase-orders' in request.path %}active{% endif %}"
                 onclick="closeSidebarOnMobile()">
@@ -1113,6 +1137,7 @@
                 </svg>
                 Purchase Orders
             </a>
+
 
             <a href="{% url 'invoice_history' %}"
                 class="nav-link flex items-center gap-3 px-6 py-3 {% if 'billing' in request.path or request.resolver_match.url_name == 'invoice_detail' %}active{% endif %}"

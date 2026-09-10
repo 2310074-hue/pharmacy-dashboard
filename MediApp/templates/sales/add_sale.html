@@ -65,25 +65,34 @@
         <!-- Sale Items -->
         <div class="card p-6 mb-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    Sale Items
-                </h3>
-                <button type="button" onclick="addSaleItem()" class="btn btn-secondary">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add Item
-                </button>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        Sale Items
+                    </h3>
+                    <p class="text-xs text-gray-500">Live batch selection with cost price & margin indicator</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="cost-toggle-btn" onclick="toggleCostVisibility()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5" title="Toggle Chemist Secret Kharid Rate & Profit Margin View">
+                        <span id="cost-toggle-icon">👁️</span>
+                        <span id="cost-toggle-text">Chemist Margin View</span>
+                    </button>
+                    <button type="button" onclick="addSaleItem()" class="btn btn-secondary text-xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Item
+                    </button>
+                </div>
             </div>
             
             <div id="saleItemsContainer">
                 <!-- Initial sale item row -->
-                <div class="sale-item bg-gray-50 p-4 rounded-lg mb-4">
+                <div class="sale-item bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                        <div class="md:col-span-2">
+                        <div class="md:col-span-2 relative">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Medicine *</label>
                             <input 
                                 type="text" 
@@ -99,7 +108,7 @@
                         
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Batch *</label>
-                            <select name="batch_id[]" class="batch-select form-select" required disabled aria-label="Select Batch">
+                            <select name="batch_id[]" class="batch-select form-select" onchange="onBatchSelected(this)" required disabled aria-label="Select Batch">
                                 <option value="">Select batch</option>
                             </select>
                         </div>
@@ -112,14 +121,16 @@
                                 class="quantity-input form-input" 
                                 placeholder="1"
                                 min="1"
+                                value="1"
                                 required
                                 onchange="calculateItemTotal(this)"
+                                oninput="calculateItemTotal(this)"
                                 aria-label="Quantity"
                             >
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Price (₹) *</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Selling Price (₹) *</label>
                             <input 
                                 type="number" 
                                 name="price[]" 
@@ -129,24 +140,43 @@
                                 min="0.01"
                                 required
                                 onchange="calculateItemTotal(this)"
+                                oninput="calculateItemTotal(this)"
                                 aria-label="Price"
                             >
                         </div>
                     </div>
-                    <div class="mt-2 flex items-center justify-between">
 
+                    <!-- Live Cost Price & Profit Margin Inspector (Chemist Tool) -->
+                    <div class="cost-margin-strip mt-3 p-2.5 bg-emerald-50/80 rounded-lg border border-emerald-200 text-xs flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-600 font-medium">🏷️ Kharid Rate (Cost):</span>
+                            <strong class="cost-price-val text-slate-800 font-bold">₹0.00</strong>
+                            <span class="text-slate-400 text-[10px]">/ unit</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-600 font-medium">💰 Est. Margin & Profit:</span>
+                            <strong class="profit-val font-bold text-emerald-700">₹0.00 (0% margin)</strong>
+                        </div>
+                    </div>
+
+                    <!-- Loss Alert Warning Banner -->
+                    <div class="loss-alert-box hidden mt-2 p-2 bg-rose-50 text-rose-800 rounded-lg border border-rose-300 text-xs font-bold flex items-center gap-1.5 animate-pulse">
+                        <svg class="w-4 h-4 text-rose-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <span class="loss-msg">⚠️ Warning: Selling Price is below Kharid Rate! You will incur a loss on this item.</span>
+                    </div>
+
+                    <div class="mt-2.5 flex items-center justify-between border-t border-gray-200/60 pt-2">
                         <p class="text-sm text-gray-600">Subtotal: 
                             <span class="item-subtotal font-bold text-cyan-600">₹0.00</span>
                         </p>
-
-                        <p class="text-sm text-gray-600 mt-1">
+                        <p class="text-sm text-gray-600">
                             GST (5%): <span class="item-gst font-bold text-orange-500">₹0.00</span>
                         </p>
-
-                        <p class="text-sm text-gray-700 mt-1">
+                        <p class="text-sm text-gray-700">
                             Subtotal + GST: <span class="item-total font-bold text-green-700">₹0.00</span>
                         </p>
-
                     </div>
                 </div>
             </div>
@@ -259,6 +289,30 @@
 
 <script>
 let itemCount = 1;
+let isCostVisible = true;
+
+function toggleCostVisibility() {
+    isCostVisible = !isCostVisible;
+    const strips = document.querySelectorAll('.cost-margin-strip');
+    const icon = document.getElementById('cost-toggle-icon');
+    const text = document.getElementById('cost-toggle-text');
+
+    strips.forEach(s => {
+        if (isCostVisible) {
+            s.classList.remove('hidden');
+        } else {
+            s.classList.add('hidden');
+        }
+    });
+
+    if (isCostVisible) {
+        icon.textContent = '👁️';
+        text.textContent = 'Chemist Margin View (On)';
+    } else {
+        icon.textContent = '🙈';
+        text.textContent = 'Chemist Margin View (Hidden)';
+    }
+}
 
 function toggleCustomerSearch() {
     const type = document.getElementById('customerType').value;
@@ -278,7 +332,7 @@ function addSaleItem() {
     itemCount++;
     const container = document.getElementById('saleItemsContainer');
     const newItem = document.createElement('div');
-    newItem.className = 'sale-item bg-gray-50 p-4 rounded-lg mb-4 relative';
+    newItem.className = 'sale-item bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200 relative';
     newItem.innerHTML = `
         <button type="button" onclick="this.parentElement.remove(); calculateTotal();" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,29 +348,49 @@ function addSaleItem() {
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Batch *</label>
-                <select name="batch_id[]" class="batch-select form-select" required disabled aria-label="Select Batch">
+                <select name="batch_id[]" class="batch-select form-select" onchange="onBatchSelected(this)" required disabled aria-label="Select Batch">
                     <option value="">Select batch</option>
                 </select>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity *</label>
-                <input type="number" name="quantity[]" class="quantity-input form-input" placeholder="1" min="1" required onchange="calculateItemTotal(this)" aria-label="Quantity">
+                <input type="number" name="quantity[]" class="quantity-input form-input" placeholder="1" min="1" value="1" required onchange="calculateItemTotal(this)" oninput="calculateItemTotal(this)" aria-label="Quantity">
             </div>
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Price (₹) *</label>
-                <input type="number" name="price[]" class="price-input form-input" placeholder="0.00" step="0.01" min="0.01" required onchange="calculateItemTotal(this)" aria-label="Price">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Selling Price (₹) *</label>
+                <input type="number" name="price[]" class="price-input form-input" placeholder="0.00" step="0.01" min="0.01" required onchange="calculateItemTotal(this)" oninput="calculateItemTotal(this)" aria-label="Price">
             </div>
         </div>
-        <div class="mt-2 flex items-center justify-between">
+
+        <!-- Live Cost Price & Profit Margin Inspector (Chemist Tool) -->
+        <div class="cost-margin-strip ${isCostVisible ? '' : 'hidden'} mt-3 p-2.5 bg-emerald-50/80 rounded-lg border border-emerald-200 text-xs flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-slate-600 font-medium">🏷️ Kharid Rate (Cost):</span>
+                <strong class="cost-price-val text-slate-800 font-bold">₹0.00</strong>
+                <span class="text-slate-400 text-[10px]">/ unit</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-slate-600 font-medium">💰 Est. Margin & Profit:</span>
+                <strong class="profit-val font-bold text-emerald-700">₹0.00 (0% margin)</strong>
+            </div>
+        </div>
+
+        <!-- Loss Alert Warning Banner -->
+        <div class="loss-alert-box hidden mt-2 p-2 bg-rose-50 text-rose-800 rounded-lg border border-rose-300 text-xs font-bold flex items-center gap-1.5 animate-pulse">
+            <svg class="w-4 h-4 text-rose-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <span class="loss-msg">⚠️ Warning: Selling Price is below Kharid Rate! You will incur a loss on this item.</span>
+        </div>
+
+        <div class="mt-2.5 flex items-center justify-between border-t border-gray-200/60 pt-2">
             <p class="text-sm text-gray-600">Subtotal: 
                 <span class="item-subtotal font-bold text-cyan-600">₹0.00</span>
             </p>
-
-            <p class="text-sm text-gray-600 mt-1">
+            <p class="text-sm text-gray-600">
                 GST (5%): <span class="item-gst font-bold text-orange-500">₹0.00</span>
             </p>
-
-            <p class="text-sm text-gray-700 mt-1">
+            <p class="text-sm text-gray-700">
                 Subtotal + GST: <span class="item-total font-bold text-green-700">₹0.00</span>
             </p>
         </div>
@@ -424,12 +498,18 @@ function setupMedicineSearch(container) {
                 .then(data => {
                     if (data.medicines.length > 0) {
                         resultsDiv.innerHTML = data.medicines.map(m => `
-                            <div class="p-3 hover:bg-gray-100 cursor-pointer border-b ${!m.is_active ? 'opacity-75' : ''}" data-id="${m.id}" data-name="${m.name}" data-price="${m.price}" data-active="${m.is_active}">
+                            <div class="p-3 hover:bg-slate-50 cursor-pointer border-b ${!m.is_active ? 'opacity-75' : ''}" data-id="${m.id}" data-name="${m.name}" data-price="${m.price}" data-cost="${m.cost_price}" data-active="${m.is_active}">
                                 <div class="flex justify-between items-center">
-                                    <p class="font-semibold">${m.name}</p>
-                                    ${!m.is_active ? '<span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-bold">Discontinued</span>' : ''}
+                                    <p class="font-semibold text-slate-800 text-sm">${m.name}</p>
+                                    ${!m.is_active ? '<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Discontinued</span>' : ''}
                                 </div>
-                                <p class="text-sm text-gray-500">₹${m.price}</p>
+                                <div class="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                    <span class="font-bold text-teal-700">MRP: ₹${m.price}</span>
+                                    <span>•</span>
+                                    <span class="text-slate-600">Kharid: ₹${m.cost_price.toFixed(2)}</span>
+                                    <span>•</span>
+                                    <span class="text-emerald-600 font-semibold">${m.margin_percent}% Margin</span>
+                                </div>
                             </div>
                         `).join('');
                         
@@ -443,14 +523,15 @@ function setupMedicineSearch(container) {
                                     medicineIdInput,
                                     batchSelect,
                                     priceInput,
-                                    resultsDiv
+                                    resultsDiv,
+                                    container
                                 );
                             });
                         });
                         
                         resultsDiv.classList.remove('hidden');
                     } else {
-                        resultsDiv.innerHTML = '<div class="p-3 text-gray-500">No medicines found</div>';
+                        resultsDiv.innerHTML = '<div class="p-3 text-gray-500 text-xs">No medicines found</div>';
                         resultsDiv.classList.remove('hidden');
                     }
                 });
@@ -458,13 +539,13 @@ function setupMedicineSearch(container) {
     });
 }
 
-function selectMedicine(id, name, price, searchInput, medicineIdInput, batchSelect, priceInput, resultsDiv) {
+function selectMedicine(id, name, price, searchInput, medicineIdInput, batchSelect, priceInput, resultsDiv, itemContainer) {
     medicineIdInput.value = id;
     searchInput.value = name;
     priceInput.value = price;
     resultsDiv.classList.add('hidden');
     
-    // Fetch batches
+    // Fetch batches with purchase_price
     fetch(`/api/medicine-batches/?medicine_id=${id}`)
         .then(res => res.json())
         .then(data => {
@@ -472,11 +553,22 @@ function selectMedicine(id, name, price, searchInput, medicineIdInput, batchSele
             data.batches.forEach(batch => {
                 const option = document.createElement('option');
                 option.value = batch.id;
-                option.textContent = `${batch.batch_name} (Qty: ${batch.quantity}, Exp: ${batch.expiry_date})`;
+                option.dataset.costPrice = batch.purchase_price || 0;
+                option.textContent = `${batch.batch_name} (Qty: ${batch.quantity}, Exp: ${batch.expiry_date}) - Cost: ₹${batch.purchase_price.toFixed(2)}`;
                 batchSelect.appendChild(option);
             });
             batchSelect.disabled = false;
+
+            // Auto-select first batch if available
+            if (data.batches.length > 0) {
+                batchSelect.selectedIndex = 1;
+                onBatchSelected(batchSelect);
+            }
         });
+}
+
+function onBatchSelected(selectElem) {
+    calculateItemTotal(selectElem);
 }
 
 // Setup initial medicine search
@@ -484,13 +576,17 @@ document.querySelectorAll('.sale-item').forEach(item => {
     setupMedicineSearch(item);
 });
 
-// Calculate item total
+// Calculate item total & update live Margin and Loss Alert
 function calculateItemTotal(input) {
     const item = input.closest('.sale-item');
     const quantity = parseFloat(item.querySelector('.quantity-input').value) || 0;
-    const price = parseFloat(item.querySelector('.price-input').value) || 0; // MRP including GST
+    const price = parseFloat(item.querySelector('.price-input').value) || 0; // Selling price (MRP)
 
-    // Extract base price & GST from MRP
+    const batchSelect = item.querySelector('.batch-select');
+    const selectedOption = batchSelect.options[batchSelect.selectedIndex];
+    const costPrice = selectedOption ? (parseFloat(selectedOption.dataset.costPrice) || 0) : 0;
+
+    // Extract base price & GST from MRP (5% GST)
     const basePrice = price / 1.05;
     const gstAmount = price - basePrice;
 
@@ -501,6 +597,38 @@ function calculateItemTotal(input) {
     item.querySelector('.item-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
     item.querySelector('.item-gst').textContent = `₹${gst.toFixed(2)}`;
     item.querySelector('.item-total').textContent = `₹${totalWithGst.toFixed(2)}`;
+
+    // Calculate Chemist Profit Margin
+    const costDisplay = item.querySelector('.cost-price-val');
+    const profitDisplay = item.querySelector('.profit-val');
+    const lossAlert = item.querySelector('.loss-alert-box');
+    const priceInput = item.querySelector('.price-input');
+
+    if (costPrice > 0) {
+        costDisplay.textContent = `₹${costPrice.toFixed(2)}`;
+        const profitPerUnit = price - costPrice;
+        const totalProfit = profitPerUnit * quantity;
+        const marginPercent = price > 0 ? ((profitPerUnit / price) * 100).toFixed(1) : 0;
+
+        if (profitPerUnit >= 0) {
+            profitDisplay.className = "profit-val font-bold text-emerald-700";
+            profitDisplay.textContent = `₹${totalProfit.toFixed(2)} (${marginPercent}% margin)`;
+            lossAlert.classList.add('hidden');
+            priceInput.classList.remove('border-red-500', 'bg-red-50');
+        } else {
+            // Loss Alert
+            profitDisplay.className = "profit-val font-bold text-rose-600";
+            profitDisplay.textContent = `- ₹${Math.abs(totalProfit).toFixed(2)} (LOSS)`;
+            lossAlert.classList.remove('hidden');
+            lossAlert.querySelector('.loss-msg').textContent = `⚠️ Loss Alert: Selling price (₹${price.toFixed(2)}) is lower than Kharid Rate (₹${costPrice.toFixed(2)})! Total loss: ₹${Math.abs(totalProfit).toFixed(2)}`;
+            priceInput.classList.add('border-red-500', 'bg-red-50');
+        }
+    } else {
+        costDisplay.textContent = `₹0.00`;
+        profitDisplay.textContent = `₹0.00 (N/A)`;
+        lossAlert.classList.add('hidden');
+        priceInput.classList.remove('border-red-500', 'bg-red-50');
+    }
 
     calculateTotal();
 }
@@ -556,7 +684,6 @@ function calculateTotal() {
     document.querySelector('#discountDisplay').textContent = `₹${discount.toFixed(2)}`;
 }
 
-
 // Form validation
 document.getElementById('saleForm').addEventListener('submit', function(e) {
     const items = document.querySelectorAll('.sale-item');
@@ -586,4 +713,4 @@ document.addEventListener('click', function(e) {
     }
 });
 </script>
-{% endblock %}
+{% endblock %}

@@ -116,16 +116,32 @@
     <!-- Price & Quantity -->
     <div class="border-t pt-4 mb-4">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-sm text-gray-600">Price:</span>
+        <span class="text-sm text-gray-600">MRP (Selling):</span>
         <span class="text-lg font-bold text-cyan-600">₹{{ medicine.price }}</span>
       </div>
+      <div class="flex items-center justify-between text-xs mb-2 p-1.5 {% if nearest_batch and nearest_batch.purchase_price > 0 %}bg-emerald-50/90 border-emerald-200 text-slate-700{% else %}bg-amber-50/90 border-amber-200 text-amber-800{% endif %} rounded border">
+        <span class="font-medium">🏷️ Kharid (Cost): 
+          <strong class="text-slate-900 font-bold">
+            {% if nearest_batch and nearest_batch.purchase_price > 0 %}
+              ₹{{ nearest_batch.purchase_price }}
+            {% else %}
+              ₹0.00
+            {% endif %}
+          </strong>
+        </span>
+        <span class="font-bold {% if nearest_batch and nearest_batch.purchase_price > 0 %}text-emerald-700{% else %}text-amber-700{% endif %}">
+          {% if nearest_batch %}Batch: {{ nearest_batch.batch_name }}{% else %}No active batch{% endif %}
+        </span>
+      </div>
       <div class="flex items-center justify-between">
-        <span class="text-sm text-gray-600">Total Quantity:</span>
+        <span class="text-sm text-gray-600">Total Stock:</span>
         <span class="text-lg font-semibold {% if medicine.is_low_stock %}text-red-600{% else %}text-green-600{% endif %}">
-          {{ medicine.total_quantity }}
+          {{ medicine.total_quantity }} units
         </span>
       </div>
     </div>
+
+
 
     <!-- Nearest Active Expiring Batch -->
     <div class="mb-4">

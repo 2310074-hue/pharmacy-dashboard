@@ -1545,7 +1545,7 @@ def export_supplier_stock(request, id):
 # API Views
 @login_required
 def get_medicine_batches(request):
-    """API to get batches for a medicine"""
+    """API to get batches for a medicine with cost price for margin calculation"""
     medicine_id = request.GET.get('medicine_id')
     if not medicine_id:
         return JsonResponse({'batches': []})
@@ -1566,6 +1566,7 @@ def get_medicine_batches(request):
         'batch_name': b.batch_name,
         'quantity': b.quantity,
         'expiry_date': b.expiry_date.strftime('%Y-%m-%d'),
+        'purchase_price': float(b.purchase_price or 0.0),
     } for b in batches]
     
     return JsonResponse({'batches': data})
@@ -1573,7 +1574,7 @@ def get_medicine_batches(request):
 
 @login_required
 def search_medicines(request):
-    """API to search medicines"""
+    """API to search medicines with cost price and margin details"""
     query = request.GET.get('q', '')
     if len(query) < 2:
         return JsonResponse({'medicines': []})
@@ -1583,19 +1584,29 @@ def search_medicines(request):
         Medicine.objects.filter(
             Q(name__icontains=query) |
             Q(description__icontains=query)
-        ),
+        ).prefetch_related('batches'),
         'created_by'
-    )[:10]
+    )[:12]
     
-    data = [{
-        'id': m.id,
-        'name': m.name,
-        'price': str(m.price),
-        'quantity': m.total_quantity,
-        'is_active': m.is_active,
-    } for m in medicines]
+    data = []
+    for m in medicines:
+        nearest_batch = m.nearest_active_batch
+        cost_price = float(nearest_batch.purchase_price) if nearest_batch and nearest_batch.purchase_price else 0.0
+        selling_price = float(m.price) if m.price else 0.0
+        margin_pct = round(((selling_price - cost_price) / selling_price * 100), 1) if selling_price > 0 and cost_price > 0 else 0.0
+
+        data.append({
+            'id': m.id,
+            'name': m.name,
+            'price': str(m.price),
+            'quantity': m.total_quantity,
+            'is_active': m.is_active,
+            'cost_price': cost_price,
+            'margin_percent': margin_pct,
+        })
     
     return JsonResponse({'medicines': data})
+
 
 
 @login_required
@@ -4142,13 +4153,23 @@ def demand_forecasting_view(request):
     """
     Renders the AI Demand Forecasting Dashboard.
     Displays:
-      - 30-day predicted demand for all catalog medicines
+      - 30-day predicted demand for catalog medicines owned by the current tenant
       - Critical Stockout alerts & Reorder recommendations
       - Interactive Chart.js comparing past actual sales vs forecasted future demand
       - Dynamic dropdown to switch medicine forecast on the fly
     """
-    all_forecasts = get_all_medicine_forecasts(days_ahead=30)
-    medicines = Medicine.objects.order_by('name')
+    medicines = owner_scope_queryset(request, Medicine.objects.order_by('name'), 'created_by')
+    all_forecasts = []
+    for med in medicines:
+        res = forecast_demand(med.id, days_ahead=30)
+        if res:
+            all_forecasts.append(res)
+
+    def sort_key(item):
+        level_order = {'OUT_OF_STOCK': 0, 'CRITICAL': 1, 'HIGH': 2, 'MODERATE': 3, 'ADEQUATE': 4}
+        return (level_order.get(item['risk_level'], 5), item['days_of_stock_left'])
+
+    all_forecasts.sort(key=sort_key)
 
     selected_med_id = request.GET.get('med_id')
     if selected_med_id:
@@ -4161,7 +4182,7 @@ def demand_forecasting_view(request):
         selected_med_id = all_forecasts[0]['medicine_id']
 
     selected_forecast = None
-    if selected_med_id:
+    if selected_med_id and any(f['medicine_id'] == selected_med_id for f in all_forecasts):
         selected_forecast = forecast_demand(selected_med_id, days_ahead=30)
 
     # Executive Summary KPIs
@@ -4177,7 +4198,7 @@ def demand_forecasting_view(request):
         'medicines': medicines,
         'selected_med_id': selected_med_id,
         'selected_forecast': selected_forecast,
-        'selected_forecast_json': json.dumps(selected_forecast),
+        'selected_forecast_json': json.dumps(selected_forecast) if selected_forecast else "null",
         'total_projected_units': total_projected_units,
         'critical_risk_count': critical_risk_count,
         'high_risk_count': high_risk_count,
@@ -4194,10 +4215,14 @@ def api_medicine_forecast(request, medicine_id):
     """
     JSON API for dynamic AJAX medicine switching on the forecasting chart.
     """
+    scoped_med = owner_scope_queryset(request, Medicine.objects.filter(id=medicine_id), 'created_by').first()
+    if not scoped_med:
+        return JsonResponse({'error': 'Medicine not found or access denied'}, status=404)
     data = forecast_demand(medicine_id, days_ahead=30)
     if not data:
         return JsonResponse({'error': 'Medicine not found'}, status=404)
     return JsonResponse(data)
+
 
 
 @assistant_or_above
@@ -4242,10 +4267,18 @@ def _get_expiry_reminder_queryset(request):
         .values_list('customer__email', flat=True)
     )
     all_scoped_emails = [e.strip().lower() for e in user_cust_emails.union(user_sale_emails) if e]
+    user_cust_names = [
+        n.strip() for n in Customer.objects.filter(created_by=request.user).exclude(name='').values_list('name', flat=True) if n
+    ]
 
-    if all_scoped_emails:
-        return qs.filter(customer_email__in=all_scoped_emails)
-    return qs
+    if all_scoped_emails or user_cust_names:
+        filter_q = Q()
+        if all_scoped_emails:
+            filter_q |= Q(customer_email__in=all_scoped_emails)
+        if user_cust_names:
+            filter_q |= Q(customer_name__in=user_cust_names)
+        return qs.filter(filter_q)
+    return qs.none()
 
 
 def _dispatch_consolidated_expiry_email(customer_name, customer_email, logs_list, conn=None):
@@ -4996,6 +5029,1059 @@ def send_cloud_whatsapp_single_view(request):
         'sid': disp.get('sid', ''),
         'channel': disp.get('channel', 'Cloud Bot')
     })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 📄 EXECUTIVE AUDIT & DEMAND FORECASTING DOSSIER (PRINTABLE & DOWNLOADABLE)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@assistant_or_above
+def executive_dossier_report(request):
+    """
+    Master interactive and printable Executive Audit Dossier combining:
+      1. Master Financial KPIs & Store Valuation
+      2. 180-Day Sales Velocity & Day-of-Week Seasonality Decomposition
+      3. AI 30-Day Forward Demand Forecast & 4-Tier Inventory Risk Matrix
+      4. Automated Reorder & Procurement Schedule
+      5. Top Selling Medicines & Category Breakdown
+      6. Batch-Level Expiry Alert Watchlist (Next 30 Days)
+      7. Dynamic Action Plan & Recommendations
+    
+    Supports ?download=1 to export as a standalone downloadable HTML file.
+    """
+    today = timezone.now().date()
+    
+    # 1. Past Sales & Financials
+    completed_sales = Sale.objects.filter(status='Completed')
+    total_revenue = completed_sales.aggregate(total=Sum('total_price'))['total'] or Decimal('0.00')
+    total_invoices = completed_sales.count()
+    
+    # Calculate Cost of Goods Sold (COGS) and Profit
+    sale_items = SaleItem.objects.filter(sale__status='Completed').select_related('medicine')
+    total_cost = Decimal('0.00')
+    for item in sale_items:
+        cost = Decimal('0.00')
+        if item.cost_price and item.cost_price > 0:
+            cost = item.cost_price * item.quantity
+        elif item.price:
+            cost = (item.price * Decimal('0.70')) * item.quantity
+        total_cost += cost
+        
+    net_profit = max(Decimal('0.00'), total_revenue - total_cost)
+    profit_margin = round((float(net_profit) / float(total_revenue) * 100), 1) if total_revenue > 0 else 0.0
+    
+    # Inventory Stats
+    medicines = Medicine.objects.all().select_related('category', 'supplier')
+    total_catalog_count = medicines.count()
+    total_stock_units = sum((m.total_quantity or 0) for m in medicines)
+    total_inventory_valuation = sum((m.total_quantity or 0) * m.price for m in medicines)
+    total_customers = Customer.objects.count()
+    
+    # 2. Seasonality & Day-of-Week Distribution (Past 180 Days)
+    lookback_start = today - timedelta(days=180)
+    recent_items = SaleItem.objects.filter(
+        sale__status='Completed',
+        sale__date__date__gte=lookback_start
+    ).select_related('sale')
+    
+    dow_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    dow_counts = [0.0] * 7
+    dow_revenue = [Decimal('0.00')] * 7
+    total_recent_units = 0.0
+    
+    for item in recent_items:
+        sale_dt = item.sale.date if item.sale else None
+        if sale_dt:
+            d_idx = sale_dt.weekday()
+            qty = float(item.quantity)
+            dow_counts[d_idx] += qty
+            dow_revenue[d_idx] += item.subtotal or Decimal('0.00')
+            total_recent_units += qty
+            
+    seasonality_data = []
+    max_dow_qty = max(dow_counts) if max(dow_counts) > 0 else 1.0
+    for idx, name in enumerate(dow_names):
+        qty = dow_counts[idx]
+        rev = dow_revenue[idx]
+        pct = round((qty / total_recent_units * 100), 1) if total_recent_units > 0 else 0.0
+        is_peak = (qty == max(dow_counts) and qty > 0)
+        seasonality_data.append({
+            'day': name,
+            'units': int(qty),
+            'revenue': float(rev),
+            'percentage': pct,
+            'is_peak': is_peak,
+            'bar_width': int((qty / max_dow_qty) * 100)
+        })
+        
+    # 3. AI Demand Forecasting & Risk Analysis
+    from MediApp.forecasting import get_all_medicine_forecasts
+    all_forecasts = get_all_medicine_forecasts(days_ahead=30)
+    
+    total_projected_demand = round(sum(f['total_30_day_demand'] for f in all_forecasts), 1)
+    critical_risk_items = [f for f in all_forecasts if f['risk_level'] in ('CRITICAL', 'OUT_OF_STOCK')]
+    high_risk_items = [f for f in all_forecasts if f['risk_level'] == 'HIGH']
+    moderate_risk_items = [f for f in all_forecasts if f['risk_level'] == 'MODERATE']
+    safe_items = [f for f in all_forecasts if f['risk_level'] == 'ADEQUATE']
+    
+    total_reorder_units = sum(f['recommended_reorder_qty'] for f in all_forecasts)
+    total_reorder_investment = sum(
+        Decimal(str(f['recommended_reorder_qty'])) * Decimal(str(f['unit_price'])) * Decimal('0.70')
+        for f in all_forecasts
+    )
+    
+    # 4. Top Selling Products
+    from django.db.models import F
+    top_selling_raw = (
+        SaleItem.objects.filter(sale__status='Completed')
+        .values('medicine__name', 'medicine__category__name')
+        .annotate(total_units=Sum('quantity'), total_rev=Sum(F('price') * F('quantity')))
+        .order_by('-total_rev')[:8]
+    )
+    top_selling_list = []
+    for rank, p in enumerate(top_selling_raw, 1):
+        top_selling_list.append({
+            'rank': rank,
+            'name': p['medicine__name'] or 'Unknown',
+            'category': p['medicine__category__name'] or 'General',
+            'units': p['total_units'] or 0,
+            'revenue': float(p['total_rev'] or 0.0),
+        })
+        
+    # 5. Category Breakdown
+    from MediApp.models import Category
+    categories = Category.objects.all()
+    category_summary = []
+    for cat in categories:
+        cat_meds = medicines.filter(category=cat)
+        cat_stock = sum((m.total_quantity or 0) for m in cat_meds)
+        cat_sales = SaleItem.objects.filter(sale__status='Completed', medicine__category=cat).aggregate(rev=Sum(F('price') * F('quantity')), units=Sum('quantity'))
+        category_summary.append({
+            'name': cat.name,
+            'medicine_count': cat_meds.count(),
+            'stock_units': cat_stock,
+            'revenue': float(cat_sales['rev'] or 0.0),
+            'units_sold': cat_sales['units'] or 0
+        })
+    category_summary.sort(key=lambda x: x['revenue'], reverse=True)
+    
+    # 6. Batch Expiry Watchlist (Next 30 Days)
+    from MediApp.models import Batch
+    exp_batches = Batch.objects.filter(
+        quantity__gt=0,
+        expiry_date__lte=today + timedelta(days=30)
+    ).select_related('medicine').order_by('expiry_date')
+    
+    expiry_watchlist = []
+    total_at_risk_expiry_val = Decimal('0.00')
+    for b in exp_batches:
+        days_left = (b.expiry_date - today).days
+        loss_val = Decimal(str(b.quantity)) * (b.medicine.price if b.medicine else Decimal('0.00'))
+        total_at_risk_expiry_val += loss_val
+        status_label = "Expired" if days_left < 0 else (f"{days_left}d left" if days_left <= 7 else f"{days_left}d left")
+        expiry_watchlist.append({
+            'medicine_name': b.medicine.name if b.medicine else 'Unknown',
+            'batch_name': b.batch_name,
+            'quantity': b.quantity,
+            'expiry_date': b.expiry_date.strftime('%d-%b-%Y'),
+            'days_left': days_left,
+            'status_label': status_label,
+            'is_expired': days_left < 0,
+            'is_urgent': 0 <= days_left <= 7,
+            'loss_value': float(loss_val)
+        })
+        
+    # 7. Operational Health Score (0-100)
+    deductions = (len(critical_risk_items) * 6) + (len(high_risk_items) * 3) + (len([b for b in expiry_watchlist if b['is_expired']]) * 8)
+    health_score = max(35, min(98, 100 - deductions))
+    if health_score >= 85:
+        health_status = "Optimal / Excellent"
+        health_color = "#10b981"
+    elif health_score >= 70:
+        health_status = "Good / Minor Reorders Needed"
+        health_color = "#3b82f6"
+    elif health_score >= 55:
+        health_status = "Moderate / Restock Required"
+        health_color = "#f59e0b"
+    else:
+        health_status = "Critical Action Required"
+        health_color = "#ef4444"
+        
+    # 8. Dynamic Automated Action Plan & Recommendations
+    action_items = []
+    if critical_risk_items:
+        action_items.append({
+            'priority': 'URGENT',
+            'badge_color': '#ef4444',
+            'title': f'Raise Immediate Purchase Orders for {len(critical_risk_items)} Critical Medicines',
+            'desc': f'Items including {", ".join([f["medicine_name"] for f in critical_risk_items[:3]])} will deplete within 7 days. Issue purchase orders immediately to prevent stockouts.'
+        })
+    if expiry_watchlist:
+        action_items.append({
+            'priority': 'HIGH',
+            'badge_color': '#f97316',
+            'title': f'Clear or Discount {len(expiry_watchlist)} Batches Expiring Within 30 Days',
+            'desc': f'Inventory worth ₹{total_at_risk_expiry_val:,.2f} is approaching expiration. Initiate FEFO (First-Expired, First-Out) dispensing or promotional markdowns.'
+        })
+    peak_days = [d for d in seasonality_data if d['is_peak']]
+    if peak_days:
+        action_items.append({
+            'priority': 'OPERATIONAL',
+            'badge_color': '#3b82f6',
+            'title': f'Optimize Staffing & Stock Buffers for Peak Days ({peak_days[0]["day"]})',
+            'desc': f'{peak_days[0]["day"]} contributes {peak_days[0]["percentage"]}% of weekly volume. Ensure peak inventory readiness on this day.'
+        })
+    action_items.append({
+        'priority': 'STRATEGIC',
+        'badge_color': '#10b981',
+        'title': 'Engage Chronic Patients for Prescription Refills',
+        'desc': 'Leverage automated WhatsApp and email reminders to retain repeating patient lifetime value and stabilize monthly baseline revenue.'
+    })
+    
+    context = {
+        'now_str': timezone.now().strftime("%d %B %Y, %I:%M %p"),
+        'today_str': today.strftime("%d %B %Y"),
+        'user_name': request.user.get_full_name() or request.user.username,
+        'user_role': getattr(request.user, 'role', 'Store Admin').capitalize() if hasattr(request.user, 'role') else 'Administrator',
+        'total_revenue': float(total_revenue),
+        'total_cost': float(total_cost),
+        'net_profit': float(net_profit),
+        'profit_margin': profit_margin,
+        'total_invoices': total_invoices,
+        'total_catalog_count': total_catalog_count,
+        'total_stock_units': total_stock_units,
+        'total_inventory_valuation': float(total_inventory_valuation),
+        'total_customers': total_customers,
+        'seasonality_data': seasonality_data,
+        'all_forecasts': all_forecasts,
+        'total_projected_demand': total_projected_demand,
+        'critical_count': len(critical_risk_items),
+        'high_risk_count': len(high_risk_items),
+        'moderate_risk_count': len(moderate_risk_items),
+        'safe_count': len(safe_items),
+        'total_reorder_units': total_reorder_units,
+        'total_reorder_investment': float(total_reorder_investment),
+        'top_selling_list': top_selling_list,
+        'category_summary': category_summary,
+        'expiry_watchlist': expiry_watchlist,
+        'total_at_risk_expiry_val': float(total_at_risk_expiry_val),
+        'health_score': health_score,
+        'health_status': health_status,
+        'health_color': health_color,
+        'action_items': action_items,
+    }
+    
+    if request.GET.get('download') == '1':
+        from django.template.loader import render_to_string
+        from django.http import HttpResponse
+        rendered_content = render_to_string('reports/executive_dossier.html', context, request=request)
+        response = HttpResponse(rendered_content, content_type='text/html; charset=utf-8')
+        filename = f"PharmaCare_Executive_Dossier_{today.strftime('%Y%m%d')}.html"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+        
+    return render(request, 'reports/executive_dossier.html', context)
+
+
+# ==============================================================================
+# MODULE 1: DISTRIBUTOR PURCHASE BILL AUTO-IMPORT & PARSER
+# ==============================================================================
+
+from .models import WantBookItem, PurchaseBillImport
+from .utils.purchase_parser import (
+    parse_purchase_invoice_file,
+    parse_pasted_purchase_text
+)
+from .whatsapp_service import (
+    build_supplier_po_message,
+    send_cloud_whatsapp_message,
+    clean_phone_number,
+    build_custom_broadcast_message,
+    broadcast_bulk_whatsapp_messages
+)
+
+
+@login_required
+@assistant_or_above
+def purchase_bill_import_view(request):
+    """
+    Render Distributor Purchase Bill Auto-Import page with recent import history.
+    """
+    suppliers = owner_scope_queryset(request, Supplier.objects.all(), 'created_by').order_by('name')
+    categories = owner_scope_queryset(request, Category.objects.all(), 'created_by').order_by('name')
+    recent_imports = owner_scope_queryset(request, PurchaseBillImport.objects.select_related('supplier', 'imported_by').all(), 'imported_by')[:10]
+
+    context = {
+        'suppliers': suppliers,
+        'categories': categories,
+        'recent_imports': recent_imports,
+    }
+    return render(request, 'purchase/import_bill.html', context)
+
+
+@login_required
+@assistant_or_above
+@require_POST
+def purchase_bill_preview_ajax(request):
+    """
+    Parse uploaded Excel / CSV file or pasted text and return structured preview rows.
+    """
+    try:
+        if 'invoice_file' in request.FILES:
+            uploaded_file = request.FILES['invoice_file']
+            result = parse_purchase_invoice_file(uploaded_file, filename=uploaded_file.name)
+        elif request.POST.get('invoice_text'):
+            raw_text = request.POST.get('invoice_text', '').strip()
+            result = parse_pasted_purchase_text(raw_text)
+        else:
+            return JsonResponse({'success': False, 'error': 'No file or pasted text provided.'}, status=400)
+
+        if not result.get('success'):
+            return JsonResponse(result, status=400)
+
+        return JsonResponse(result)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f"Internal error parsing bill: {str(e)}"}, status=500)
+
+
+@login_required
+@assistant_or_above
+@require_POST
+def purchase_bill_confirm_ajax(request):
+    """
+    Commit parsed purchase bill items into database (Medicine, Batch, InventoryLog, PurchaseOrder).
+    """
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON request payload.'}, status=400)
+
+    supplier_id = data.get('supplier_id')
+    invoice_number = data.get('invoice_number', '').strip() or f"INV-{timezone.now().strftime('%Y%m%d-%H%M')}"
+    invoice_date_str = data.get('invoice_date', '')
+    file_name = data.get('file_name', 'Manual Upload')
+    items = data.get('items', [])
+
+    if not items:
+        return JsonResponse({'success': False, 'error': 'No items to import.'}, status=400)
+
+    supplier = Supplier.objects.filter(id=supplier_id).first() if supplier_id else None
+
+    # Parse invoice date
+    invoice_date = timezone.now().date()
+    if invoice_date_str:
+        try:
+            invoice_date = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
+        except Exception:
+            pass
+
+    total_units_imported = 0
+    total_cost_imported = Decimal('0.00')
+
+    with transaction.atomic():
+        # Create PurchaseOrder
+        po = PurchaseOrder.objects.create(
+            order_number=f"PO-{timezone.now().strftime('%Y%m%d%H%M%S')}",
+            supplier=supplier,
+            status='Received',
+            order_date=timezone.now(),
+            expected_date=invoice_date,
+            received_date=invoice_date,
+            created_by=request.user,
+            total_amount=Decimal('0.00')
+        )
+
+        for item_data in items:
+            med_name = str(item_data.get('medicine_name', '')).strip()
+            if not med_name:
+                continue
+
+            matched_id = item_data.get('matched_medicine_id')
+            batch_name = str(item_data.get('batch_name', '')).strip() or f"BAT-{timezone.now().strftime('%y%m%d')}"
+            expiry_date_str = str(item_data.get('expiry_date', '')).strip()
+            
+            try:
+                expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+            except Exception:
+                expiry_date = timezone.now().date() + timedelta(days=365)
+
+            quantity = int(item_data.get('quantity', 1))
+            free_qty = int(item_data.get('free_quantity', 0))
+            total_qty = max(quantity + free_qty, 1)
+
+            purchase_price = Decimal(str(item_data.get('purchase_price', '0.00')))
+            mrp = Decimal(str(item_data.get('mrp', '0.00')))
+            if mrp <= Decimal('0.00'):
+                mrp = round(purchase_price * Decimal('1.25'), 2) if purchase_price > Decimal('0.00') else Decimal('10.00')
+
+            category_name = str(item_data.get('category_name', '')).strip()
+            category = None
+            if category_name:
+                category, _ = Category.objects.get_or_create(
+                    name__iexact=category_name,
+                    defaults={'name': category_name, 'created_by': request.user}
+                )
+
+            # Find or Create Medicine
+            medicine = None
+            if matched_id:
+                medicine = Medicine.objects.filter(id=matched_id).first()
+
+            if not medicine:
+                medicine = Medicine.objects.filter(name__iexact=med_name).first()
+
+            if not medicine:
+                medicine = Medicine.objects.create(
+                    name=med_name,
+                    price=mrp,
+                    supplier=supplier,
+                    preferred_supplier=supplier,
+                    category=category,
+                    reorder_threshold=15,
+                    created_by=request.user
+                )
+            else:
+                # Update price if higher or missing
+                if mrp > medicine.price or medicine.price <= Decimal('0.00'):
+                    medicine.price = mrp
+                if supplier and not medicine.supplier:
+                    medicine.supplier = supplier
+                medicine.save()
+
+            # Create or update Batch
+            batch, created = Batch.objects.get_or_create(
+                medicine=medicine,
+                batch_name=batch_name,
+                defaults={
+                    'expiry_date': expiry_date,
+                    'quantity': total_qty,
+                    'purchase_price': purchase_price,
+                    'created_by': request.user
+                }
+            )
+            if not created:
+                batch.quantity += total_qty
+                if purchase_price > Decimal('0.00'):
+                    batch.purchase_price = purchase_price
+                if expiry_date:
+                    batch.expiry_date = expiry_date
+                batch.save()
+
+            # Create Inventory Log
+            notes_str = f"Auto-imported from Distributor Bill #{invoice_number}"
+            if free_qty > 0:
+                notes_str += f" (Billed: {quantity}, Free: {free_qty})"
+            
+            InventoryLog.objects.create(
+                medicine=medicine,
+                batch=batch,
+                action='add',
+                quantity_change=total_qty,
+                performed_by=request.user,
+                notes=notes_str
+            )
+
+            # Purchase Order Item
+            line_cost = purchase_price * Decimal(str(quantity))
+            PurchaseOrderItem.objects.create(
+                purchase_order=po,
+                medicine=medicine,
+                quantity=total_qty,
+                cost_price=purchase_price
+            )
+
+            total_units_imported += total_qty
+            total_cost_imported += line_cost
+
+        po.total_amount = total_cost_imported
+        po.save()
+
+        # Log PurchaseBillImport
+        bill_log = PurchaseBillImport.objects.create(
+            purchase_order=po,
+            supplier=supplier,
+            invoice_number=invoice_number,
+            invoice_date=invoice_date,
+            file_name=file_name,
+            total_items=len(items),
+            total_amount=total_cost_imported,
+            status='completed',
+            imported_by=request.user,
+            notes=f"Successfully imported {len(items)} medicines ({total_units_imported} units total)."
+        )
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Successfully imported {len(items)} items ({total_units_imported} units) into inventory!",
+        'import_id': bill_log.id,
+        'po_number': po.order_number,
+        'total_units': total_units_imported,
+        'total_cost': float(total_cost_imported)
+    })
+
+
+@login_required
+@assistant_or_above
+def purchase_bill_detail_ajax(request, import_id):
+    """
+    Returns full list of medicines, batches, quantities, rates and amounts
+    imported in a specific distributor bill.
+    """
+    bill_import = get_object_or_404(PurchaseBillImport, id=import_id)
+    po = bill_import.purchase_order
+    
+    items_list = []
+    total_units = 0
+
+    if po:
+        for itm in po.items.select_related('medicine', 'medicine__category').all():
+            med = itm.medicine
+            batch = med.batches.filter(created_by=bill_import.imported_by).order_by('-id').first() if med else None
+            
+            line_total = float(itm.cost_price * itm.quantity)
+            total_units += itm.quantity
+            items_list.append({
+                'medicine_id': med.id if med else None,
+                'medicine_name': med.name if med else 'Unknown Medicine',
+                'category_name': med.category.name if (med and med.category) else 'General',
+                'batch_name': batch.batch_name if batch else '-',
+                'expiry_date': batch.expiry_date.strftime('%d %b %Y') if (batch and batch.expiry_date) else '-',
+                'quantity': itm.quantity,
+                'cost_price': float(itm.cost_price),
+                'mrp': float(med.price) if med else 0.0,
+                'line_total': line_total,
+                'current_stock': med.total_quantity if med else 0,
+            })
+    else:
+        # Fallback: inspect InventoryLog by invoice_number
+        logs = InventoryLog.objects.filter(notes__icontains=bill_import.invoice_number).select_related('medicine', 'batch')
+        for log in logs:
+            med = log.medicine
+            batch = log.batch
+            qty = abs(log.quantity_change)
+            cost = float(batch.purchase_price) if (batch and batch.purchase_price) else 0.0
+            total_units += qty
+            items_list.append({
+                'medicine_id': med.id if med else None,
+                'medicine_name': med.name if med else 'Unknown Medicine',
+                'category_name': med.category.name if (med and med.category) else 'General',
+                'batch_name': batch.batch_name if batch else '-',
+                'expiry_date': batch.expiry_date.strftime('%d %b %Y') if (batch and batch.expiry_date) else '-',
+                'quantity': qty,
+                'cost_price': cost,
+                'mrp': float(med.price) if med else 0.0,
+                'line_total': round(cost * qty, 2),
+                'current_stock': med.total_quantity if med else 0,
+            })
+
+    return JsonResponse({
+        'success': True,
+        'import_id': bill_import.id,
+        'invoice_number': bill_import.invoice_number or 'N/A',
+        'invoice_date': bill_import.invoice_date.strftime('%d %b %Y') if bill_import.invoice_date else bill_import.created_at.strftime('%d %b %Y'),
+        'supplier_name': bill_import.supplier.name if bill_import.supplier else 'General Supplier',
+        'supplier_phone': bill_import.supplier.contact_number if bill_import.supplier else '',
+        'imported_by': bill_import.imported_by.get_full_name() or bill_import.imported_by.username if bill_import.imported_by else 'Admin',
+        'created_at': bill_import.created_at.strftime('%d %b %Y, %I:%M %p'),
+        'total_items': len(items_list),
+        'total_units': total_units,
+        'total_amount': float(bill_import.total_amount),
+        'po_number': po.order_number if po else None,
+        'items': items_list
+    })
+
+
+@login_required
+@assistant_or_above
+def download_purchase_template(request):
+    """
+    Generate and download sample CSV or Excel template for distributor purchase bill upload.
+    """
+    file_type = request.GET.get('format', 'csv').lower()
+
+    sample_rows = [
+        ['Medicine Name', 'Batch No', 'Expiry Date', 'Quantity', 'Free Qty', 'Purchase Rate', 'MRP', 'Category'],
+        ['Paracetamol 650mg Tablet', 'PAR2401', '12/2026', '50', '5', '18.50', '32.00', 'Pain Relief'],
+        ['Amoxicillin 500mg Capsule', 'AMX9982', '08/2027', '20', '2', '65.00', '110.00', 'Antibiotics'],
+        ['Pantoprazole 40mg Tab', 'PNT5510', '05/2026', '30', '0', '42.00', '85.00', 'Gastroenterology'],
+        ['Azithromycin 500mg', 'AZT1022', '10/2027', '15', '1', '78.00', '135.00', 'Antibiotics'],
+        ['Cetirizine 10mg Tab', 'CET8811', '03/2028', '100', '10', '12.00', '24.00', 'Antiallergic'],
+    ]
+
+    if file_type == 'excel' or file_type == 'xlsx':
+        import io
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Purchase Bill Format"
+        
+        # Header styles
+        for row_idx, row in enumerate(sample_rows, 1):
+            for col_idx, val in enumerate(row, 1):
+                cell = ws.cell(row=row_idx, column=col_idx, value=val)
+                if row_idx == 1:
+                    cell.font = openpyxl.styles.Font(bold=True, color="FFFFFF")
+                    cell.fill = openpyxl.styles.PatternFill(start_color="0891B2", end_color="0891B2", fill_type="solid")
+                ws.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = 22
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = HttpResponse(
+            output.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="Purchase_Bill_Sample_Template.xlsx"'
+        return response
+
+    # Default CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Purchase_Bill_Sample_Template.csv"'
+    writer = csv.writer(response)
+    for row in sample_rows:
+        writer.writerow(row)
+    return response
+
+
+# ==============================================================================
+# MODULE 2: DIGITAL WANT-BOOK (SHORTAGE REGISTER) & WHATSAPP PO DISPATCHER
+# ==============================================================================
+
+@login_required
+@assistant_or_above
+def want_book_list(request):
+    """
+    Main dashboard for Digital Want-Book (Shortage Register).
+    Displays shortage items, allows quick adding, supplier groupings, and 1-click WhatsApp PO generation.
+    """
+    status_filter = request.GET.get('status', 'active')  # 'active' = pending + ordered, or specific
+    priority_filter = request.GET.get('priority', 'all')
+    supplier_filter = request.GET.get('supplier', 'all')
+    search_query = request.GET.get('q', '').strip()
+
+    base_items_qs = owner_scope_queryset(request, WantBookItem.objects.select_related('medicine', 'supplier', 'created_by').all(), 'created_by')
+    items_qs = base_items_qs
+
+    if status_filter == 'active':
+        items_qs = items_qs.filter(status__in=['pending', 'ordered'])
+    elif status_filter != 'all':
+        items_qs = items_qs.filter(status=status_filter)
+
+    if priority_filter != 'all':
+        items_qs = items_qs.filter(priority=priority_filter)
+
+    if supplier_filter != 'all':
+        items_qs = items_qs.filter(supplier_id=supplier_filter)
+
+    if search_query:
+        items_qs = items_qs.filter(
+            Q(medicine__name__icontains=search_query) |
+            Q(custom_medicine_name__icontains=search_query) |
+            Q(customer_name__icontains=search_query) |
+            Q(notes__icontains=search_query)
+        )
+
+    # Statistics
+    total_active_count = base_items_qs.filter(status__in=['pending', 'ordered']).count()
+    pending_count = base_items_qs.filter(status='pending').count()
+    urgent_count = base_items_qs.filter(status__in=['pending', 'ordered'], priority='urgent').count()
+    fulfilled_count = base_items_qs.filter(status='fulfilled').count()
+
+    # Detect Low Stock in Catalog for Quick Alert Banner
+    scoped_medicines = owner_scope_queryset(request, Medicine.objects.filter(is_active=True), 'created_by')
+    low_stock_medicines = [m for m in scoped_medicines if m.is_low_stock or m.total_quantity <= m.reorder_threshold]
+    low_stock_count = len(low_stock_medicines)
+
+    # Group pending/active items by supplier for quick PO generation
+    active_items_all = base_items_qs.filter(status__in=['pending', 'ordered'])
+    supplier_groups = {}
+    unassigned_items = []
+
+    for item in active_items_all:
+        supp = item.supplier or (item.medicine.preferred_supplier if item.medicine else None) or (item.medicine.supplier if item.medicine else None)
+        if supp:
+            if supp.id not in supplier_groups:
+                supplier_groups[supp.id] = {
+                    'supplier': supp,
+                    'items': [],
+                    'urgent_count': 0,
+                }
+            supplier_groups[supp.id]['items'].append(item)
+            if item.priority == 'urgent':
+                supplier_groups[supp.id]['urgent_count'] += 1
+        else:
+            unassigned_items.append(item)
+
+    suppliers = owner_scope_queryset(request, Supplier.objects.all(), 'created_by').order_by('name')
+    medicines = scoped_medicines.order_by('name')
+
+    context = {
+        'items': items_qs,
+        'status_filter': status_filter,
+        'priority_filter': priority_filter,
+        'supplier_filter': supplier_filter,
+        'search_query': search_query,
+        'total_active_count': total_active_count,
+        'pending_count': pending_count,
+        'urgent_count': urgent_count,
+        'fulfilled_count': fulfilled_count,
+        'low_stock_count': low_stock_count,
+        'supplier_groups': supplier_groups.values(),
+        'unassigned_items': unassigned_items,
+        'suppliers': suppliers,
+        'medicines': medicines,
+    }
+    return render(request, 'wantbook/want_book_list.html', context)
+
+
+@login_required
+@assistant_or_above
+@require_POST
+def want_book_add_ajax(request):
+    """
+    Fast AJAX endpoint to punch a missing item into Want-Book.
+    """
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    medicine_id = data.get('medicine_id')
+    custom_name = data.get('custom_medicine_name', '').strip()
+    quantity = int(data.get('quantity', 1)) if str(data.get('quantity', '')).isdigit() else 1
+    unit = data.get('unit', 'Boxes').strip() or 'Boxes'
+    priority = data.get('priority', 'normal')
+    supplier_id = data.get('supplier_id')
+    customer_name = data.get('customer_name', '').strip()
+    customer_contact = data.get('customer_contact', '').strip()
+    notes = data.get('notes', '').strip()
+
+    medicine = Medicine.objects.filter(id=medicine_id).first() if medicine_id else None
+    supplier = Supplier.objects.filter(id=supplier_id).first() if supplier_id else None
+
+    if not medicine and not custom_name:
+        return JsonResponse({'success': False, 'error': 'Please select or enter a medicine name.'}, status=400)
+
+    # Auto-resolve supplier if not specified
+    if not supplier and medicine:
+        supplier = medicine.preferred_supplier or medicine.supplier
+
+    item = WantBookItem.objects.create(
+        medicine=medicine,
+        custom_medicine_name=custom_name if not medicine else '',
+        supplier=supplier,
+        quantity=max(quantity, 1),
+        unit=unit,
+        priority=priority,
+        status='pending',
+        customer_name=customer_name,
+        customer_contact=customer_contact,
+        notes=notes,
+        created_by=request.user
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Added '{item.display_name}' to Want-Book.",
+        'item_id': item.id,
+        'display_name': item.display_name,
+        'quantity': item.quantity,
+        'unit': item.unit,
+        'priority': item.priority,
+        'supplier_name': item.supplier.name if item.supplier else 'Not Assigned'
+    })
+
+
+@login_required
+@assistant_or_above
+@require_POST
+def want_book_auto_sync_low_stock(request):
+    """
+    1-Click Smart Scanner: Scans all low stock / critical inventory items
+    and adds them to the Want-Book if not already present in pending status.
+    """
+    existing_pending_med_ids = set(
+        WantBookItem.objects.filter(status__in=['pending', 'ordered'], medicine__isnull=False)
+        .values_list('medicine_id', flat=True)
+    )
+
+    all_active_medicines = Medicine.objects.filter(is_active=True).prefetch_related('batches')
+    added_count = 0
+
+    for med in all_active_medicines:
+        stock = med.total_quantity
+        threshold = med.reorder_threshold or 15
+
+        if stock <= threshold or med.is_low_stock:
+            if med.id not in existing_pending_med_ids:
+                # Calculate smart recommended order quantity
+                needed_qty = max(50 - stock, threshold * 2, 10)
+                priority = 'urgent' if stock == 0 else ('urgent' if stock < 10 else 'normal')
+                supplier = med.preferred_supplier or med.supplier
+
+                WantBookItem.objects.create(
+                    medicine=med,
+                    supplier=supplier,
+                    quantity=needed_qty,
+                    unit='Boxes',
+                    priority=priority,
+                    status='pending',
+                    notes=f"Auto-detected low stock: current balance {stock} units (threshold: {threshold})",
+                    created_by=request.user
+                )
+                added_count += 1
+
+
+    return JsonResponse({
+        'success': True,
+        'added_count': added_count,
+        'message': f"Auto-scanned inventory! Added {added_count} low-stock medicines to Want-Book."
+    })
+
+
+@login_required
+@assistant_or_above
+@require_POST
+def want_book_update_status(request, item_id):
+    """
+    Update status of a Want-Book item (pending, ordered, fulfilled, cancelled).
+    """
+    item = get_object_or_404(WantBookItem, id=item_id)
+    new_status = request.POST.get('status', '').strip() or json.loads(request.body.decode('utf-8')).get('status', '')
+
+    if new_status in ['pending', 'ordered', 'fulfilled', 'cancelled']:
+        item.status = new_status
+        if new_status == 'ordered' and not item.ordered_at:
+            item.ordered_at = timezone.now()
+        elif new_status == 'fulfilled':
+            item.fulfilled_at = timezone.now()
+        item.save()
+        return JsonResponse({'success': True, 'new_status': item.status, 'item_id': item.id})
+
+    return JsonResponse({'success': False, 'error': 'Invalid status provided.'}, status=400)
+
+
+@login_required
+@assistant_or_above
+@require_POST
+def want_book_send_whatsapp(request, supplier_id):
+    """
+    Generate professional WhatsApp Purchase Order slip for a specific supplier,
+    trigger background cloud dispatcher, and return direct Click-to-Chat WhatsApp Web URL.
+    """
+    supplier = get_object_or_404(Supplier, id=supplier_id)
+    
+    # Get active items for this supplier
+    items = WantBookItem.objects.filter(
+        status__in=['pending', 'ordered'],
+        supplier=supplier
+    )
+
+    if not items.exists():
+        return JsonResponse({'success': False, 'error': f"No pending items found for {supplier.name}."}, status=400)
+
+    items_list = []
+    for itm in items:
+        items_list.append({
+            'name': itm.display_name,
+            'quantity': itm.quantity,
+            'unit': itm.unit,
+            'priority': itm.priority,
+            'notes': itm.notes
+        })
+
+    msg_text = build_supplier_po_message(
+        supplier_name=supplier.name,
+        items_list=items_list,
+        pharmacy_name="PharmaCare Pharmacy",
+        pharmacy_phone=getattr(settings, 'PHARMACY_PHONE', '+91 99060 06872')
+    )
+
+    clean_phone = clean_phone_number(supplier.contact_number)
+    
+    # Trigger cloud simulated / live API
+    cloud_result = send_cloud_whatsapp_message(
+        phone=supplier.contact_number,
+        message_text=msg_text,
+        customer_name=supplier.name
+    )
+
+    # Mark items as 'ordered'
+    items.update(status='ordered', ordered_at=timezone.now())
+
+    import urllib.parse
+    encoded_text = urllib.parse.quote(msg_text)
+    whatsapp_url = f"https://wa.me/{clean_phone}?text={encoded_text}" if clean_phone else f"https://api.whatsapp.com/send?text={encoded_text}"
+
+    return JsonResponse({
+        'success': True,
+        'supplier_name': supplier.name,
+        'supplier_phone': supplier.contact_number,
+        'items_count': len(items_list),
+        'message_text': msg_text,
+        'whatsapp_url': whatsapp_url,
+        'cloud_result': cloud_result
+    })
+
+
+@login_required
+@assistant_or_above
+@require_POST
+def want_book_delete(request, item_id):
+    """
+    Delete an item from the Want-Book.
+    """
+    item = get_object_or_404(WantBookItem, id=item_id)
+    item_name = item.display_name
+    item.delete()
+    return JsonResponse({'success': True, 'message': f"Removed '{item_name}' from Want-Book."})
+
+
+@login_required
+@assistant_or_above
+@require_POST
+def want_book_broadcast_all_pos_ajax(request):
+    """
+    1-Click Multi-Distributor Background Cloud Dispatcher.
+    Dispatches purchase order slips to ALL suppliers with active/pending shortages in background
+    without opening any WhatsApp Web tabs.
+    """
+    active_items = WantBookItem.objects.select_related('medicine', 'supplier').filter(status__in=['pending', 'ordered'])
+    
+    supplier_groups = {}
+    for item in active_items:
+        supp = item.supplier or (item.medicine.preferred_supplier if item.medicine else None) or (item.medicine.supplier if item.medicine else None)
+        if supp:
+            if supp.id not in supplier_groups:
+                supplier_groups[supp.id] = {
+                    'supplier': supp,
+                    'items': []
+                }
+            supplier_groups[supp.id]['items'].append(item)
+
+    if not supplier_groups:
+        return JsonResponse({'success': False, 'error': 'No pending shortage items found with assigned distributors.'}, status=400)
+
+    dispatch_results = []
+    total_dispatched = 0
+    total_items_count = 0
+
+    for supp_id, group in supplier_groups.items():
+        supp = group['supplier']
+        items = group['items']
+        
+        items_payload = []
+        for itm in items:
+            items_payload.append({
+                'name': itm.display_name,
+                'quantity': itm.quantity,
+                'unit': itm.unit,
+                'priority': itm.priority,
+                'notes': itm.notes
+            })
+            total_items_count += 1
+
+        msg_text = build_supplier_po_message(
+            supplier_name=supp.name,
+            items_list=items_payload,
+            pharmacy_name="PharmaCare Pharmacy",
+            pharmacy_phone=getattr(settings, 'PHARMACY_PHONE', '+91 99060 06872')
+        )
+
+        cloud_res = send_cloud_whatsapp_message(
+            phone=supp.contact_number,
+            message_text=msg_text,
+            customer_name=supp.name
+        )
+
+        # Mark all items as 'ordered'
+        for itm in items:
+            itm.status = 'ordered'
+            if not itm.ordered_at:
+                itm.ordered_at = timezone.now()
+            itm.save()
+
+        total_dispatched += 1
+        dispatch_results.append({
+            'supplier_name': supp.name,
+            'supplier_phone': supp.contact_number,
+            'items_count': len(items),
+            'status': cloud_res.get('status', 'delivered'),
+            'sid': cloud_res.get('sid', ''),
+            'channel': cloud_res.get('channel', 'Cloud Gateway'),
+            'success': cloud_res.get('success', True)
+        })
+
+    return JsonResponse({
+        'success': True,
+        'message': f"🚀 Successfully dispatched automated WhatsApp Purchase Orders to {total_dispatched} distributor(s) for {total_items_count} shortage medicines!",
+        'total_suppliers': total_dispatched,
+        'total_items': total_items_count,
+        'results': dispatch_results
+    })
+
+
+@login_required
+@assistant_or_above
+@require_POST
+def customer_broadcast_whatsapp_ajax(request):
+    """
+    Send automated background WhatsApp broadcast (Offers, Announcements, Stock Notices)
+    to multiple customers at once in 1 click without opening WhatsApp Web.
+    """
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    title = data.get('title', 'Important Health & Pharmacy Update').strip()
+    body_text = data.get('body_text', '').strip()
+    target_group = data.get('target_group', 'all')  # 'all', 'repeat', or 'custom'
+    selected_customer_ids = data.get('customer_ids', [])
+
+    if not body_text:
+        return JsonResponse({'success': False, 'error': 'Please enter a broadcast message body.'}, status=400)
+
+    customers_qs = owner_scope_queryset(request, Customer.objects.all(), 'created_by')
+
+    if target_group == 'custom' and selected_customer_ids:
+        customers_qs = customers_qs.filter(id__in=selected_customer_ids)
+    elif target_group == 'repeat':
+        customers_qs = customers_qs.filter(is_repeating=True)
+
+    customers_list = [c for c in customers_qs if c.contact_number]
+
+    if not customers_list:
+        return JsonResponse({'success': False, 'error': 'No customer contacts found matching your criteria.'}, status=400)
+
+    full_message = build_custom_broadcast_message(
+        title=title,
+        body_text=body_text,
+        pharmacy_name="PharmaCare Healthcare Pharmacy",
+        pharmacy_phone=getattr(settings, 'PHARMACY_PHONE', '+91 99060 06872')
+    )
+
+
+    recipients_payload = [
+        {'phone': c.contact_number, 'name': c.name, 'message': full_message}
+        for c in customers_list
+    ]
+
+    broadcast_summary = broadcast_bulk_whatsapp_messages(recipients_payload, default_message=full_message)
+
+    return JsonResponse({
+        'success': True,
+        'message': f"🎉 Successfully broadcasted WhatsApp announcement to {broadcast_summary['success_count']} customer(s)!",
+        'title': title,
+        'total_recipients': broadcast_summary['total_recipients'],
+        'success_count': broadcast_summary['success_count'],
+        'failed_count': broadcast_summary['failed_count'],
+        'results': broadcast_summary['results']
+    })
+
+
+
 
 
 

@@ -61,6 +61,26 @@
     </div>
   </div>
 
+  {% if not all_forecasts %}
+  <!-- Empty State for New Pharmacists -->
+  <div class="card p-12 bg-white border border-slate-200 rounded-2xl shadow-sm text-center">
+    <div class="w-16 h-16 rounded-2xl bg-cyan-50 text-cyan-600 mx-auto flex items-center justify-center text-3xl mb-4 border border-cyan-100">
+      📦
+    </div>
+    <h3 class="text-xl font-extrabold text-slate-900 mb-2">No Medicines in Your Store Catalog Yet</h3>
+    <p class="text-sm text-slate-500 max-w-lg mx-auto mb-6">
+      Import a distributor purchase invoice or add medicines to activate real-time AI Demand Forecasting, 30-day predictive sales curves, and automated stockout risk alerts!
+    </p>
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      <a href="{% url 'purchase_bill_import' %}" class="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition inline-flex items-center gap-2">
+        📥 Import Purchase Bill (.xlsx / .csv)
+      </a>
+      <a href="{% url 'add_medicine' %}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition inline-flex items-center gap-2">
+        ➕ Add Medicine Manually
+      </a>
+    </div>
+  </div>
+  {% else %}
   <!-- ═══════════════════════════════════════════════════════════════════════════
        2. EXECUTIVE SUMMARY KPI CARDS
        ═══════════════════════════════════════════════════════════════════════════ -->
@@ -329,6 +349,7 @@
     </div>
 
   </div>
+  {% endif %}
 
 </div>
 

@@ -679,3 +679,23 @@ class InventoryLogAdmin(admin.ModelAdmin):
     list_filter = ('action', 'performed_by', 'timestamp')
     search_fields = ('medicine__name', 'batch__batch_name', 'performed_by__username')
     ordering = ('-timestamp',)
+
+
+from .models import WantBookItem, PurchaseBillImport
+
+
+@admin.register(WantBookItem)
+class WantBookItemAdmin(admin.ModelAdmin):
+    list_display = ('display_name', 'supplier', 'quantity', 'unit', 'priority', 'status', 'customer_name', 'created_at')
+    list_filter = ('priority', 'status', 'supplier', 'created_at')
+    search_fields = ('medicine__name', 'custom_medicine_name', 'customer_name', 'notes')
+    ordering = ('-created_at',)
+
+
+@admin.register(PurchaseBillImport)
+class PurchaseBillImportAdmin(admin.ModelAdmin):
+    list_display = ('id', 'supplier', 'invoice_number', 'invoice_date', 'total_items', 'total_amount', 'status', 'imported_by', 'created_at')
+    list_filter = ('status', 'supplier', 'created_at')
+    search_fields = ('invoice_number', 'file_name', 'supplier__name')
+    ordering = ('-created_at',)
+

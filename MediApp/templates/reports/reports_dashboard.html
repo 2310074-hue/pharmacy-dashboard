@@ -7,6 +7,36 @@
 
 {% block content %}
 
+<!-- Executive Intelligence Banner -->
+<div class="card p-6 mb-6 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white shadow-xl border border-slate-700/60 rounded-2xl relative overflow-hidden">
+    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+        <div class="space-y-1.5 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-400/30">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Sequential Executive Intelligence
+            </div>
+            <h2 class="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+                Executive Audit & Demand Forecasting Dossier
+            </h2>
+            <p class="text-sm text-slate-300 leading-relaxed">
+                Complete sequential analysis report compiling <strong>180-Day Sales Velocity</strong>, <strong>Day-of-Week Seasonality</strong>, <strong>AI 30-Day Forward Demand Projections</strong>, <strong>4-Tier Inventory Risk Matrix</strong>, and <strong>Procurement Schedules</strong> in a single interactive and printable format.
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{% url 'executive_dossier_report' %}" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-cyan-500/25 transition-all transform hover:-translate-y-0.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                View Dossier (Printable)
+            </a>
+            <a href="{% url 'executive_dossier_report' %}?download=1" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-200 bg-white/10 hover:bg-white/20 border border-white/15 transition-all">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Download HTML File
+            </a>
+        </div>
+    </div>
+</div>
+
 <!-- Global Filter Section -->
 <div class="card p-6 mb-8">
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -48,6 +78,13 @@
                 </svg>
                 Export All
             </button>
+
+            <a href="{% url 'executive_dossier_report' %}" target="_blank" class="btn btn-primary bg-indigo-600 hover:bg-indigo-700" title="Open Complete Printable Executive Dossier">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Executive Dossier
+            </a>
         </div>
     </div>
 </div>

@@ -599,3 +599,113 @@ class InvoiceItem(models.Model):
 
     def __str__(self):
         return f"{self.medicine_name} x {self.quantity} ({self.invoice.invoice_number})"
+
+
+class WantBookItem(models.Model):
+    """Want-Book / Shortage Register model for tracking missing/low stock and customer requests."""
+    PRIORITY_CHOICES = [
+        ('urgent', 'Urgent / Customer Waiting'),
+        ('normal', 'Normal'),
+        ('low', 'Low Priority'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('ordered', 'Ordered'),
+        ('fulfilled', 'Fulfilled'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    medicine = models.ForeignKey(
+        Medicine,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='want_book_items'
+    )
+    custom_medicine_name = models.CharField(
+        max_length=150,
+        blank=True,
+        help_text='Medicine or item name if not present in inventory catalog'
+    )
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='want_book_items'
+    )
+    quantity = models.PositiveIntegerField(default=1)
+    unit = models.CharField(max_length=30, default='Boxes', blank=True)
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='normal')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    customer_name = models.CharField(max_length=100, blank=True, help_text='Patient or customer who requested')
+    customer_contact = models.CharField(max_length=20, blank=True)
+    notes = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='want_book_created'
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+    ordered_at = models.DateTimeField(null=True, blank=True)
+    fulfilled_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def display_name(self):
+        if self.medicine:
+            return self.medicine.name
+        return self.custom_medicine_name or 'Unknown Item'
+
+    def __str__(self):
+        return f"{self.display_name} ({self.quantity} {self.unit}) - {self.get_status_display()}"
+
+
+class PurchaseBillImport(models.Model):
+    """Record of distributor purchase bills parsed and imported into inventory."""
+    STATUS_CHOICES = [
+        ('completed', 'Completed'),
+        ('draft', 'Draft Preview'),
+        ('failed', 'Failed'),
+    ]
+
+    purchase_order = models.ForeignKey(
+        'PurchaseOrder',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bill_imports'
+    )
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bill_imports'
+    )
+    invoice_number = models.CharField(max_length=100, blank=True)
+    invoice_date = models.DateField(null=True, blank=True)
+    file_name = models.CharField(max_length=255, blank=True)
+    total_items = models.PositiveIntegerField(default=0)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='completed')
+    imported_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bill_imports_created'
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        supp_name = self.supplier.name if self.supplier else 'Unknown Supplier'
+        return f"Import #{self.id} - {supp_name} ({self.invoice_number})"
