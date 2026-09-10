@@ -12,16 +12,17 @@
      ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="mb-8 space-y-4">
   
-  <!-- Filter & System Status Bar -->
-  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white border border-slate-200/80 p-4 sm:p-5 rounded-2xl shadow-xs">
-    <div class="flex items-center gap-3.5">
-      <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-cyan-500/20 border border-white/20">
+  <!-- Filter & System Status Bar (Sleek Dark Indigo Banner) -->
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 rounded-2xl shadow-lg border border-slate-700/50 relative overflow-hidden">
+    <div class="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="flex items-center gap-3.5 relative z-10">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center font-bold text-2xl shadow-lg shadow-cyan-500/30 border border-white/20">
         ⚡
       </div>
       <div>
-        <div class="flex items-center gap-2">
-          <h2 class="text-sm font-extrabold text-slate-900 tracking-tight">Active Operation Window</h2>
-          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-cyan-50 text-cyan-700 border border-cyan-200/80">
+        <div class="flex items-center gap-2 flex-wrap">
+          <h2 class="text-base font-extrabold text-white tracking-tight">Pharmacy Operations Center</h2>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 backdrop-blur-xs">
             {% if duration == 'today' %}Today's Real-time Stream
             {% elif duration == 'week' %}Last 7 Days
             {% elif duration == 'month' %}Last 30 Days
@@ -29,105 +30,105 @@
             {% else %}Today{% endif %}
           </span>
         </div>
-        <p class="text-xs text-slate-500 mt-0.5">Real-time point-of-sale telemetry, inventory movements, and batch tracking</p>
+        <p class="text-xs text-slate-300 mt-0.5">Live inventory telemetry, real-time POS counters & predictive intelligence</p>
       </div>
     </div>
 
     <!-- Segmented Duration Toggle -->
-    <div class="bg-slate-100/90 p-1.5 rounded-xl inline-flex items-center gap-1 border border-slate-200/70 self-start lg:self-auto">
+    <div class="bg-slate-800/80 p-1.5 rounded-xl inline-flex items-center gap-1 border border-slate-700/80 self-start lg:self-auto relative z-10">
       <a href="?duration=today"
          class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200
-                {% if duration == 'today' %}bg-white text-slate-900 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-900 hover:bg-white/50{% endif %}">
+                {% if duration == 'today' %}bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md{% else %}text-slate-300 hover:text-white hover:bg-slate-700/50{% endif %}">
         Today
       </a>
       <a href="?duration=week"
          class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200
-                {% if duration == 'week' %}bg-white text-slate-900 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-900 hover:bg-white/50{% endif %}">
+                {% if duration == 'week' %}bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md{% else %}text-slate-300 hover:text-white hover:bg-slate-700/50{% endif %}">
         7 Days
       </a>
       <a href="?duration=month"
          class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200
-                {% if duration == 'month' %}bg-white text-slate-900 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-900 hover:bg-white/50{% endif %}">
+                {% if duration == 'month' %}bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md{% else %}text-slate-300 hover:text-white hover:bg-slate-700/50{% endif %}">
         30 Days
       </a>
       <a href="?duration=year"
          class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200
-                {% if duration == 'year' %}bg-white text-slate-900 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-900 hover:bg-white/50{% endif %}">
+                {% if duration == 'year' %}bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md{% else %}text-slate-300 hover:text-white hover:bg-slate-700/50{% endif %}">
         This Year
       </a>
     </div>
   </div>
 
-  <!-- Quick Action Terminal / Shortcuts -->
+  <!-- Quick Action Terminal / Colorful Shortcuts -->
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-    <a href="{% url 'add_sale' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-slate-200/80 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all group shadow-2xs">
-      <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center font-bold text-sm group-hover:scale-110 transition-transform">🛒</span>
+    <a href="{% url 'add_sale' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-100/60 border border-emerald-200 hover:border-emerald-400 hover:shadow-md hover:-translate-y-0.5 transition-all group">
+      <span class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform">🛒</span>
       <div class="min-w-0">
-        <p class="text-xs font-extrabold text-slate-800 leading-tight">New POS Sale</p>
-        <p class="text-[10px] text-slate-400">Counter billing</p>
+        <p class="text-xs font-extrabold text-emerald-950 leading-tight">New POS Sale</p>
+        <p class="text-[10px] text-emerald-700 font-medium">Counter billing</p>
       </div>
     </a>
 
-    <a href="{% url 'add_medicine' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-slate-200/80 hover:border-cyan-300 hover:bg-cyan-50/30 transition-all group shadow-2xs">
-      <span class="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 border border-cyan-100 flex items-center justify-center font-bold text-sm group-hover:scale-110 transition-transform">➕</span>
+    <a href="{% url 'add_medicine' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-cyan-50 to-sky-100/60 border border-cyan-200 hover:border-cyan-400 hover:shadow-md hover:-translate-y-0.5 transition-all group">
+      <span class="w-8 h-8 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform">➕</span>
       <div class="min-w-0">
-        <p class="text-xs font-extrabold text-slate-800 leading-tight">Add Medicine</p>
-        <p class="text-[10px] text-slate-400">Create stock entry</p>
+        <p class="text-xs font-extrabold text-cyan-950 leading-tight">Add Medicine</p>
+        <p class="text-[10px] text-cyan-700 font-medium">Create stock entry</p>
       </div>
     </a>
 
-    <a href="{% url 'purchase_bill_import' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-slate-200/80 hover:border-blue-300 hover:bg-blue-50/30 transition-all group shadow-2xs">
-      <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold text-sm group-hover:scale-110 transition-transform">📥</span>
+    <a href="{% url 'purchase_bill_import' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-100/60 border border-blue-200 hover:border-blue-400 hover:shadow-md hover:-translate-y-0.5 transition-all group">
+      <span class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform">📥</span>
       <div class="min-w-0">
-        <p class="text-xs font-extrabold text-slate-800 leading-tight">Import Invoice</p>
-        <p class="text-[10px] text-slate-400">Excel / CSV Parser</p>
+        <p class="text-xs font-extrabold text-blue-950 leading-tight">Import Invoice</p>
+        <p class="text-[10px] text-blue-700 font-medium">Excel / CSV Parser</p>
       </div>
     </a>
 
-    <a href="{% url 'want_book_list' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-slate-200/80 hover:border-amber-300 hover:bg-amber-50/30 transition-all group shadow-2xs">
-      <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center font-bold text-sm group-hover:scale-110 transition-transform">📋</span>
+    <a href="{% url 'want_book_list' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-amber-50 to-orange-100/60 border border-amber-200 hover:border-amber-400 hover:shadow-md hover:-translate-y-0.5 transition-all group">
+      <span class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform">📋</span>
       <div class="min-w-0">
-        <p class="text-xs font-extrabold text-slate-800 leading-tight">Want-Book</p>
-        <p class="text-[10px] text-slate-400">Shortage register</p>
+        <p class="text-xs font-extrabold text-amber-950 leading-tight">Want-Book</p>
+        <p class="text-[10px] text-amber-700 font-medium">Shortage register</p>
       </div>
     </a>
 
-    <a href="{% url 'demand_forecasting' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-slate-200/80 hover:border-violet-300 hover:bg-violet-50/30 transition-all group shadow-2xs">
-      <span class="w-8 h-8 rounded-lg bg-violet-50 text-violet-600 border border-violet-100 flex items-center justify-center font-bold text-sm group-hover:scale-110 transition-transform">🔮</span>
+    <a href="{% url 'demand_forecasting' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-purple-50 to-violet-100/60 border border-purple-200 hover:border-purple-400 hover:shadow-md hover:-translate-y-0.5 transition-all group">
+      <span class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform">🔮</span>
       <div class="min-w-0">
-        <p class="text-xs font-extrabold text-slate-800 leading-tight">AI Forecasting</p>
-        <p class="text-[10px] text-slate-400">30-day predictor</p>
+        <p class="text-xs font-extrabold text-purple-950 leading-tight">AI Forecasting</p>
+        <p class="text-[10px] text-purple-700 font-medium">30-day predictor</p>
       </div>
     </a>
 
-    <a href="{% url 'expiry_reminder_list' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-slate-200/80 hover:border-rose-300 hover:bg-rose-50/30 transition-all group shadow-2xs">
-      <span class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center font-bold text-sm group-hover:scale-110 transition-transform">⏰</span>
+    <a href="{% url 'expiry_reminder_list' %}" class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-rose-50 to-pink-100/60 border border-rose-200 hover:border-rose-400 hover:shadow-md hover:-translate-y-0.5 transition-all group">
+      <span class="w-8 h-8 rounded-lg bg-rose-600 text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform">⏰</span>
       <div class="min-w-0">
-        <p class="text-xs font-extrabold text-slate-800 leading-tight">Expiry Alerts</p>
-        <p class="text-[10px] text-slate-400">Auto Reminders</p>
+        <p class="text-xs font-extrabold text-rose-950 leading-tight">Expiry Alerts</p>
+        <p class="text-[10px] text-rose-700 font-medium">Auto Reminders</p>
       </div>
     </a>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     2. ROW 1: INVENTORY HEALTH & CRITICAL TELEMETRY
+     2. ROW 1: INVENTORY HEALTH & CRITICAL TELEMETRY (VIBRANT GRADIENT CARDS)
      ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
     
-    <!-- Total Medicines -->
-    <div class="card p-5 relative overflow-hidden group hover:border-cyan-200 transition">
-        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
-        <div class="flex items-start justify-between">
+    <!-- Total Medicines (Teal / Cyan Gradient) -->
+    <div class="bg-gradient-to-br from-cyan-600 via-teal-600 to-emerald-700 text-white rounded-2xl p-6 shadow-lg shadow-teal-900/15 relative overflow-hidden group hover:shadow-xl hover:-translate-y-0.5 transition duration-200 border border-white/20">
+        <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-start justify-between relative z-10">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Medicines</p>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">{{ total_medicines }}</h3>
-                <div class="mt-2.5 flex items-center gap-2">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200">Catalog Active</span>
-                    <span class="text-[11px] text-slate-400 font-medium">All items</span>
+                <p class="text-[11px] font-bold text-teal-100 uppercase tracking-wider">Total Medicines</p>
+                <h3 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">{{ total_medicines }}</h3>
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 text-white border border-white/30 backdrop-blur-xs">Catalog Active</span>
+                    <span class="text-[11px] text-teal-100/80 font-medium">All items</span>
                 </div>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100 flex items-center justify-center font-bold text-xl shadow-2xs group-hover:scale-105 transition-transform">
+            <div class="w-12 h-12 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl backdrop-blur-xs group-hover:scale-110 transition-transform shadow-inner">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                 </svg>
@@ -135,19 +136,19 @@
         </div>
     </div>
     
-    <!-- Low Stock Items -->
-    <div class="card p-5 relative overflow-hidden group hover:border-amber-200 transition">
-        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
-        <div class="flex items-start justify-between">
+    <!-- Low Stock Items (Amber / Flame Orange Gradient) -->
+    <div class="bg-gradient-to-br from-amber-500 via-orange-600 to-red-600 text-white rounded-2xl p-6 shadow-lg shadow-orange-900/15 relative overflow-hidden group hover:shadow-xl hover:-translate-y-0.5 transition duration-200 border border-white/20">
+        <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-start justify-between relative z-10">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Low Stock Shortage</p>
-                <h3 class="text-3xl font-extrabold text-amber-600 mt-2 tracking-tight">{{ low_stock_count }}</h3>
-                <div class="mt-2.5 flex items-center gap-2">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">⚠️ Re-order Req.</span>
-                    <span class="text-[11px] text-slate-400 font-medium">Below min threshold</span>
+                <p class="text-[11px] font-bold text-amber-100 uppercase tracking-wider">Low Stock Shortage</p>
+                <h3 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">{{ low_stock_count }}</h3>
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-black/20 text-white border border-white/20 backdrop-blur-xs">⚠️ Re-order Req.</span>
+                    <span class="text-[11px] text-amber-100/80 font-medium">Below safety min</span>
                 </div>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center font-bold text-xl shadow-2xs group-hover:scale-105 transition-transform">
+            <div class="w-12 h-12 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl backdrop-blur-xs group-hover:scale-110 transition-transform shadow-inner">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 </svg>
@@ -155,19 +156,19 @@
         </div>
     </div>
     
-    <!-- Expired Batches -->
-    <div class="card p-5 relative overflow-hidden group hover:border-rose-200 transition">
-        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 to-red-600"></div>
-        <div class="flex items-start justify-between">
+    <!-- Expired Batches (Rose / Crimson Gradient) -->
+    <div class="bg-gradient-to-br from-rose-600 via-red-600 to-pink-700 text-white rounded-2xl p-6 shadow-lg shadow-rose-900/15 relative overflow-hidden group hover:shadow-xl hover:-translate-y-0.5 transition duration-200 border border-white/20">
+        <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-start justify-between relative z-10">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Expired Batches</p>
-                <h3 class="text-3xl font-extrabold text-rose-600 mt-2 tracking-tight">{{ expired_count }}</h3>
-                <div class="mt-2.5 flex items-center gap-2">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">❌ Action Required</span>
-                    <span class="text-[11px] text-slate-400 font-medium">{{ expired_subtext|default:"With stock" }}</span>
+                <p class="text-[11px] font-bold text-rose-100 uppercase tracking-wider">Expired Batches</p>
+                <h3 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">{{ expired_count }}</h3>
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-black/20 text-white border border-white/20 backdrop-blur-xs">❌ Action Required</span>
+                    <span class="text-[11px] text-rose-100/80 font-medium">{{ expired_subtext|default:"With stock" }}</span>
                 </div>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center font-bold text-xl shadow-2xs group-hover:scale-105 transition-transform">
+            <div class="w-12 h-12 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl backdrop-blur-xs group-hover:scale-110 transition-transform shadow-inner">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -175,19 +176,19 @@
         </div>
     </div>
     
-    <!-- Expiring Soon -->
-    <div class="card p-5 relative overflow-hidden group hover:border-orange-200 transition">
-        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 to-amber-500"></div>
-        <div class="flex items-start justify-between">
+    <!-- Expiring Soon (Blue / Indigo / Violet Gradient) -->
+    <div class="bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 text-white rounded-2xl p-6 shadow-lg shadow-indigo-900/15 relative overflow-hidden group hover:shadow-xl hover:-translate-y-0.5 transition duration-200 border border-white/20">
+        <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-start justify-between relative z-10">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{{ expiring_label|default:"Expiring Soon" }}</p>
-                <h3 class="text-3xl font-extrabold text-orange-600 mt-2 tracking-tight">{{ expiring_soon_count }}</h3>
-                <div class="mt-2.5 flex items-center gap-2">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200">⏳ 30-Day Window</span>
-                    <span class="text-[11px] text-slate-400 font-medium">{{ expiring_subtext|default:"Batches expiring" }}</span>
+                <p class="text-[11px] font-bold text-indigo-100 uppercase tracking-wider">{{ expiring_label|default:"Expiring Soon" }}</p>
+                <h3 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">{{ expiring_soon_count }}</h3>
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 text-white border border-white/30 backdrop-blur-xs">⏳ 30-Day Window</span>
+                    <span class="text-[11px] text-indigo-100/80 font-medium">{{ expiring_subtext|default:"Batches expiring" }}</span>
                 </div>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center font-bold text-xl shadow-2xs group-hover:scale-105 transition-transform">
+            <div class="w-12 h-12 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl backdrop-blur-xs group-hover:scale-110 transition-transform shadow-inner">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
@@ -197,20 +198,20 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     3. ROW 2: STORE MASTER DATASETS (Customers, Suppliers, Categories, Sales)
+     3. ROW 2: STORE MASTER DATASETS (Vibrant Rich Toned Cards)
      ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
     <!-- Total Customers -->
-    <div class="card p-5 hover:border-violet-200 transition group">
+    <div class="bg-gradient-to-br from-purple-700 via-indigo-700 to-purple-900 text-white rounded-2xl p-5 shadow-md border border-white/20 relative overflow-hidden group hover:-translate-y-0.5 transition">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Registered Clients</p>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1.5 tracking-tight">{{ total_customers }}</h3>
-                <p class="text-xs font-medium text-violet-600 mt-1 flex items-center gap-1">
-                    <span>Verified accounts</span>
+                <p class="text-[11px] font-bold text-purple-200 uppercase tracking-wider">Registered Clients</p>
+                <h3 class="text-3xl font-extrabold text-white mt-1.5 tracking-tight">{{ total_customers }}</h3>
+                <p class="text-xs font-medium text-purple-200 mt-1 flex items-center gap-1">
+                    <span>👥 Verified accounts</span>
                 </p>
             </div>
-            <div class="w-11 h-11 rounded-xl bg-violet-50 text-violet-600 border border-violet-100 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform">
+            <div class="w-11 h-11 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform backdrop-blur-xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
@@ -219,16 +220,16 @@
     </div>
 
     <!-- Total Suppliers -->
-    <div class="card p-5 hover:border-indigo-200 transition group">
+    <div class="bg-gradient-to-br from-blue-700 via-sky-700 to-indigo-800 text-white rounded-2xl p-5 shadow-md border border-white/20 relative overflow-hidden group hover:-translate-y-0.5 transition">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Distributor Network</p>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1.5 tracking-tight">{{ total_suppliers }}</h3>
-                <p class="text-xs font-medium text-indigo-600 mt-1 flex items-center gap-1">
-                    <span>Supply partners</span>
+                <p class="text-[11px] font-bold text-sky-200 uppercase tracking-wider">Distributor Network</p>
+                <h3 class="text-3xl font-extrabold text-white mt-1.5 tracking-tight">{{ total_suppliers }}</h3>
+                <p class="text-xs font-medium text-sky-200 mt-1 flex items-center gap-1">
+                    <span>🏢 Supply partners</span>
                 </p>
             </div>
-            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform">
+            <div class="w-11 h-11 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform backdrop-blur-xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c4.418 0 8 1.79 8 4v2H4v-2c0-2.21 3.582-4 8-4z"/>
                 </svg>
@@ -237,16 +238,16 @@
     </div>
 
     <!-- Total Categories -->
-    <div class="card p-5 hover:border-emerald-200 transition group">
+    <div class="bg-gradient-to-br from-teal-700 via-emerald-700 to-green-800 text-white rounded-2xl p-5 shadow-md border border-white/20 relative overflow-hidden group hover:-translate-y-0.5 transition">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Medicine Categories</p>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1.5 tracking-tight">{{ total_categories }}</h3>
-                <p class="text-xs font-medium text-emerald-600 mt-1 flex items-center gap-1">
-                    <span>Therapeutic groups</span>
+                <p class="text-[11px] font-bold text-emerald-200 uppercase tracking-wider">Medicine Categories</p>
+                <h3 class="text-3xl font-extrabold text-white mt-1.5 tracking-tight">{{ total_categories }}</h3>
+                <p class="text-xs font-medium text-emerald-200 mt-1 flex items-center gap-1">
+                    <span>💊 Therapeutic groups</span>
                 </p>
             </div>
-            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform">
+            <div class="w-11 h-11 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform backdrop-blur-xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"/>
                 </svg>
@@ -255,16 +256,16 @@
     </div>
 
     <!-- Total Sales Orders -->
-    <div class="card p-5 hover:border-cyan-200 transition group">
+    <div class="bg-gradient-to-br from-slate-800 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 shadow-md border border-white/20 relative overflow-hidden group hover:-translate-y-0.5 transition">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">All-Time Invoices</p>
-                <h3 class="text-3xl font-extrabold text-slate-900 mt-1.5 tracking-tight">{{ total_sales }}</h3>
-                <p class="text-xs font-medium text-cyan-600 mt-1 flex items-center gap-1">
-                    <span>Processed orders</span>
+                <p class="text-[11px] font-bold text-indigo-200 uppercase tracking-wider">All-Time Invoices</p>
+                <h3 class="text-3xl font-extrabold text-white mt-1.5 tracking-tight">{{ total_sales }}</h3>
+                <p class="text-xs font-medium text-indigo-200 mt-1 flex items-center gap-1">
+                    <span>📑 Processed orders</span>
                 </p>
             </div>
-            <div class="w-11 h-11 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform">
+            <div class="w-11 h-11 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform backdrop-blur-xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18v4H3V3zm0 8h18v4H3v-4zm0 8h18v4H3v-4z"/>
                 </svg>
@@ -279,7 +280,7 @@
 <div class="mb-4 flex items-center justify-between">
   <div class="flex items-center gap-2">
     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-    <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+    <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
       Financial Summary & Stream Metrics &mdash;
       <span class="text-cyan-700 font-extrabold normal-case">
         {% if duration == 'today' %}Today's Real-time Revenue
@@ -294,18 +295,18 @@
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
     <!-- Period Sales Orders -->
-    <div class="bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-800 text-white rounded-2xl p-6 shadow-xl shadow-emerald-700/15 relative overflow-hidden group border border-emerald-500/30">
+    <div class="bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-800 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden group border border-emerald-400/30">
         <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
         <div class="flex items-center justify-between relative z-10">
             <div>
                 <p class="text-[11px] font-extrabold text-emerald-100 uppercase tracking-wider flex items-center gap-1.5">
                   <span>Transactions</span>
-                  <span class="px-1.5 py-0.2 bg-white/20 rounded text-[9px]">Live</span>
+                  <span class="px-1.5 py-0.2 bg-white/25 rounded text-[9px] font-extrabold">LIVE</span>
                 </p>
-                <h3 class="text-3xl font-extrabold text-white mt-2 tracking-tight">{{ period_sales_count }}</h3>
-                <p class="text-xs text-emerald-100/90 mt-1 font-medium">Billed customer receipts</p>
+                <h3 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">{{ period_sales_count }}</h3>
+                <p class="text-xs text-emerald-100 mt-1 font-medium">Billed customer receipts</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center font-bold text-2xl group-hover:scale-110 transition-transform shadow-sm">
+            <div class="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center font-bold text-2xl group-hover:scale-110 transition-transform shadow-sm backdrop-blur-xs">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
@@ -314,18 +315,18 @@
     </div>
     
     <!-- Period Revenue -->
-    <div class="bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-800 text-white rounded-2xl p-6 shadow-xl shadow-indigo-700/15 relative overflow-hidden group border border-indigo-500/30">
+    <div class="bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-600 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden group border border-purple-400/30">
         <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
         <div class="flex items-center justify-between relative z-10">
             <div>
-                <p class="text-[11px] font-extrabold text-indigo-100 uppercase tracking-wider flex items-center gap-1.5">
+                <p class="text-[11px] font-extrabold text-purple-100 uppercase tracking-wider flex items-center gap-1.5">
                   <span>Gross Sales Value</span>
-                  <span class="px-1.5 py-0.2 bg-white/20 rounded text-[9px]">INR</span>
+                  <span class="px-1.5 py-0.2 bg-white/25 rounded text-[9px] font-extrabold">INR</span>
                 </p>
-                <h3 class="text-3xl font-extrabold text-white mt-2 tracking-tight">₹{{ period_revenue|floatformat:2 }}</h3>
-                <p class="text-xs text-indigo-100/90 mt-1 font-medium">Total earned revenue</p>
+                <h3 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">₹{{ period_revenue|floatformat:2 }}</h3>
+                <p class="text-xs text-purple-100 mt-1 font-medium">Total earned revenue</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center font-bold text-2xl group-hover:scale-110 transition-transform shadow-sm">
+            <div class="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center font-bold text-2xl group-hover:scale-110 transition-transform shadow-sm backdrop-blur-xs">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
@@ -334,14 +335,15 @@
     </div>
 
     <!-- New Medicines Added -->
-    <div class="card p-5 hover:border-cyan-200 transition group">
-        <div class="flex items-center justify-between">
+    <div class="bg-gradient-to-br from-cyan-600 via-sky-600 to-blue-700 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden group border border-sky-400/30">
+        <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between relative z-10">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">New SKU Additions</p>
-                <h4 class="text-3xl font-extrabold text-slate-900 mt-1.5 tracking-tight">{{ period_new_medicines }}</h4>
-                <p class="text-xs font-medium text-cyan-600 mt-1">Added in selected window</p>
+                <p class="text-[11px] font-bold text-sky-100 uppercase tracking-wider">New SKU Additions</p>
+                <h4 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">{{ period_new_medicines }}</h4>
+                <p class="text-xs font-medium text-sky-100 mt-1">Added in selected window</p>
             </div>
-            <div class="w-11 h-11 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform">
+            <div class="w-12 h-12 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform backdrop-blur-xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -350,14 +352,15 @@
     </div>
 
     <!-- New Suppliers Added -->
-    <div class="card p-5 hover:border-blue-200 transition group">
-        <div class="flex items-center justify-between">
+    <div class="bg-gradient-to-br from-amber-600 via-orange-600 to-rose-700 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden group border border-amber-400/30">
+        <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between relative z-10">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">New Distributors</p>
-                <h4 class="text-3xl font-extrabold text-slate-900 mt-1.5 tracking-tight">{{ period_new_suppliers }}</h4>
-                <p class="text-xs font-medium text-blue-600 mt-1">Vendor onboardings</p>
+                <p class="text-[11px] font-bold text-amber-100 uppercase tracking-wider">New Distributors</p>
+                <h4 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">{{ period_new_suppliers }}</h4>
+                <p class="text-xs font-medium text-amber-100 mt-1">Vendor onboardings</p>
             </div>
-            <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform">
+            <div class="w-12 h-12 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl group-hover:scale-105 transition-transform backdrop-blur-xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
@@ -372,20 +375,20 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     
     <!-- Recent Inventory Updates -->
-    <div class="card overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-indigo-950 text-white">
             <div>
-                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                <h3 class="text-sm font-bold flex items-center gap-2 text-white">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
                     Recent Stock Updates
                 </h3>
-                <p class="text-xs text-slate-500 mt-0.5">Last 10 inventory transactions</p>
+                <p class="text-xs text-slate-300 mt-0.5">Last 10 inventory transactions</p>
             </div>
-            <span class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-2.5 py-1 rounded-lg shadow-2xs">Live Stream</span>
+            <span class="text-xs font-bold text-cyan-300 bg-white/10 border border-white/20 px-2.5 py-1 rounded-lg backdrop-blur-xs">Live Stream</span>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
+                <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-100">
                     <tr>
                         <th class="py-3.5 px-4">Medicine</th>
                         <th class="py-3.5 px-4">Action</th>
@@ -423,22 +426,22 @@
     </div>
     
     <!-- Recent Sales -->
-    <div class="card overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-teal-950 text-white">
             <div>
-                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <h3 class="text-sm font-bold flex items-center gap-2 text-white">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     Recent Sales Invoices
                 </h3>
-                <p class="text-xs text-slate-500 mt-0.5">Customer billing stream</p>
+                <p class="text-xs text-slate-300 mt-0.5">Customer billing stream</p>
             </div>
-            <a href="{% url 'sales_list' %}" class="text-xs font-bold text-cyan-600 hover:text-cyan-800 flex items-center gap-1 transition">
+            <a href="{% url 'sales_list' %}" class="text-xs font-bold text-emerald-300 hover:text-white flex items-center gap-1 transition">
                 View All Sales →
             </a>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
+                <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-100">
                     <tr>
                         <th class="py-3.5 px-4">Invoice #</th>
                         <th class="py-3.5 px-4">Customer</th>
@@ -470,26 +473,26 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      6. ROW 5: LOW STOCK RESTOCKING ALERT TABLE
      ═══════════════════════════════════════════════════════════════════════════ -->
-<div class="card overflow-hidden mb-6">
-    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden mb-6">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-amber-950 via-slate-900 to-slate-900 text-white">
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center font-bold text-base shadow-2xs">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-400/30 flex items-center justify-center font-bold text-lg shadow-sm">
                 ⚠️
             </div>
             <div>
-                <h3 class="text-sm font-bold text-slate-900">Critical Stockout & Shortage Watchlist</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Medicines requiring distributor purchase orders</p>
+                <h3 class="text-sm font-bold text-white">Critical Stockout & Shortage Watchlist</h3>
+                <p class="text-xs text-slate-300 mt-0.5">Medicines requiring distributor purchase orders</p>
             </div>
         </div>
         {% if user.role in 'admin,pharmacist' or user.is_superuser %}
-        <a href="{% url 'want_book_list' %}" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl text-xs font-bold shadow-xs hover:from-amber-600 hover:to-orange-700 transition flex items-center gap-1.5">
+        <a href="{% url 'want_book_list' %}" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl text-xs font-bold shadow-md hover:from-amber-600 hover:to-orange-700 transition flex items-center gap-1.5">
             📋 Auto-Generate Want-Book PO →
         </a>
         {% endif %}
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
+            <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-100">
                 <tr>
                     <th class="py-3.5 px-4">Medicine Item</th>
                     <th class="py-3.5 px-4">Distributor / Supplier</th>
@@ -525,5 +528,6 @@
         </table>
     </div>
 </div>
+
 
 {% endblock %}
