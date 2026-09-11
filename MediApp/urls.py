@@ -122,6 +122,7 @@ urlpatterns = [
     path('purchase-bill/confirm/', views.purchase_bill_confirm_ajax, name='purchase_bill_confirm_ajax'),
     path('purchase-bill/<int:import_id>/details/', views.purchase_bill_detail_ajax, name='purchase_bill_detail_ajax'),
     path('purchase-bill/template/', views.download_purchase_template, name='download_purchase_template'),
+    path('purchase-bill/sample-photo/', views.download_sample_bill_photo, name='download_sample_bill_photo'),
 
     # Module 2: Digital Want-Book (Shortage Register) & WhatsApp PO
     path('want-book/', views.want_book_list, name='want_book_list'),

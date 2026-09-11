@@ -5656,6 +5656,30 @@ def download_purchase_template(request):
     return response
 
 
+@login_required
+@assistant_or_above
+def download_sample_bill_photo(request):
+    """
+    Download high-resolution sample distributor purchase bill image for OCR testing.
+    """
+    from django.http import FileResponse, Http404
+    from django.conf import settings
+    import os
+
+    possible_paths = [
+        os.path.join(settings.BASE_DIR, 'MediApp', 'static', 'img', 'sample_bill.jpg'),
+        os.path.join(settings.BASE_DIR, 'sample_bill.jpg'),
+    ]
+    for p in possible_paths:
+        if os.path.exists(p):
+            response = FileResponse(open(p, 'rb'), content_type='image/jpeg')
+            response['Content-Disposition'] = 'attachment; filename="sample_distributor_bill.jpg"'
+            return response
+
+    raise Http404("Sample bill image not found.")
+
+
+
 # ==============================================================================
 # MODULE 2: DIGITAL WANT-BOOK (SHORTAGE REGISTER) & WHATSAPP PO DISPATCHER
 # ==============================================================================
