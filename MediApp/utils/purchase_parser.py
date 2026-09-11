@@ -10,10 +10,16 @@ Supports:
 """
 
 import io
+import os
 import re
+import json
+import base64
 import datetime
+import urllib.request
+import urllib.error
 from decimal import Decimal
 import pandas as pd
+from django.conf import settings as django_settings
 from django.utils import timezone
 from MediApp.models import Medicine, Supplier, Category
 
@@ -320,3 +326,288 @@ def process_parsed_dataframe(df):
         'total_bill_amount': float(total_bill_amount),
         'items': parsed_items
     }
+
+
+def parse_purchase_invoice_image(file_obj_or_bytes_or_str, filename=""):
+    """
+    Parse an uploaded purchase bill image (JPEG, PNG, WebP, PDF) or camera capture using Gemini Multimodal Vision AI.
+    Extracts supplier name, bill number, bill date, medicines, batches, expiry dates, quantities, rates, and MRPs.
+    """
+    api_key = (
+        getattr(django_settings, 'GEMINI_API_KEY', '') or
+        os.environ.get('GEMINI_API_KEY', '') or
+        ''
+    ).strip()
+
+    # Step 1: Extract bytes & mime type
+    mime_type = 'image/jpeg'
+    img_bytes = None
+
+    if isinstance(file_obj_or_bytes_or_str, str):
+        # Base64 string from web camera or data URI
+        if 'base64,' in file_obj_or_bytes_or_str:
+            header, base64_data = file_obj_or_bytes_or_str.split('base64,', 1)
+            if 'image/png' in header:
+                mime_type = 'image/png'
+            elif 'image/webp' in header:
+                mime_type = 'image/webp'
+            elif 'application/pdf' in header:
+                mime_type = 'application/pdf'
+            else:
+                mime_type = 'image/jpeg'
+            img_bytes = base64.b64decode(base64_data)
+        else:
+            try:
+                img_bytes = base64.b64decode(file_obj_or_bytes_or_str)
+            except Exception:
+                img_bytes = file_obj_or_bytes_or_str.encode('utf-8')
+    elif hasattr(file_obj_or_bytes_or_str, 'read'):
+        if hasattr(file_obj_or_bytes_or_str, 'seek'):
+            file_obj_or_bytes_or_str.seek(0)
+        img_bytes = file_obj_or_bytes_or_str.read()
+        fn = (filename or getattr(file_obj_or_bytes_or_str, 'name', '')).lower()
+        if fn.endswith('.png'):
+            mime_type = 'image/png'
+        elif fn.endswith('.webp'):
+            mime_type = 'image/webp'
+        elif fn.endswith('.pdf'):
+            mime_type = 'application/pdf'
+        elif fn.endswith('.bmp'):
+            mime_type = 'image/bmp'
+        else:
+            mime_type = 'image/jpeg'
+    elif isinstance(file_obj_or_bytes_or_str, bytes):
+        img_bytes = file_obj_or_bytes_or_str
+
+    if not img_bytes or len(img_bytes) == 0:
+        return {'success': False, 'error': "No image or document data found in the uploaded file.", 'items': []}
+
+    base64_data_str = base64.b64encode(img_bytes).decode('utf-8')
+
+    # If no API key configured, return friendly guidance or fallback
+    if not api_key:
+        return {
+            'success': False,
+            'error': "Gemini Vision AI API key is not configured. Please set GEMINI_API_KEY in environment variables or settings to enable AI photo scanning.",
+            'items': []
+        }
+
+    # Prompt Gemini Vision with structured schema
+    prompt_text = (
+        "You are an expert pharmaceutical distributor bill/invoice OCR and data extraction system.\n"
+        "Carefully analyze this pharmacy invoice/purchase bill image and extract all header information and every line item/medicine listed.\n\n"
+        "Return ONLY a strictly valid JSON object adhering to this structure:\n"
+        "{\n"
+        '  "supplier_name": "Name of the wholesale distributor or pharmaceutical agency printed at the top (or null)",\n'
+        '  "invoice_number": "Invoice / Bill Number (or null)",\n'
+        '  "invoice_date": "Invoice Date in YYYY-MM-DD format (or null)",\n'
+        '  "items": [\n'
+        "    {\n"
+        '      "medicine_name": "Medicine name with strength/form e.g. Dolo 650mg Tab, Augmentin 625 Duo, Azithral 500mg, Pan-D",\n'
+        '      "batch_name": "Batch number or lot number printed on bill (e.g. BAT-102, DL891)",\n'
+        '      "expiry_date": "Expiry date in YYYY-MM-DD or MM/YY format (e.g. 2027-08-31)",\n'
+        '      "quantity": 10,\n'
+        '      "free_quantity": 0,\n'
+        '      "purchase_price": 120.50,\n'
+        '      "mrp": 210.00,\n'
+        '      "category_name": "Tablets / Syrups / Injections / Ointments / Antibiotics / General"\n'
+        "    }\n"
+        "  ]\n"
+        "}\n\n"
+        "CRITICAL INSTRUCTIONS:\n"
+        "1. Extract ALL medicines/products present on the bill.\n"
+        "2. Extract numerical quantities, free scheme quantities, purchase rate (PTR/rate/cost per unit), and MRP.\n"
+        "3. If purchase rate is missing but line total and qty are given, calculate rate = line total / qty.\n"
+        "4. If MRP is missing, estimate standard price or leave 0.\n"
+        "5. Output pure JSON without markdown code fences or conversational text."
+    )
+
+    candidate_models = [
+        getattr(django_settings, 'GEMINI_MODEL', 'gemini-1.5-flash'),
+        'gemini-1.5-flash',
+        'gemini-2.0-flash',
+        'gemini-2.5-flash',
+        'gemini-flash-lite-latest',
+        'gemini-1.5-pro'
+    ]
+    # Deduplicate while preserving order
+    models_to_try = list(dict.fromkeys([m for m in candidate_models if m]))
+
+    last_error = None
+    extracted_json = None
+
+    for model_name in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+        payload = {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "inlineData": {
+                                "mimeType": mime_type,
+                                "data": base64_data_str
+                            }
+                        },
+                        {
+                            "text": prompt_text
+                        }
+                    ]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.1,
+                "maxOutputTokens": 4096
+            }
+        }
+
+        payload_bytes = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(
+            url,
+            data=payload_bytes,
+            headers={
+                'Content-Type': 'application/json',
+                'x-goog-api-key': api_key
+            },
+            method='POST'
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=20.0) as response:
+                res_data = json.loads(response.read().decode('utf-8'))
+                candidates = res_data.get('candidates') or []
+                if candidates:
+                    parts = candidates[0].get('content', {}).get('parts', [])
+                    if parts:
+                        raw_text = parts[0].get('text', '').strip()
+                        # Strip markdown backticks if returned
+                        if raw_text.startswith('```json'):
+                            raw_text = raw_text[7:]
+                        elif raw_text.startswith('```'):
+                            raw_text = raw_text[3:]
+                        if raw_text.endswith('```'):
+                            raw_text = raw_text[:-3]
+                        raw_text = raw_text.strip()
+                        
+                        try:
+                            extracted_json = json.loads(raw_text)
+                            if extracted_json:
+                                break
+                        except Exception as json_err:
+                            last_error = f"JSON parse error from model {model_name}: {str(json_err)}"
+        except Exception as api_err:
+            last_error = f"AI Vision API error ({model_name}): {str(api_err)}"
+            continue
+
+    if not extracted_json:
+        return {
+            'success': False,
+            'error': f"Could not extract bill details from image. {last_error or 'Please ensure the photo is clear and well-lit.'}",
+            'items': []
+        }
+
+    # Extract parsed elements
+    supplier_name = str(extracted_json.get('supplier_name') or '').strip()
+    invoice_number = str(extracted_json.get('invoice_number') or '').strip()
+    invoice_date_raw = str(extracted_json.get('invoice_date') or '').strip()
+    invoice_date = parse_flexible_expiry_date(invoice_date_raw) if invoice_date_raw else timezone.now().strftime('%Y-%m-%d')
+
+    # Match supplier with DB
+    matched_supplier_id = None
+    if supplier_name:
+        supp = Supplier.objects.filter(name__icontains=supplier_name).first()
+        if not supp:
+            # Try word matching
+            for s in Supplier.objects.all():
+                if any(word.lower() in s.name.lower() for word in supplier_name.split() if len(word) >= 3):
+                    supp = s
+                    break
+        if supp:
+            matched_supplier_id = supp.id
+            supplier_name = supp.name
+
+    raw_items = extracted_json.get('items', [])
+    if not isinstance(raw_items, list) or len(raw_items) == 0:
+        return {
+            'success': False,
+            'error': "AI scanned the image but could not find any medicine line items. Please upload a clear photo showing the item table.",
+            'items': []
+        }
+
+    existing_medicines = {m.name.strip().lower(): m for m in Medicine.objects.all()}
+    parsed_items = []
+    total_bill_amount = Decimal('0.00')
+
+    for idx, item in enumerate(raw_items):
+        if not isinstance(item, dict):
+            continue
+        med_name = str(item.get('medicine_name') or '').strip()
+        if not med_name:
+            continue
+
+        batch_name = str(item.get('batch_name') or '').strip() or f"BAT-{timezone.now().strftime('%y%m')}-{idx+1:02d}"
+        expiry_val = item.get('expiry_date')
+        expiry_date = parse_flexible_expiry_date(expiry_val)
+
+        try:
+            quantity = int(float(item.get('quantity', 1)))
+            if quantity <= 0:
+                quantity = 1
+        except Exception:
+            quantity = 1
+
+        try:
+            free_quantity = int(float(item.get('free_quantity', 0)))
+            if free_quantity < 0:
+                free_quantity = 0
+        except Exception:
+            free_quantity = 0
+
+        total_quantity = quantity + free_quantity
+        purchase_price = clean_currency_str(item.get('purchase_price', 0))
+        mrp = clean_currency_str(item.get('mrp', 0))
+
+        if mrp <= Decimal('0.00') and purchase_price > Decimal('0.00'):
+            mrp = round(purchase_price * Decimal('1.25'), 2)
+        elif mrp <= Decimal('0.00'):
+            mrp = Decimal('10.00')
+
+        if purchase_price <= Decimal('0.00') and mrp > Decimal('0.00'):
+            purchase_price = round(mrp * Decimal('0.75'), 2)
+
+        line_total = round(purchase_price * Decimal(str(quantity)), 2)
+        total_bill_amount += line_total
+
+        matched_medicine = existing_medicines.get(med_name.lower())
+        matched_id = matched_medicine.id if matched_medicine else None
+        match_status = 'Existing' if matched_medicine else 'New Item'
+        category_name = str(item.get('category_name') or '').strip()
+
+        parsed_items.append({
+            'row_index': idx,
+            'medicine_name': med_name,
+            'matched_medicine_id': matched_id,
+            'match_status': match_status,
+            'batch_name': batch_name,
+            'expiry_date': expiry_date,
+            'quantity': quantity,
+            'free_quantity': free_quantity,
+            'total_quantity': total_quantity,
+            'purchase_price': float(purchase_price),
+            'mrp': float(mrp),
+            'line_total': float(line_total),
+            'category_name': category_name,
+        })
+
+    return {
+        'success': True,
+        'source': 'AI Photo Scan (OCR)',
+        'supplier_name': supplier_name,
+        'matched_supplier_id': matched_supplier_id,
+        'invoice_number': invoice_number or f"INV-{timezone.now().strftime('%Y%m%d%H%M')}",
+        'invoice_date': invoice_date,
+        'total_items_count': len(parsed_items),
+        'total_bill_amount': float(total_bill_amount),
+        'items': parsed_items
+    }
+

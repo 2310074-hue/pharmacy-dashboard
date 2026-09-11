@@ -5290,7 +5290,8 @@ def executive_dossier_report(request):
 from .models import WantBookItem, PurchaseBillImport
 from .utils.purchase_parser import (
     parse_purchase_invoice_file,
-    parse_pasted_purchase_text
+    parse_pasted_purchase_text,
+    parse_purchase_invoice_image
 )
 from .whatsapp_service import (
     build_supplier_po_message,
@@ -5324,17 +5325,28 @@ def purchase_bill_import_view(request):
 @require_POST
 def purchase_bill_preview_ajax(request):
     """
-    Parse uploaded Excel / CSV file or pasted text and return structured preview rows.
+    Parse uploaded Bill Photo / Image (AI Vision OCR), Excel / CSV file or pasted text and return structured preview rows.
     """
     try:
-        if 'invoice_file' in request.FILES:
-            uploaded_file = request.FILES['invoice_file']
-            result = parse_purchase_invoice_file(uploaded_file, filename=uploaded_file.name)
+        # 1. Check for photo/image upload or document file
+        if 'invoice_photo' in request.FILES or 'invoice_file' in request.FILES:
+            uploaded_file = request.FILES.get('invoice_photo') or request.FILES.get('invoice_file')
+            fn = (uploaded_file.name or '').lower()
+            img_extensions = ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff', '.pdf')
+            if any(fn.endswith(ext) for ext in img_extensions):
+                result = parse_purchase_invoice_image(uploaded_file, filename=uploaded_file.name)
+            else:
+                result = parse_purchase_invoice_file(uploaded_file, filename=uploaded_file.name)
+        # 2. Check for base64 camera image data
+        elif request.POST.get('image_data'):
+            image_data = request.POST.get('image_data')
+            result = parse_purchase_invoice_image(image_data, filename="camera_capture.jpg")
+        # 3. Check for pasted text
         elif request.POST.get('invoice_text'):
             raw_text = request.POST.get('invoice_text', '').strip()
             result = parse_pasted_purchase_text(raw_text)
         else:
-            return JsonResponse({'success': False, 'error': 'No file or pasted text provided.'}, status=400)
+            return JsonResponse({'success': False, 'error': 'No bill photo, file, or text provided. Please select an invoice.'}, status=400)
 
         if not result.get('success'):
             return JsonResponse(result, status=400)
