@@ -145,3 +145,42 @@ class RoleScopedDataIsolationTests(TestCase):
         self.assertEqual(kpi.get('top_medicine_qty'), 0)
         self.assertEqual(payload.get('top_customers'), [])
         self.assertTrue(payload.get('insights'))
+
+
+class AdminNavigationTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username='site_admin',
+            email='admin@pharmacy.com',
+            password='adminpass123',
+            role='admin',
+            is_superuser=True,
+            is_staff=True,
+        )
+
+    def test_login_page_renders_admin_login_button(self):
+        """Test that the main login page includes direct button/link to the admin portal."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn('/admin/', content)
+        self.assertIn('adminLoginBtn', content)
+        self.assertIn('Admin Login', content)
+
+    def test_admin_login_page_renders_custom_template_with_back_link(self):
+        """Test that the Django admin login page renders with a return button to user login."""
+        response = self.client.get('/admin/login/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn('PharmaCare', content)
+        self.assertIn('Admin Login', content)
+        self.assertIn('Back to Staff Login', content)
+
+    def test_dashboard_renders_admin_links_for_admin_user(self):
+        """Test that logged-in admins see Admin Console in sidebar, header and dropdown."""
+        self.client.force_login(self.admin)
+        response = self.client.get('/dashboard/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn('Admin Console', content)
+        self.assertIn('/admin/', content)

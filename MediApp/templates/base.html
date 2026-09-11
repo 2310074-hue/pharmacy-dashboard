@@ -1363,6 +1363,32 @@
                 <span class="ml-auto text-[10px] font-extrabold bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full shadow-xs">AI</span>
             </a>
             {% endif %}
+
+            <!-- GROUP: SYSTEM ADMINISTRATION -->
+            {% if request.user.is_superuser or request.user.role == 'admin' %}
+            <div class="nav-section-title">Administration</div>
+            <a href="{% url 'admin:index' %}"
+                class="nav-link"
+                title="Open Django Admin Portal"
+                onclick="closeSidebarOnMobile()">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Admin Console</span>
+                <span class="ml-auto text-[10px] font-extrabold bg-gradient-to-r from-cyan-500 to-indigo-600 text-white px-2 py-0.5 rounded-full shadow-xs">Admin</span>
+            </a>
+
+            <a href="{% url 'register' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'register' %}active{% endif %}"
+                onclick="closeSidebarOnMobile()">
+                <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                <span>Add Staff User</span>
+            </a>
+            {% endif %}
         </nav>
 
         <!-- Sidebar User Profile Footer -->
@@ -1410,6 +1436,17 @@
                         <span>Cloud Active</span>
                     </div>
 
+                    <!-- Quick Admin Portal Button for Admins -->
+                    {% if request.user.is_superuser or request.user.role == 'admin' %}
+                    <a href="{% url 'admin:index' %}" title="Open Django Admin Portal"
+                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition border border-slate-700 hover:border-cyan-400">
+                        <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        <span>Admin Console</span>
+                    </a>
+                    {% endif %}
+
                     <!-- User Dropdown -->
                     <div class="user-dropdown relative">
                         <button onclick="toggleDropdown()"
@@ -1435,6 +1472,15 @@
                                 </span>
                             </div>
                             <div class="p-1">
+                                {% if request.user.is_superuser or request.user.role == 'admin' %}
+                                <a href="{% url 'admin:index' %}"
+                                    class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-cyan-50 text-cyan-700 text-xs font-bold transition mb-1">
+                                    <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    </svg>
+                                    Django Admin Console
+                                </a>
+                                {% endif %}
                                 <a href="{% url 'logout' %}"
                                     class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-600 text-xs font-bold transition">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
