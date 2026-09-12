@@ -6170,9 +6170,11 @@ def forgot_password_view(request):
             request.session['reset_username'] = user.username
 
             if res.get('email_sent'):
+                print(f"[OTP SUCCESS] Code sent to {res.get('recipient_email')} for user {user.username}")
                 messages.success(request, f"A 6-digit verification code has been dispatched to {res['masked_email']}.")
             else:
-                messages.info(request, f"Verification code generated. Please check your registered email inbox or ask your Pharmacy Admin.")
+                print(f"[OTP SEND ERROR] Failed sending to {res.get('recipient_email')} for {user.username}: {res.get('send_error')}")
+                messages.warning(request, f"Could not deliver email to {res['masked_email']}. Ensure BREVO_API_KEY is configured in Render Environment.")
 
             return redirect(f"{reverse('verify_reset_otp')}?token={res['token']}")
         else:

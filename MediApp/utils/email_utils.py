@@ -113,14 +113,20 @@ def send_universal_mail(subject, plain_body, html_body, to_email, from_email=Non
     if brevo_key:
         success, err = send_via_brevo(to_email, subject, html_body, text_content=plain_body, from_email=from_email)
         if success:
+            print(f"[EMAIL SUCCESS] Dispatched via Brevo HTTPS API to {to_email}")
             return True, None
+        else:
+            print(f"[EMAIL WARNING] Brevo HTTPS API failed: {err}. Falling back to next method...")
 
     # 2. Try Resend HTTPS API (Port 443)
     resend_key = getattr(settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
     if resend_key:
         success, err = send_via_resend(to_email, subject, html_body, text_content=plain_body, from_email=from_email)
         if success:
+            print(f"[EMAIL SUCCESS] Dispatched via Resend HTTPS API to {to_email}")
             return True, None
+        else:
+            print(f"[EMAIL WARNING] Resend HTTPS API failed: {err}. Falling back to SMTP...")
 
     # 3. Fallback to standard SMTP
     try:
