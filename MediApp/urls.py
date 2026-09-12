@@ -3,10 +3,14 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Authentication
+    # Authentication & Password Recovery
     path('', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
+    path('forgot-password/', views.forgot_password_view, name='forgot_password'),
+    path('forgot-password/verify/', views.verify_reset_otp_view, name='verify_reset_otp'),
+    path('forgot-password/reset/', views.reset_password_view, name='reset_password'),
+    path('change-password/', views.change_password_view, name='change_password'),
     
     # Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -135,6 +139,12 @@ urlpatterns = [
 
     # Customer WhatsApp Broadcast Marketing Tool
     path('customers/broadcast-whatsapp/', views.customer_broadcast_whatsapp_ajax, name='customer_broadcast_whatsapp_ajax'),
+
+    # Staff & User Management & Admin 1-Click Password Reset
+    path('staff-management/', views.staff_user_management_view, name='staff_management'),
+    path('staff-management/reset-password/', views.admin_reset_user_password_ajax, name='admin_reset_user_password_ajax'),
+    path('staff-management/add-user/', views.admin_add_staff_ajax, name='admin_add_staff_ajax'),
+    path('staff-management/toggle-status/<int:user_id>/', views.admin_toggle_user_status_ajax, name='admin_toggle_user_status_ajax'),
 ]
 
 

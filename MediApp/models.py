@@ -708,4 +708,35 @@ class PurchaseBillImport(models.Model):
 
     def __str__(self):
         supp_name = self.supplier.name if self.supplier else 'Unknown Supplier'
-        return f"Import #{self.id} - {supp_name} ({self.invoice_number})"
+        return f"Import #{self.id} - {supp_name} ({self.invoice_number})"
+
+
+class PasswordResetOTP(models.Model):
+    """
+    Tracks 6-digit numeric OTP and secure random tokens for password recovery.
+    Supports both email delivery and secure fail-safe reset workflows.
+    """
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='password_reset_otps'
+    )
+    otp_code = models.CharField(max_length=6)
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Password Reset OTP'
+        verbose_name_plural = 'Password Reset OTPs'
+
+    def is_valid(self):
+        return not self.is_used and timezone.now() <= self.expires_at
+
+    def __str__(self):
+        status = "Active" if self.is_valid() else ("Used" if self.is_used else "Expired")
+        return f"Reset OTP for {self.user.username} [{self.otp_code}] - {status}"
+

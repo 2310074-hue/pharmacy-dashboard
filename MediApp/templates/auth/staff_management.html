@@ -1,0 +1,484 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Staff &amp; User Management - PharmaCare PRO{% endblock %}
+{% block page_title %}Staff &amp; Role Management{% endblock %}
+{% block page_subtitle %}Manage pharmacy staff credentials, roles, and 1-click emergency password resets{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="card p-5 flex items-center justify-between border-l-4 border-l-cyan-500">
+            <div>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Staff Accounts</p>
+                <h3 class="text-2xl font-extrabold text-gray-900 mt-1">{{ total_staff_count }}</h3>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center font-bold">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="card p-5 flex items-center justify-between border-l-4 border-l-emerald-500">
+            <div>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Staff</p>
+                <h3 class="text-2xl font-extrabold text-emerald-700 mt-1">{{ active_staff_count }}</h3>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="card p-5 flex items-center justify-between border-l-4 border-l-indigo-500">
+            <div>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Quick Actions</p>
+                <button type="button" onclick="openAddStaffModal()" class="btn btn-primary text-xs font-bold px-3 py-1.5 mt-1.5 flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                    <span>+ Add New Staff</span>
+                </button>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="card overflow-hidden">
+        <!-- Filter Header -->
+        <div class="p-5 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-gray-50/50">
+            <div>
+                <h4 class="text-base font-bold text-gray-800">Pharmacy Staff &amp; Access Directory</h4>
+                <p class="text-xs text-gray-500">Click "Reset Password" to immediately assign new credentials to any user</p>
+            </div>
+
+            <form method="get" class="flex items-center gap-2 flex-wrap">
+                <input 
+                    type="text" 
+                    name="q" 
+                    value="{{ search_q }}" 
+                    placeholder="Search name, username, email..." 
+                    class="form-input text-xs py-1.5 px-3 w-48 sm:w-64"
+                >
+                <select name="role" class="form-select text-xs py-1.5 px-3">
+                    <option value="">All Roles</option>
+                    <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="pharmacist" {% if role_filter == 'pharmacist' %}selected{% endif %}>Pharmacist</option>
+                    <option value="assistant" {% if role_filter == 'assistant' %}selected{% endif %}>Assistant</option>
+                </select>
+                <button type="submit" class="btn btn-secondary text-xs py-1.5 px-3 font-bold">Filter</button>
+                {% if search_q or role_filter %}
+                <a href="{% url 'staff_management' %}" class="text-xs text-rose-600 font-bold hover:underline">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-gray-200 bg-gray-50/80 text-[11px] font-extrabold uppercase tracking-wider text-gray-500">
+                        <th class="py-3 px-4">Staff Member</th>
+                        <th class="py-3 px-4">Role</th>
+                        <th class="py-3 px-4">Contact / Email</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-4">Last Login</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-xs">
+                    {% for u in users_page %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr {% if u.role == 'admin' %}from-indigo-600 to-purple-600 text-white{% elif u.role == 'pharmacist' %}from-cyan-500 to-blue-600 text-white{% else %}from-slate-600 to-slate-800 text-white{% endif %} flex items-center justify-center font-extrabold text-xs shadow-xs">
+                                    {{ u.username|slice:":2"|upper }}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 flex items-center gap-1.5">
+                                        <span>{{ u.get_full_name|default:u.username }}</span>
+                                        {% if u.id == request.user.id %}
+                                        <span class="text-[9px] bg-cyan-100 text-cyan-800 font-extrabold px-1.5 py-0.2 rounded">YOU</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-[11px] text-gray-400 font-mono">@{{ u.username }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {% if u.role == 'admin' %}bg-purple-100 text-purple-800{% elif u.role == 'pharmacist' %}bg-cyan-100 text-cyan-800{% else %}bg-slate-100 text-slate-700{% endif %}">
+                                {{ u.get_role_display }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="text-gray-700">{{ u.email|default:'No email set' }}</div>
+                            <div class="text-[11px] text-gray-400">{{ u.contact_number|default:'-' }}</div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if u.is_active %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Deactivated
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-gray-500">
+                            {% if u.last_login %}
+                            <div>{{ u.last_login|date:"d M Y" }}</div>
+                            <div class="text-[10px] text-gray-400">{{ u.last_login|time:"h:i A" }}</div>
+                            {% else %}
+                            <span class="text-gray-400 italic">Never</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                                <!-- 1-Click Password Reset Button -->
+                                <button 
+                                    type="button" 
+                                    onclick="openResetPasswordModal('{{ u.id }}', '{{ u.username|escapejs }}', '{{ u.get_role_display|escapejs }}')" 
+                                    class="px-2.5 py-1.5 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold text-xs border border-cyan-200 flex items-center gap-1 transition shadow-2xs"
+                                    title="Set new password for {{ u.username }}"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                                    </svg>
+                                    <span>Reset Password</span>
+                                </button>
+
+                                {% if u.id != request.user.id %}
+                                <button 
+                                    type="button" 
+                                    onclick="toggleUserStatus('{{ u.id }}', '{{ u.username|escapejs }}')" 
+                                    class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                                    title="{% if u.is_active %}Deactivate Account{% else %}Activate Account{% endif %}"
+                                >
+                                    {% if u.is_active %}
+                                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                    {% else %}
+                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {% endif %}
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-400">
+                            No staff accounts found matching your query.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if users_page.has_other_pages %}
+        <div class="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600 bg-gray-50/50">
+            <span>Page {{ users_page.number }} of {{ users_page.paginator.num_pages }}</span>
+            <div class="flex items-center gap-1">
+                {% if users_page.has_previous %}
+                <a href="?page={{ users_page.previous_page_number }}{% if search_q %}&q={{ search_q }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}" class="btn btn-secondary text-xs px-2.5 py-1">Previous</a>
+                {% endif %}
+                {% if users_page.has_next %}
+                <a href="?page={{ users_page.next_page_number }}{% if search_q %}&q={{ search_q }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}" class="btn btn-secondary text-xs px-2.5 py-1">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- 🔑 Modal 1: 1-Click Admin Password Reset Modal -->
+<div id="reset-password-modal" class="fixed inset-0 z-50 bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in duration-200">
+        <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-900">Admin 1-Click Password Reset</h4>
+                    <p id="modal-user-subtitle" class="text-[11px] text-gray-500">Resetting for @username</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeResetPasswordModal()" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <form id="admin-reset-form" onsubmit="submitAdminPasswordReset(event)" class="space-y-4">
+            <input type="hidden" id="modal_user_id">
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Assign New Password *
+                </label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="modal_new_password" 
+                        class="form-input text-xs w-full pr-24 font-mono font-bold" 
+                        placeholder="e.g. Pharma@2026"
+                        required 
+                        minlength="6"
+                    >
+                    <button 
+                        type="button" 
+                        onclick="generateRandomPassword()" 
+                        class="absolute right-2 top-1.5 px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-[10px] rounded-md transition"
+                    >
+                        ⚡ Random
+                    </button>
+                </div>
+                <p class="text-[11px] text-gray-400 mt-1">Staff will immediately be able to log in with this new password.</p>
+            </div>
+
+            <div id="modal-error" class="hidden p-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold"></div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                <button type="button" onclick="closeResetPasswordModal()" class="btn btn-secondary text-xs px-3.5 py-2 font-bold">
+                    Cancel
+                </button>
+                <button type="submit" id="modal-submit-btn" class="btn btn-primary text-xs px-4 py-2 font-bold flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>Save &amp; Update Password</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ➕ Modal 2: Add New Staff Modal -->
+<div id="add-staff-modal" class="fixed inset-0 z-50 bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in duration-200">
+        <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-800 flex items-center justify-center font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-900">Add New Staff Member</h4>
+                    <p class="text-[11px] text-gray-500">Create login credentials for a new pharmacist or assistant</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeAddStaffModal()" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <form id="add-staff-form" onsubmit="submitAddStaff(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Username *</label>
+                    <input type="text" id="add_username" class="form-input text-xs w-full" placeholder="e.g. rahul_pharma" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Role *</label>
+                    <select id="add_role" class="form-select text-xs w-full">
+                        <option value="pharmacist">Pharmacist</option>
+                        <option value="assistant">Assistant / Counter Staff</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">First Name</label>
+                    <input type="text" id="add_first_name" class="form-input text-xs w-full" placeholder="First name">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Last Name</label>
+                    <input type="text" id="add_last_name" class="form-input text-xs w-full" placeholder="Last name">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
+                    <input type="email" id="add_email" class="form-input text-xs w-full" placeholder="staff@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Contact Number</label>
+                    <input type="text" id="add_contact_number" class="form-input text-xs w-full" placeholder="+91 98765 43210">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Initial Password *</label>
+                <input type="text" id="add_password" class="form-input text-xs w-full font-mono font-bold" placeholder="Min 6 characters" required minlength="6">
+            </div>
+
+            <div id="add-modal-error" class="hidden p-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold"></div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                <button type="button" onclick="closeAddStaffModal()" class="btn btn-secondary text-xs px-3.5 py-2 font-bold">Cancel</button>
+                <button type="submit" id="add-modal-submit-btn" class="btn btn-primary text-xs px-4 py-2 font-bold flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>Create Staff Account</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openResetPasswordModal(userId, username, role) {
+        document.getElementById('modal_user_id').value = userId;
+        document.getElementById('modal-user-subtitle').innerText = `Resetting password for @${username} (${role})`;
+        document.getElementById('modal_new_password').value = '';
+        document.getElementById('modal-error').classList.add('hidden');
+        document.getElementById('reset-password-modal').classList.remove('hidden');
+        generateRandomPassword();
+    }
+
+    function closeResetPasswordModal() {
+        document.getElementById('reset-password-modal').classList.add('hidden');
+    }
+
+    function generateRandomPassword() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
+        let pass = '';
+        for(let i=0; i<8; i++) {
+            pass += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('modal_new_password').value = pass;
+    }
+
+    function submitAdminPasswordReset(e) {
+        e.preventDefault();
+        const userId = document.getElementById('modal_user_id').value;
+        const newPass = document.getElementById('modal_new_password').value;
+        const errEl = document.getElementById('modal-error');
+        const submitBtn = document.getElementById('modal-submit-btn');
+
+        errEl.classList.add('hidden');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Updating...';
+
+        fetch('{% url "admin_reset_user_password_ajax" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ user_id: userId, new_password: newPass })
+        })
+        .then(res => res.json())
+        .then(data => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Save & Update Password';
+            if (data.success) {
+                alert(data.message);
+                closeResetPasswordModal();
+            } else {
+                errEl.innerText = data.error || 'Failed to update password.';
+                errEl.classList.remove('hidden');
+            }
+        })
+        .catch(err => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Save & Update Password';
+            errEl.innerText = 'Network error. Please try again.';
+            errEl.classList.remove('hidden');
+        });
+    }
+
+    function openAddStaffModal() {
+        document.getElementById('add-modal-error').classList.add('hidden');
+        document.getElementById('add-staff-modal').classList.remove('hidden');
+    }
+
+    function closeAddStaffModal() {
+        document.getElementById('add-staff-modal').classList.add('hidden');
+    }
+
+    function submitAddStaff(e) {
+        e.preventDefault();
+        const payload = {
+            username: document.getElementById('add_username').value,
+            role: document.getElementById('add_role').value,
+            first_name: document.getElementById('add_first_name').value,
+            last_name: document.getElementById('add_last_name').value,
+            email: document.getElementById('add_email').value,
+            contact_number: document.getElementById('add_contact_number').value,
+            password: document.getElementById('add_password').value,
+        };
+
+        const errEl = document.getElementById('add-modal-error');
+        const submitBtn = document.getElementById('add-modal-submit-btn');
+        errEl.classList.add('hidden');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Creating...';
+
+        fetch('{% url "admin_add_staff_ajax" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Create Staff Account';
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                errEl.innerText = data.error || 'Failed to create user.';
+                errEl.classList.remove('hidden');
+            }
+        })
+        .catch(err => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Create Staff Account';
+            errEl.innerText = 'Network error. Please try again.';
+            errEl.classList.remove('hidden');
+        });
+    }
+
+    function toggleUserStatus(userId, username) {
+        if (!confirm(`Are you sure you want to toggle the status of staff member '${username}'?`)) return;
+
+        fetch(`/staff-management/toggle-status/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to update status.');
+            }
+        });
+    }
+</script>
+{% endblock %}

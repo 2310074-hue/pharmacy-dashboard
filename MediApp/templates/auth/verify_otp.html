@@ -1,0 +1,298 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - PharmaCare PRO</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        * {
+            font-family: 'Plus Jakarta Sans', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0369a1 0%, #0f172a 50%, #4338ca 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.25) 0%, transparent 70%);
+            top: -150px;
+            left: -150px;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
+            bottom: -150px;
+            right: -150px;
+            pointer-events: none;
+        }
+        
+        .verify-card {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            z-index: 10;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(35px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .otp-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #cbd5e1;
+            border-radius: 14px;
+            color: #0f172a;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 12px;
+            text-align: center;
+            transition: all 0.2s ease;
+            background-color: #f8fafc;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .otp-input:focus {
+            outline: none;
+            background-color: #ffffff;
+            border-color: #0284c7;
+            box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.18);
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.4);
+            background: linear-gradient(135deg, #0369a1 0%, #4338ca 100%);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-card w-full max-w-md">
+        <!-- Header Banner -->
+        <div class="p-8 bg-gradient-to-r from-sky-600 via-cyan-600 to-indigo-600 text-white text-center relative overflow-hidden">
+            <div class="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-white/10 blur-md pointer-events-none"></div>
+            
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 shadow-lg shadow-cyan-900/20 mb-3.5">
+                <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center justify-center gap-2">
+                PharmaCare
+                <span class="text-[10px] font-bold bg-cyan-400/25 text-cyan-200 border border-cyan-300/40 px-2 py-0.5 rounded-full uppercase tracking-wider">PRO</span>
+            </h1>
+            <p class="text-sky-100 text-xs sm:text-sm mt-1 font-medium">Identity Verification Step</p>
+        </div>
+        
+        <!-- Form Area -->
+        <div class="p-6 sm:p-8">
+            <div class="mb-5">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="w-6 h-6 rounded-full bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold text-xs">2</span>
+                    <h2 class="text-xl font-bold text-slate-900">Enter Verification Code</h2>
+                </div>
+                <p class="text-xs text-slate-500">
+                    We sent a 6-digit OTP code for user <strong>{{ user.username }}</strong> to <span class="font-bold text-slate-700">{{ masked_email }}</span>.
+                </p>
+            </div>
+            
+            {% if messages %}
+            {% for message in messages %}
+            <div class="mb-4 p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 {% if message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {% if message.tags == 'error' %}
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    {% else %}
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    {% endif %}
+                </svg>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% if error %}
+            <div class="mb-4 p-3.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold flex items-center gap-2">
+                <svg class="w-4 h-4 flex-shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Testing / Development Instant OTP Preview (If email service not yet configured) -->
+            {% if otp_dev_preview %}
+            <div class="mb-4 p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl text-xs text-amber-900">
+                <div class="flex items-center justify-between font-bold mb-1">
+                    <span>⚡ Instant OTP Code (Offline / Dev Mode):</span>
+                    <button type="button" onclick="document.getElementById('otp_code').value='{{ otp_dev_preview }}'" class="text-[11px] text-cyan-700 underline font-bold hover:text-cyan-900">Auto-fill Code</button>
+                </div>
+                <div class="text-lg font-mono font-extrabold text-amber-900 tracking-widest">{{ otp_dev_preview }}</div>
+            </div>
+            {% endif %}
+            
+            <form method="post" action="{% url 'verify_reset_otp' %}?token={{ token }}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="token" value="{{ token }}">
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 text-center" for="otp_code">
+                        6-Digit Verification Code
+                    </label>
+                    <input 
+                        type="text" 
+                        id="otp_code" 
+                        name="otp_code" 
+                        maxlength="6"
+                        placeholder="&bull;&bull;&bull;&bull;&bull;&bull;"
+                        class="otp-input" 
+                        required
+                        autofocus
+                        autocomplete="one-time-code"
+                    >
+                    <p class="text-[11px] text-slate-400 text-center mt-1.5">Emergency Admin PIN accepted: <code class="font-mono text-slate-600 bg-slate-100 px-1 rounded">PHARMA-2026-ADMIN</code></p>
+                </div>
+                
+                <button type="submit" class="btn-submit mt-3">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>Verify Code &amp; Continue</span>
+                </button>
+            </form>
+
+            <!-- Resend & Timer -->
+            <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span id="countdown-text" class="text-slate-500 font-medium">Code expires in: <strong id="timer" class="text-cyan-700 font-bold">14:59</strong></span>
+                <button type="button" id="resend-btn" onclick="resendOtpAjax()" class="text-cyan-600 hover:text-cyan-800 font-bold flex items-center gap-1 transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span>Resend OTP</span>
+                </button>
+            </div>
+
+            <!-- Start Over Link -->
+            <div class="mt-4 text-center">
+                <a href="{% url 'forgot_password' %}" class="text-xs text-slate-400 hover:text-slate-600 font-semibold transition">
+                    &larr; Use different username / email
+                </a>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // 15-minute countdown timer
+        let timeLeft = 15 * 60;
+        const timerEl = document.getElementById('timer');
+        
+        const countdownInterval = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                timerEl.innerText = "Expired";
+                timerEl.classList.add('text-rose-600');
+                return;
+            }
+            timeLeft--;
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }, 1000);
+
+        function resendOtpAjax() {
+            const resendBtn = document.getElementById('resend-btn');
+            resendBtn.disabled = true;
+            resendBtn.innerHTML = 'Sending...';
+
+            const formData = new FormData();
+            formData.append('action', 'resend');
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            fetch('{% url "verify_reset_otp" %}?token={{ token }}', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = '<span>Resend OTP</span>';
+                if (data.success) {
+                    alert('Fresh 6-digit OTP code has been dispatched!');
+                    timeLeft = 15 * 60;
+                    if (data.dev_otp) {
+                        document.getElementById('otp_code').value = data.dev_otp;
+                    }
+                } else {
+                    alert('Error resending code: ' + (data.error || 'Please try again.'));
+                }
+            })
+            .catch(err => {
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = '<span>Resend OTP</span>';
+                alert('Network error. Please try again.');
+            });
+        }
+    </script>
+</body>
+</html>

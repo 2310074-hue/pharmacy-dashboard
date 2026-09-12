@@ -6117,6 +6117,360 @@ def customer_broadcast_whatsapp_ajax(request):
     })
 
 
+# ==============================================================================
+# MODULE 3: FORGOT & RESET PASSWORD RECOVERY ENGINE & STAFF MANAGEMENT
+# ==============================================================================
+from django.contrib.auth import update_session_auth_hash
+from .models import PasswordResetOTP
+from .utils.password_reset_utils import (
+    create_and_send_reset_otp,
+    verify_reset_otp,
+    mask_email
+)
+
+
+def forgot_password_view(request):
+    """
+    Step 1: Enter Username or Email to request Password Reset OTP.
+    Works seamlessly for both Admin & Staff users.
+    """
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    context = {'error': None, 'success': None, 'identifier': ''}
+
+    if request.method == 'POST':
+        identifier = request.POST.get('identifier', '').strip()
+        context['identifier'] = identifier
+
+        if not identifier:
+            context['error'] = "Please enter your username or registered email address."
+            return render(request, 'auth/forgot_password.html', context)
+
+        # Look up user by username or email
+        user = User.objects.filter(
+            Q(username__iexact=identifier) | Q(email__iexact=identifier)
+        ).first()
+
+        if not user:
+            # For security, we can provide clear feedback or hint
+            context['error'] = f"No account found matching '{identifier}'. Please verify your username or contact the administrator."
+            return render(request, 'auth/forgot_password.html', context)
+
+        if not user.is_active:
+            context['error'] = "This account is currently inactive. Please contact the administrator to reactivate your account."
+            return render(request, 'auth/forgot_password.html', context)
+
+        # Generate & Send OTP
+        res = create_and_send_reset_otp(user, request=request)
+        if res.get('success'):
+            request.session['reset_token'] = res['token']
+            request.session['reset_user_id'] = user.id
+            request.session['masked_email'] = res['masked_email']
+            request.session['reset_username'] = user.username
+            request.session['otp_dev_preview'] = res.get('otp_code') if not res.get('email_sent') else None
+
+            messages.success(request, f"A 6-digit verification code has been dispatched for {user.username}.")
+            return redirect(f"{reverse('verify_reset_otp')}?token={res['token']}")
+        else:
+            context['error'] = "Could not generate verification code. Please try again or use Admin Emergency PIN."
+            return render(request, 'auth/forgot_password.html', context)
+
+    return render(request, 'auth/forgot_password.html', context)
+
+
+def verify_reset_otp_view(request):
+    """
+    Step 2: Enter 6-digit OTP code to verify identity.
+    Includes countdown timer, resend button, and emergency recovery code fallback.
+    """
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    token = request.GET.get('token') or request.session.get('reset_token')
+    if not token:
+        messages.error(request, "Password reset session has expired. Please start over.")
+        return redirect('forgot_password')
+
+    otp_obj = PasswordResetOTP.objects.filter(token=token).select_related('user').first()
+    if not otp_obj or otp_obj.is_used:
+        messages.error(request, "Invalid or already used verification session. Please request a new code.")
+        return redirect('forgot_password')
+
+    context = {
+        'token': token,
+        'user': otp_obj.user,
+        'masked_email': mask_email(otp_obj.user.email),
+        'otp_dev_preview': request.session.get('otp_dev_preview'),
+        'error': None
+    }
+
+    # Handle AJAX resend OTP request
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.POST.get('action') == 'resend':
+        new_res = create_and_send_reset_otp(otp_obj.user, request=request)
+        request.session['reset_token'] = new_res['token']
+        request.session['otp_dev_preview'] = new_res.get('otp_code') if not new_res.get('email_sent') else None
+        return JsonResponse({
+            'success': True,
+            'token': new_res['token'],
+            'message': 'A fresh 6-digit code has been sent!',
+            'dev_otp': new_res.get('otp_code') if not new_res.get('email_sent') else None
+        })
+
+    if request.method == 'POST':
+        entered_code = request.POST.get('otp_code', '').strip()
+        is_valid, msg, validated_otp = verify_reset_otp(token, entered_code)
+
+        if is_valid and validated_otp:
+            request.session['verified_reset_token'] = token
+            request.session['verified_user_id'] = validated_otp.user.id
+            messages.success(request, "Identity verified! Please create your new secure password.")
+            return redirect(f"{reverse('reset_password')}?token={token}")
+        else:
+            context['error'] = msg
+
+    return render(request, 'auth/verify_otp.html', context)
+
+
+def reset_password_view(request):
+    """
+    Step 3: Set and confirm new password after OTP verification.
+    """
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    token = request.GET.get('token') or request.session.get('verified_reset_token')
+    if not token or token != request.session.get('verified_reset_token'):
+        messages.error(request, "Security verification required. Please verify your OTP code first.")
+        return redirect('forgot_password')
+
+    otp_obj = PasswordResetOTP.objects.filter(token=token).select_related('user').first()
+    if not otp_obj or otp_obj.is_used:
+        messages.error(request, "Reset session is no longer valid. Please start again.")
+        return redirect('forgot_password')
+
+    user = otp_obj.user
+    context = {'user': user, 'token': token, 'error': None}
+
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+
+        if not new_password:
+            context['error'] = "Please enter a new password."
+            return render(request, 'auth/set_new_password.html', context)
+
+        if len(new_password) < 6:
+            context['error'] = "Password must be at least 6 characters long."
+            return render(request, 'auth/set_new_password.html', context)
+
+        if new_password != confirm_password:
+            context['error'] = "New passwords do not match. Please re-enter carefully."
+            return render(request, 'auth/set_new_password.html', context)
+
+        # Update password
+        user.set_password(new_password)
+        user.save()
+
+        # Mark OTP used
+        otp_obj.is_used = True
+        otp_obj.save()
+
+        # Clear session
+        request.session.pop('reset_token', None)
+        request.session.pop('verified_reset_token', None)
+        request.session.pop('reset_user_id', None)
+        request.session.pop('verified_user_id', None)
+        request.session.pop('otp_dev_preview', None)
+
+        messages.success(request, f"Password for {user.username} has been successfully updated! You can now log in.")
+
+        if user.is_superuser or getattr(user, 'role', '') == 'admin':
+            return redirect('admin:index')
+        return redirect('login')
+
+    return render(request, 'auth/set_new_password.html', context)
+
+
+@login_required
+def change_password_view(request):
+    """
+    For logged-in users to update their password from the dashboard.
+    """
+    context = {'error': None, 'success': None}
+
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password', '')
+        new_password = request.POST.get('new_password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+
+        if not request.user.check_password(current_password):
+            context['error'] = "Your current password is incorrect."
+            return render(request, 'auth/change_password.html', context)
+
+        if len(new_password) < 6:
+            context['error'] = "New password must be at least 6 characters long."
+            return render(request, 'auth/change_password.html', context)
+
+        if new_password != confirm_password:
+            context['error'] = "New password and confirmation do not match."
+            return render(request, 'auth/change_password.html', context)
+
+        request.user.set_password(new_password)
+        request.user.save()
+        update_session_auth_hash(request, request.user)
+
+        messages.success(request, "🎉 Your password has been changed successfully!")
+        return redirect('change_password')
+
+    return render(request, 'auth/change_password.html', context)
+
+
+@login_required
+@admin_required
+def staff_user_management_view(request):
+    """
+    Staff & User Management Panel for Administrators:
+    View all staff accounts, roles, active status, and perform 1-click password resets.
+    """
+    search_q = request.GET.get('q', '').strip()
+    role_filter = request.GET.get('role', '').strip()
+
+    users_qs = User.objects.all().order_by('-date_joined')
+
+    if search_q:
+        users_qs = users_qs.filter(
+            Q(username__icontains=search_q) |
+            Q(first_name__icontains=search_q) |
+            Q(last_name__icontains=search_q) |
+            Q(email__icontains=search_q) |
+            Q(contact_number__icontains=search_q)
+        )
+
+    if role_filter:
+        users_qs = users_qs.filter(role=role_filter)
+
+    paginator = Paginator(users_qs, 15)
+    page_number = request.GET.get('page')
+    try:
+        users_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        users_page = paginator.page(1)
+    except EmptyPage:
+        users_page = paginator.page(paginator.num_pages)
+
+    context = {
+        'users_page': users_page,
+        'search_q': search_q,
+        'role_filter': role_filter,
+        'total_staff_count': User.objects.count(),
+        'active_staff_count': User.objects.filter(is_active=True).count(),
+    }
+    return render(request, 'auth/staff_management.html', context)
+
+
+@login_required
+@admin_required
+@require_POST
+def admin_reset_user_password_ajax(request):
+    """
+    1-Click Password Reset by Admin for any Staff user (No email or code required).
+    """
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    user_id = data.get('user_id')
+    new_password = data.get('new_password', '').strip()
+
+    if not user_id or not new_password:
+        return JsonResponse({'success': False, 'error': 'User ID and new password are required.'}, status=400)
+
+    if len(new_password) < 6:
+        return JsonResponse({'success': False, 'error': 'Password must be at least 6 characters long.'}, status=400)
+
+    target_user = get_object_or_404(User, id=user_id)
+    target_user.set_password(new_password)
+    target_user.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Password for {target_user.username} ({target_user.get_role_display()}) was successfully updated to '{new_password}'!"
+    })
+
+
+@login_required
+@admin_required
+@require_POST
+def admin_add_staff_ajax(request):
+    """
+    Create a new staff member account (Pharmacist / Assistant).
+    """
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    username = data.get('username', '').strip()
+    first_name = data.get('first_name', '').strip()
+    last_name = data.get('last_name', '').strip()
+    email = data.get('email', '').strip()
+    contact_number = data.get('contact_number', '').strip()
+    role = data.get('role', 'pharmacist').strip()
+    password = data.get('password', '').strip()
+
+    if not username or not password:
+        return JsonResponse({'success': False, 'error': 'Username and Password are required.'}, status=400)
+
+    if User.objects.filter(username__iexact=username).exists():
+        return JsonResponse({'success': False, 'error': f"Username '{username}' is already taken. Please choose another."}, status=400)
+
+    if email and User.objects.filter(email__iexact=email).exists():
+        return JsonResponse({'success': False, 'error': f"Email '{email}' is already registered with another account."}, status=400)
+
+    new_user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+        first_name=first_name,
+        last_name=last_name,
+        role=role,
+        contact_number=contact_number,
+        is_staff=(role in ['admin', 'pharmacist']),
+        is_active=True
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Staff member '{new_user.username}' ({new_user.get_role_display()}) created successfully!",
+        'user_id': new_user.id
+    })
+
+
+@login_required
+@admin_required
+@require_POST
+def admin_toggle_user_status_ajax(request, user_id):
+    """
+    Activate or deactivate a staff member account.
+    """
+    target_user = get_object_or_404(User, id=user_id)
+    if target_user.id == request.user.id:
+        return JsonResponse({'success': False, 'error': 'You cannot deactivate your own administrative account.'}, status=400)
+
+    target_user.is_active = not target_user.is_active
+    target_user.save()
+
+    status_str = "Activated" if target_user.is_active else "Deactivated"
+    return JsonResponse({
+        'success': True,
+        'is_active': target_user.is_active,
+        'message': f"Staff account for {target_user.username} is now {status_str}."
+    })
+
+
+
 
 
 
