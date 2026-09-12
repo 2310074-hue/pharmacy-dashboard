@@ -64,6 +64,9 @@ def send_via_brevo(to_email, subject, html_content, text_content=None, from_emai
         return False, "No BREVO_API_KEY configured"
 
     from_addr = from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', '') or 'sharmaneeraj3415@gmail.com'
+    if not from_addr or '@' not in from_addr:
+        from_addr = 'sharmaneeraj3415@gmail.com'
+
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {
         "api-key": api_key.strip(),
@@ -77,7 +80,7 @@ def send_via_brevo(to_email, subject, html_content, text_content=None, from_emai
         return False, "No recipient email address provided"
 
     payload = {
-        "sender": {"name": "PharmaCare", "email": from_addr if '@' in from_addr else 'sharmaneeraj3415@gmail.com'},
+        "sender": {"name": "PharmaCare Security", "email": from_addr},
         "to": to_list,
         "subject": subject,
         "htmlContent": html_content,
