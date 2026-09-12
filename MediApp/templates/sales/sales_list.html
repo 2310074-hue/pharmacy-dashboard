@@ -179,7 +179,7 @@
                     </td>
                     <td>
                         <button onclick="toggleItems({{ sale.id }})" class="text-cyan-600 hover:text-cyan-700 font-medium flex items-center gap-1">
-                            {{ sale.items.count }} item{{ sale.items.count|pluralize }}
+                            {{ sale.items.all|length }} item{{ sale.items.all|length|pluralize }}
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>

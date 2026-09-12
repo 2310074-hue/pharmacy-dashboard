@@ -66,7 +66,7 @@ class Supplier(models.Model):
 
 class Medicine(models.Model):
     """Medicine model with supplier relationship"""
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, db_index=True)
     description = models.TextField(blank=True)
     supplier = models.ForeignKey(
         Supplier, 
@@ -126,8 +126,21 @@ class Medicine(models.Model):
 
     @property
     def nearest_active_batch(self):
-        """Return the nearest non-expired batch with stock, or nearest overall batch if all expired."""
+        """Return the nearest non-expired batch with stock, using prefetched cache if available."""
         today = timezone.now().date()
+        # Use in-memory cache if prefetched
+        if hasattr(self, '_prefetched_objects_cache') and 'batches' in self._prefetched_objects_cache:
+            active = [b for b in self.batches.all() if b.expiry_date and b.expiry_date >= today and (b.quantity or 0) > 0]
+            if active:
+                active.sort(key=lambda b: b.expiry_date)
+                return active[0]
+            all_b = [b for b in self.batches.all() if b.expiry_date]
+            if all_b:
+                all_b.sort(key=lambda b: b.expiry_date)
+                return all_b[0]
+            batches_list = list(self.batches.all())
+            return batches_list[0] if batches_list else None
+
         active = (
             self.batches
             .filter(expiry_date__gte=today, quantity__gt=0)
@@ -149,11 +162,11 @@ class Batch(models.Model):
     )
     batch_name = models.CharField(max_length=50)
     add_date = models.DateField(default=timezone.now)
-    expiry_date = models.DateField()
+    expiry_date = models.DateField(db_index=True)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     purchase_price = models.DecimalField(
         max_digits=10, 
-        decimal_places=2,
+        decimal_places=2, 
         default=0,
         validators=[MinValueValidator(Decimal('0'))],
         help_text='Cost price per unit for this batch'
@@ -274,11 +287,11 @@ class MedicineReminder(models.Model):
 
 class ExpiryReminderLog(models.Model):
     """Log for expiry reminders sent to customers."""
-    customer_email = models.EmailField()
+    customer_email = models.EmailField(db_index=True)
     customer_name = models.CharField(max_length=200, blank=True)
-    medicine_name = models.CharField(max_length=200)
-    expiry_date = models.DateField()
-    reminder_sent = models.BooleanField(default=False)
+    medicine_name = models.CharField(max_length=200, db_index=True)
+    expiry_date = models.DateField(db_index=True)
+    reminder_sent = models.BooleanField(default=False, db_index=True)
     sent_at = models.DateTimeField(null=True, blank=True)
     message = models.TextField(blank=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -325,7 +338,7 @@ class Sale(models.Model):
         blank=True,
         related_name='sales'
     )
-    date = models.DateTimeField(default=timezone.now)
+    date = models.DateTimeField(default=timezone.now, db_index=True)
     total_price = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -347,7 +360,7 @@ class Sale(models.Model):
         related_name='sales_created'
     )
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='Cash')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Completed')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Completed', db_index=True)
 
     class Meta:
         ordering = ['-date']

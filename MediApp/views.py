@@ -17,8 +17,7 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
-from django.db.models import Q, Sum, Count
+from django.db.models import Q, Sum, Count, Case, When
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.urls import reverse
@@ -585,12 +584,11 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 
-# Medicine Views
 @pharmacist_or_admin
 def medicine_list(request):
-    """List all medicines"""
-    search_query = request.GET.get('search', '')
-    expiry_filter = request.GET.get('expiry', '')
+    """List all medicines with zero N+1 queries and instant loading"""
+    search_query = request.GET.get('search', '').strip()
+    expiry_filter = request.GET.get('expiry', '').strip()
     today = timezone.now().date()
     medicines = owner_scope_queryset(request, Medicine.objects.select_related('supplier').prefetch_related('batches'), 'created_by')
 
@@ -601,27 +599,25 @@ def medicine_list(request):
             Q(supplier__name__icontains=search_query)
         )
 
+    medicines = list(medicines)
+
     if expiry_filter in ['7', '15', '30']:
         days = int(expiry_filter)
         target_date = today + timedelta(days=days)
-        # Filter medicines that have any batch expiring within the chosen window
-        medicines = medicines.filter(
-            batches__expiry_date__gte=today,
-            batches__expiry_date__lte=target_date
-        ).distinct()
-        # Attach the batch that falls within THIS specific window to each medicine
-        # so the card shows the relevant batch, not just the globally nearest one.
-        medicines = list(medicines)
+        filtered_meds = []
         for med in medicines:
-            med.display_batch = (
-                med.batches
-                .filter(expiry_date__gte=today, expiry_date__lte=target_date, quantity__gt=0)
-                .order_by('expiry_date')
-                .first()
-            )
+            batches = list(med.batches.all())
+            valid_batches = [
+                b for b in batches 
+                if b.expiry_date and today <= b.expiry_date <= target_date and (b.quantity or 0) > 0
+            ]
+            if valid_batches:
+                valid_batches.sort(key=lambda b: b.expiry_date)
+                med.display_batch = valid_batches[0]
+                filtered_meds.append(med)
+        medicines = filtered_meds
     else:
-        # No expiry filter — attach the nearest active batch for each medicine
-        medicines = list(medicines)
+        # Fast in-memory resolution of nearest active batch
         for med in medicines:
             med.display_batch = med.nearest_active_batch
 
@@ -872,12 +868,15 @@ def sales_list(request):
             Q(customer__contact_number__icontains=search_query)
         )
     
-    # Calculate totals
-    total_sales_count = sales_qs.count()
-    today_sales_count = owner_scope_sales(request, Sale.objects.filter(date__date=today)).count()
-
-    # Calculate total discount given
-    total_discount = sales_qs.aggregate(Sum('discount'))['discount__sum'] or 0
+    # Calculate totals in 1 single combined aggregation query
+    stats = sales_qs.aggregate(
+        total_count=Count('id'),
+        total_discount=Sum('discount'),
+        today_count=Count(Case(When(date__date=today, then=1)))
+    )
+    total_sales_count = stats['total_count'] or 0
+    total_discount = stats['total_discount'] or 0
+    today_sales_count = stats['today_count'] or 0
 
     # Paginate (25 records per page for lightning fast load time)
     page = request.GET.get('page', 1)
@@ -4145,7 +4144,7 @@ def smart_analytics_data(request):
 @assistant_or_above
 def demand_forecasting_view(request):
     """
-    Renders the AI Demand Forecasting Dashboard.
+    Renders the AI Demand Forecasting Dashboard with high-speed bulk aggregation.
     Displays:
       - 30-day predicted demand for catalog medicines owned by the current tenant
       - Critical Stockout alerts & Reorder recommendations
@@ -4153,17 +4152,7 @@ def demand_forecasting_view(request):
       - Dynamic dropdown to switch medicine forecast on the fly
     """
     medicines = owner_scope_queryset(request, Medicine.objects.order_by('name'), 'created_by')
-    all_forecasts = []
-    for med in medicines:
-        res = forecast_demand(med.id, days_ahead=30)
-        if res:
-            all_forecasts.append(res)
-
-    def sort_key(item):
-        level_order = {'OUT_OF_STOCK': 0, 'CRITICAL': 1, 'HIGH': 2, 'MODERATE': 3, 'ADEQUATE': 4}
-        return (level_order.get(item['risk_level'], 5), item['days_of_stock_left'])
-
-    all_forecasts.sort(key=sort_key)
+    all_forecasts = get_all_medicine_forecasts(medicines_qs=medicines, days_ahead=30)
 
     selected_med_id = request.GET.get('med_id')
     if selected_med_id:
@@ -4175,6 +4164,7 @@ def demand_forecasting_view(request):
     if not selected_med_id and all_forecasts:
         selected_med_id = all_forecasts[0]['medicine_id']
 
+    # Compute detailed historical series and Holt-Winters curve ONLY for the selected medicine
     selected_forecast = None
     if selected_med_id and any(f['medicine_id'] == selected_med_id for f in all_forecasts):
         selected_forecast = forecast_demand(selected_med_id, days_ahead=30)
@@ -4471,13 +4461,20 @@ def expiry_reminder_list(request):
     elif timeline_filter == 'safe':
         qs = qs.filter(expiry_date__gt=today + timedelta(days=30))
 
-    # KPI Metrics across entire scoped set
+    # KPI Metrics across entire scoped set (1 single aggregation query)
     base_qs = _get_expiry_reminder_queryset(request)
-    total_alerts_count = base_qs.count()
-    pending_alerts_count = base_qs.filter(reminder_sent=False).count()
-    sent_alerts_count = base_qs.filter(reminder_sent=True).count()
-    critical_alerts_count = base_qs.filter(expiry_date__gte=today, expiry_date__lte=today + timedelta(days=7)).count()
-    expired_alerts_count = base_qs.filter(expiry_date__lt=today).count()
+    kpis = base_qs.aggregate(
+        total=Count('id'),
+        pending=Count(Case(When(reminder_sent=False, then=1))),
+        sent=Count(Case(When(reminder_sent=True, then=1))),
+        critical=Count(Case(When(expiry_date__gte=today, expiry_date__lte=today + timedelta(days=7), then=1))),
+        expired=Count(Case(When(expiry_date__lt=today, then=1)))
+    )
+    total_alerts_count = kpis['total'] or 0
+    pending_alerts_count = kpis['pending'] or 0
+    sent_alerts_count = kpis['sent'] or 0
+    critical_alerts_count = kpis['critical'] or 0
+    expired_alerts_count = kpis['expired'] or 0
 
     # Ordering: soonest expiring first
     qs = qs.order_by('expiry_date', 'customer_name')
