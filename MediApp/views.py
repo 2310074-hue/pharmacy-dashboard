@@ -6168,12 +6168,15 @@ def forgot_password_view(request):
             request.session['reset_user_id'] = user.id
             request.session['masked_email'] = res['masked_email']
             request.session['reset_username'] = user.username
-            request.session['otp_dev_preview'] = res.get('otp_code') if not res.get('email_sent') else None
 
-            messages.success(request, f"A 6-digit verification code has been dispatched for {user.username}.")
+            if res.get('email_sent'):
+                messages.success(request, f"A 6-digit verification code has been dispatched to {res['masked_email']}.")
+            else:
+                messages.info(request, f"Verification code generated. Please check your registered email inbox or ask your Pharmacy Admin.")
+
             return redirect(f"{reverse('verify_reset_otp')}?token={res['token']}")
         else:
-            context['error'] = "Could not generate verification code. Please try again or use Admin Emergency PIN."
+            context['error'] = "Could not generate verification code. Please contact your system administrator."
             return render(request, 'auth/forgot_password.html', context)
 
     return render(request, 'auth/forgot_password.html', context)
@@ -6182,7 +6185,6 @@ def forgot_password_view(request):
 def verify_reset_otp_view(request):
     """
     Step 2: Enter 6-digit OTP code to verify identity.
-    Includes countdown timer, resend button, and emergency recovery code fallback.
     """
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -6201,7 +6203,6 @@ def verify_reset_otp_view(request):
         'token': token,
         'user': otp_obj.user,
         'masked_email': mask_email(otp_obj.user.email),
-        'otp_dev_preview': request.session.get('otp_dev_preview'),
         'error': None
     }
 
@@ -6209,12 +6210,10 @@ def verify_reset_otp_view(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.POST.get('action') == 'resend':
         new_res = create_and_send_reset_otp(otp_obj.user, request=request)
         request.session['reset_token'] = new_res['token']
-        request.session['otp_dev_preview'] = new_res.get('otp_code') if not new_res.get('email_sent') else None
         return JsonResponse({
             'success': True,
             'token': new_res['token'],
-            'message': 'A fresh 6-digit code has been sent!',
-            'dev_otp': new_res.get('otp_code') if not new_res.get('email_sent') else None
+            'message': 'A fresh 6-digit verification code has been dispatched to your email!'
         })
 
     if request.method == 'POST':

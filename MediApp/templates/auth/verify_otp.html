@@ -179,24 +179,13 @@
             </div>
             {% endif %}
 
-            <!-- Testing / Development Instant OTP Preview (If email service not yet configured) -->
-            {% if otp_dev_preview %}
-            <div class="mb-4 p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl text-xs text-amber-900">
-                <div class="flex items-center justify-between font-bold mb-1">
-                    <span>⚡ Instant OTP Code (Offline / Dev Mode):</span>
-                    <button type="button" onclick="document.getElementById('otp_code').value='{{ otp_dev_preview }}'" class="text-[11px] text-cyan-700 underline font-bold hover:text-cyan-900">Auto-fill Code</button>
-                </div>
-                <div class="text-lg font-mono font-extrabold text-amber-900 tracking-widest">{{ otp_dev_preview }}</div>
-            </div>
-            {% endif %}
-            
             <form method="post" action="{% url 'verify_reset_otp' %}?token={{ token }}" class="space-y-4">
                 {% csrf_token %}
                 <input type="hidden" name="token" value="{{ token }}">
                 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 text-center" for="otp_code">
-                        6-Digit Verification Code
+                        Enter 6-Digit Verification Code
                     </label>
                     <input 
                         type="text" 
@@ -209,7 +198,7 @@
                         autofocus
                         autocomplete="one-time-code"
                     >
-                    <p class="text-[11px] text-slate-400 text-center mt-1.5">Emergency Admin PIN accepted: <code class="font-mono text-slate-600 bg-slate-100 px-1 rounded">PHARMA-2026-ADMIN</code></p>
+                    <p class="text-[11px] text-slate-400 text-center mt-2">Check your email inbox / spam folder for the 6-digit code.</p>
                 </div>
                 
                 <button type="submit" class="btn-submit mt-3">
