@@ -104,21 +104,21 @@ def send_via_brevo(to_email, subject, html_content, text_content=None, from_emai
 def send_universal_mail(subject, plain_body, html_body, to_email, from_email=None, conn=None):
     """
     Smart unified email dispatcher:
-    1. If RESEND_API_KEY is configured (Render Cloud), uses HTTPS port 443 (100% unblocked).
-    2. If BREVO_API_KEY is configured, uses Brevo HTTPS REST API (Port 443).
+    1. If BREVO_API_KEY is configured (Render Cloud), uses Brevo HTTPS REST API (Port 443) which works to ALL domains without sandbox block.
+    2. If RESEND_API_KEY is configured, uses Resend HTTPS REST API (Port 443).
     3. Falls back to Django SMTP backend (for local dev or custom SMTP).
     """
-    # 1. Try Resend HTTPS API (Port 443)
-    resend_key = getattr(settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
-    if resend_key:
-        success, err = send_via_resend(to_email, subject, html_body, text_content=plain_body, from_email=from_email)
-        if success:
-            return True, None
-
-    # 2. Try Brevo HTTPS API (Port 443)
+    # 1. Try Brevo HTTPS API (Port 443 - 100% unblocked on Render cloud & all email domains)
     brevo_key = getattr(settings, 'BREVO_API_KEY', '') or os.environ.get('BREVO_API_KEY', '')
     if brevo_key:
         success, err = send_via_brevo(to_email, subject, html_body, text_content=plain_body, from_email=from_email)
+        if success:
+            return True, None
+
+    # 2. Try Resend HTTPS API (Port 443)
+    resend_key = getattr(settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
+    if resend_key:
+        success, err = send_via_resend(to_email, subject, html_body, text_content=plain_body, from_email=from_email)
         if success:
             return True, None
 
