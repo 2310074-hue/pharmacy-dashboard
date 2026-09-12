@@ -79,22 +79,16 @@ def login_view(request):
     
     error = None
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
             login(request, user)
-            messages.success(request, f'Welcome back, {user.get_full_name()}!')
+            messages.success(request, f'Welcome back, {user.get_full_name() or user.username}!')
             return redirect('dashboard')
         else:
             error = 'Invalid username or password.'
-    else:
-        # Clear any stale 'Invalid username or password' flash messages from cookies
-        storage = messages.get_messages(request)
-        other_messages = [m for m in storage if 'Invalid username or password' not in str(m)]
-        for m in other_messages:
-            messages.add_message(request, m.level, m.message, extra_tags=m.extra_tags)
     
     return render(request, 'login.html', {'error': error})
 
