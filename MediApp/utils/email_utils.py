@@ -106,32 +106,15 @@ def send_via_brevo(to_email, subject, html_content, text_content=None, from_emai
 
 def send_universal_mail(subject, plain_body, html_body, to_email, from_email=None, conn=None):
     """
-    Smart unified email dispatcher:
-    1. If BREVO_API_KEY is configured (Render Cloud), uses Brevo HTTPS REST API (Port 443) which works to ALL domains without sandbox block.
-    2. If RESEND_API_KEY is configured, uses Resend HTTPS REST API (Port 443).
-    3. Falls back to Django SMTP backend (for local dev or custom SMTP).
+    Smart multi-tiered email dispatcher:
+    1. Try Direct Gmail SMTP first (Ultra fast, Google-authenticated, 100% Inbox delivery on localhost & unrestricted hosts).
+    2. If SMTP is blocked (Render Cloud [Errno 101] / timeout), immediately falls back to Brevo HTTPS REST API (Port 443).
+    3. If Brevo fails or not set, falls back to Resend HTTPS REST API (Port 443).
     """
-    # 1. Try Brevo HTTPS API (Port 443 - 100% unblocked on Render cloud & all email domains)
-    brevo_key = getattr(settings, 'BREVO_API_KEY', '') or os.environ.get('BREVO_API_KEY', '')
-    if brevo_key:
-        success, err = send_via_brevo(to_email, subject, html_body, text_content=plain_body, from_email=from_email)
-        if success:
-            print(f"[EMAIL SUCCESS] Dispatched via Brevo HTTPS API to {to_email}")
-            return True, None
-        else:
-            print(f"[EMAIL WARNING] Brevo HTTPS API failed: {err}. Falling back to next method...")
+    from_addr = from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', '') or 'sharmaneeraj3415@gmail.com'
+    recipients = [to_email] if isinstance(to_email, str) else list(to_email)
 
-    # 2. Try Resend HTTPS API (Port 443)
-    resend_key = getattr(settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
-    if resend_key:
-        success, err = send_via_resend(to_email, subject, html_body, text_content=plain_body, from_email=from_email)
-        if success:
-            print(f"[EMAIL SUCCESS] Dispatched via Resend HTTPS API to {to_email}")
-            return True, None
-        else:
-            print(f"[EMAIL WARNING] Resend HTTPS API failed: {err}. Falling back to SMTP...")
-
-    # 3. Fallback to standard SMTP
+    # 1. Try Direct SMTP (Gmail SSL/TLS) - Fastest delivery on Localhost
     try:
         if conn is None:
             conn = get_email_connection()
@@ -139,22 +122,38 @@ def send_universal_mail(subject, plain_body, html_body, to_email, from_email=Non
             subject=subject,
             message=plain_body,
             html_message=html_body,
-            from_email=from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', ''),
-            recipient_list=[to_email] if isinstance(to_email, str) else list(to_email),
+            from_email=from_addr,
+            recipient_list=recipients,
             fail_silently=False,
             connection=conn
         )
+        print(f"[EMAIL SUCCESS - SMTP] Dispatched to {to_email}")
         return True, None
-    except Exception as exc:
-        err_str = str(exc)
-        if "[Errno 101]" in err_str or "Network is unreachable" in err_str or "10060" in err_str:
-            friendly_msg = (
-                "Render Cloud blocks standard SMTP ports (465/587). "
-                "To enable emails on Render, add 'RESEND_API_KEY' in Render Dashboard -> Environment tab "
-                "(Get free API key at https://resend.com)."
-            )
-            return False, friendly_msg
-        return False, err_str
+    except Exception as smtp_exc:
+        smtp_err = str(smtp_exc)
+        print(f"[EMAIL INFO] SMTP unavailable or timed out ({smtp_err[:50]}...). Falling back to Cloud HTTPS API...")
+
+    # 2. Try Brevo HTTPS API (Port 443 - 100% unblocked on Render cloud & all email domains)
+    brevo_key = getattr(settings, 'BREVO_API_KEY', '') or os.environ.get('BREVO_API_KEY', '')
+    if brevo_key:
+        success, err = send_via_brevo(to_email, subject, html_body, text_content=plain_body, from_email=from_addr)
+        if success:
+            print(f"[EMAIL SUCCESS - BREVO API] Dispatched via Brevo HTTPS API to {to_email}")
+            return True, None
+        else:
+            print(f"[EMAIL WARNING] Brevo HTTPS API failed: {err}. Falling back to Resend...")
+
+    # 3. Try Resend HTTPS API (Port 443)
+    resend_key = getattr(settings, 'RESEND_API_KEY', '') or os.environ.get('RESEND_API_KEY', '')
+    if resend_key:
+        success, err = send_via_resend(to_email, subject, html_body, text_content=plain_body, from_email=from_addr)
+        if success:
+            print(f"[EMAIL SUCCESS - RESEND API] Dispatched via Resend HTTPS API to {to_email}")
+            return True, None
+        else:
+            print(f"[EMAIL WARNING] Resend HTTPS API failed: {err}")
+
+    return False, "Failed to send email via SMTP, Brevo, and Resend."
 
 
 def get_email_connection():
