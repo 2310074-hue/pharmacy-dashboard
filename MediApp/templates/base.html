@@ -585,7 +585,11 @@
         /* ─── 2. Cards, Panels, Boxes & Filter Wrappers ─── */
         html.dark .card,
         html.dark [class*="card"]:not([class*="from-"]):not([class*="bg-gradient-"]),
-        html.dark .bg-white:not([class*="bg-opacity-"]):not(.text-transparent),
+        html.dark .bg-white:not([class*="bg-opacity-"]):not(.text-transparent):not(.theme-toggle-btn):not([class*="from-"]):not([class*="to-"]),
+        html.dark [class*="bg-white\/"]:not([class*="bg-white\/5"]):not([class*="bg-white\/10"]):not([class*="bg-white\/15"]):not([class*="bg-white\/20"]):not([class*="bg-white\/25"]):not([class*="bg-white\/[0.0"]):not(.text-transparent):not(.theme-toggle-btn),
+        html.dark .grid > div[class*="bg-white"],
+        html.dark .grid > div[class*="bg-white\/90"],
+        html.dark #forecast-detail-panel,
         html.dark .table-container,
         html.dark #filterBox,
         html.dark .panel,
@@ -596,7 +600,9 @@
             box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.5) !important;
         }
 
-        html.dark .card:hover {
+        html.dark .card:hover,
+        html.dark .grid > div[class*="bg-white"]:hover,
+        html.dark .grid > div[class*="bg-white\/90"]:hover {
             border-color: rgba(56, 189, 248, 0.35) !important;
         }
 
@@ -611,11 +617,17 @@
 
         /* Inner container shades (e.g. filter bars, gray boxes) */
         html.dark .bg-slate-50,
+        html.dark [class*="bg-slate-50"],
         html.dark .bg-gray-50,
+        html.dark [class*="bg-gray-50"],
         html.dark .bg-zinc-50,
+        html.dark [class*="bg-zinc-50"],
         html.dark .bg-slate-100,
+        html.dark [class*="bg-slate-100"],
         html.dark .bg-gray-100,
-        html.dark .bg-zinc-100 {
+        html.dark [class*="bg-gray-100"],
+        html.dark .bg-zinc-100,
+        html.dark [class*="bg-zinc-100"] {
             background-color: #162035 !important;
             color: #cbd5e1 !important;
             border-color: rgba(255, 255, 255, 0.08) !important;
@@ -633,6 +645,57 @@
         html.dark .divide-slate-100,
         html.dark .divide-slate-200 {
             border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Customer Cards Specific Overrides */
+        html.dark .grid > div[class*="bg-white"] h3 {
+            color: #f8fafc !important;
+        }
+        html.dark .grid > div[class*="bg-white"] .text-gray-500,
+        html.dark .grid > div[class*="bg-white"] .text-gray-600 {
+            color: #94a3b8 !important;
+        }
+        html.dark .grid > div[class*="bg-white"] .text-gray-700,
+        html.dark .grid > div[class*="bg-white"] .space-y-3 span {
+            color: #cbd5e1 !important;
+        }
+
+        /* Demand Forecasting Inspection Panel Overrides */
+        html.dark #forecast-detail-panel > div.bg-slate-50\/70,
+        html.dark #forecast-detail-panel > div[class*="bg-slate-50"] {
+            background-color: #162035 !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html.dark #forecast-detail-panel .bg-white.border,
+        html.dark #forecast-detail-panel div[class*="bg-white"] {
+            background-color: #0b1329 !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        html.dark #forecast-detail-panel #card-current-stock {
+            color: #ffffff !important;
+        }
+        html.dark #forecast-detail-panel #card-forecast-demand {
+            color: #38bdf8 !important;
+        }
+        html.dark #forecast-detail-panel #card-days-left {
+            color: #818cf8 !important;
+        }
+        html.dark #forecast-detail-panel #card-reorder-qty {
+            color: #fbbf24 !important;
+        }
+        html.dark #forecast-detail-panel .mt-6 .bg-slate-50,
+        html.dark #forecast-detail-panel .mt-6 [class*="bg-slate-50"] {
+            background-color: #111c35 !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html.dark #w1-pred,
+        html.dark #w2-pred,
+        html.dark #w3-pred,
+        html.dark #w4-pred {
+            color: #ffffff !important;
+        }
+        html.dark #card-stockout-date {
+            color: #38bdf8 !important;
         }
 
         /* ─── 3. Form Controls & Inputs (Universal Fix) ─── */
@@ -705,6 +768,42 @@
         html.dark tbody tr:hover,
         html.dark tr:hover td {
             background-color: rgba(255, 255, 255, 0.04) !important;
+        }
+
+        /* Table Secondary Text (Staff Management, Sales, Invoices) */
+        html.dark td .text-gray-500,
+        html.dark td .text-slate-500,
+        html.dark td .text-zinc-500,
+        html.dark td .text-gray-600,
+        html.dark td .text-slate-600,
+        html.dark td .font-mono,
+        html.dark td [class*="text-\[11px\]"],
+        html.dark td [class*="text-\[10px\]"],
+        html.dark td .text-xs {
+            color: #94a3b8 !important;
+        }
+        html.dark td .text-gray-700,
+        html.dark td .text-slate-700 {
+            color: #cbd5e1 !important;
+        }
+        html.dark td .text-gray-900,
+        html.dark td .text-slate-900 {
+            color: #f8fafc !important;
+        }
+
+        /* Table Action Buttons (Password Reset, Small Actions) */
+        html.dark button[onclick*="openResetPasswordModal"],
+        html.dark button[class*="bg-cyan-50"],
+        html.dark a[class*="bg-cyan-50"] {
+            background-color: rgba(14, 165, 233, 0.18) !important;
+            color: #38bdf8 !important;
+            border-color: rgba(14, 165, 233, 0.35) !important;
+        }
+        html.dark button[onclick*="openResetPasswordModal"]:hover,
+        html.dark button[class*="bg-cyan-50"]:hover,
+        html.dark a[class*="bg-cyan-50"]:hover {
+            background-color: rgba(14, 165, 233, 0.32) !important;
+            color: #ffffff !important;
         }
 
         /* ─── 5. Status Badges, Pills & Color Chips (High-Contrast) ─── */
