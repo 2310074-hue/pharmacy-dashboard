@@ -869,6 +869,86 @@
             color: #f1f5f9 !important;
         }
 
+        /* ─── 9. Targeted Fix: Light Gradients & Top KPI Cards (Invoice History, Expiry, Staff) ─── */
+        html.dark [class*="to-white"],
+        html.dark [class*="to-teal-100"],
+        html.dark [class*="to-sky-100"],
+        html.dark [class*="to-indigo-100"],
+        html.dark [class*="to-orange-100"],
+        html.dark [class*="to-violet-100"],
+        html.dark [class*="to-red-100"],
+        html.dark [class*="from-cyan-50"],
+        html.dark [class*="from-emerald-50"],
+        html.dark [class*="from-indigo-50"],
+        html.dark [class*="from-amber-50"],
+        html.dark [class*="from-rose-50"],
+        html.dark [class*="from-purple-50"],
+        html.dark [class*="from-blue-50"],
+        html.dark [class*="from-teal-50"] {
+            background-color: #0f172a !important;
+            background-image: none !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* ─── 10. Dashboard Quick Action Shortcut Hub ─── */
+        html.dark .grid a[href*="add_sale"],
+        html.dark .grid a[href*="add_medicine"],
+        html.dark .grid a[href*="purchase_bill"],
+        html.dark .grid a[href*="want_book"],
+        html.dark .grid a[href*="demand_forecasting"],
+        html.dark .grid a[href*="expiry_reminder"] {
+            background-color: #0b1329 !important;
+            background-image: none !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+        }
+        html.dark .grid a[href*="add_sale"]:hover,
+        html.dark .grid a[href*="add_medicine"]:hover,
+        html.dark .grid a[href*="purchase_bill"]:hover,
+        html.dark .grid a[href*="want_book"]:hover,
+        html.dark .grid a[href*="demand_forecasting"]:hover,
+        html.dark .grid a[href*="expiry_reminder"]:hover {
+            border-color: rgba(56, 189, 248, 0.45) !important;
+            background-color: #111c38 !important;
+        }
+        html.dark .text-emerald-950,
+        html.dark .text-cyan-950,
+        html.dark .text-blue-950,
+        html.dark .text-amber-950,
+        html.dark .text-purple-950,
+        html.dark .text-rose-950 {
+            color: #ffffff !important;
+        }
+
+        /* ─── 11. Medicine Card Kharid/Cost Bar High Contrast ─── */
+        html.dark .medicine-card [class*="bg-emerald-50"],
+        html.dark .medicine-card [class*="bg-amber-50"],
+        html.dark [class*="bg-emerald-50\/90"],
+        html.dark [class*="bg-amber-50\/90"] {
+            background-color: rgba(16, 185, 129, 0.16) !important;
+            border-color: rgba(16, 185, 129, 0.35) !important;
+            color: #34d399 !important;
+        }
+        html.dark .medicine-card [class*="bg-emerald-50"] strong,
+        html.dark .medicine-card [class*="bg-amber-50"] strong,
+        html.dark [class*="bg-emerald-50\/90"] strong,
+        html.dark [class*="bg-amber-50\/90"] strong {
+            color: #ffffff !important;
+        }
+
+        /* ─── 12. Pagination & Filter Buttons ─── */
+        html.dark .pagination a,
+        html.dark a.border-gray-300.text-gray-700 {
+            background-color: #162035 !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            color: #e2e8f0 !important;
+        }
+        html.dark a.border-gray-300.text-gray-700:hover {
+            background-color: #1e293b !important;
+            color: #38bdf8 !important;
+            border-color: #38bdf8 !important;
+        }
+
         /* Dark Mode Switcher Button */
         .theme-toggle-btn {
             width: 38px;
