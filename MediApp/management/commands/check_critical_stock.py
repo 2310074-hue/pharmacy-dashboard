@@ -16,12 +16,12 @@ class Command(BaseCommand):
             '--recipient',
             type=str,
             default=None,
-            help='Override recipient email address (default: sharmaneeraj3415@gmail.com).',
+            help='Override recipient email address (default: active admin user email or 2310074@ritindia.edu).',
         )
 
     def handle(self, *args, **options):
         force = options.get('force', False)
-        recipient = options.get('recipient', None) or getattr(settings, 'EMAIL_HOST_USER', 'sharmaneeraj3415@gmail.com')
+        recipient = options.get('recipient', None) or getattr(settings, 'EMAIL_HOST_USER', '2310074@ritindia.edu')
 
         self.stdout.write(self.style.NOTICE("Evaluating 30-day demand forecasts for inventory risk..."))
 

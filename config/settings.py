@@ -183,7 +183,7 @@ if EMAIL_USE_SSL and EMAIL_USE_TLS:
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=config('EMAIL_HOST_USER', default=''))
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=config('EMAIL_HOST_USER', default='2310074@ritindia.edu'))
 
 # Resend HTTPS API Configuration (Port 443 - 100% unblocked on Render cloud)
 RESEND_API_KEY = config('RESEND_API_KEY', default='')

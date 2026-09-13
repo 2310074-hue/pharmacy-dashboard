@@ -4223,7 +4223,13 @@ def trigger_critical_stock_alert_now(request):
     elif request.user.is_authenticated and request.user.email and '@' in request.user.email:
         recipient = request.user.email.strip()
     else:
-        recipient = getattr(settings, 'EMAIL_HOST_USER', 'sharmaneeraj3415@gmail.com') or 'sharmaneeraj3415@gmail.com'
+        try:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            admin_user = User.objects.filter(is_superuser=True, is_active=True).exclude(email='').first()
+            recipient = admin_user.email if admin_user and admin_user.email else getattr(settings, 'DEFAULT_FROM_EMAIL', '2310074@ritindia.edu')
+        except Exception:
+            recipient = getattr(settings, 'DEFAULT_FROM_EMAIL', '2310074@ritindia.edu') or '2310074@ritindia.edu'
 
     result = send_forecast_critical_stock_email(recipient_email=recipient, force=True)
     return JsonResponse(result)

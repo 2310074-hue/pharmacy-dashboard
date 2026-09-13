@@ -414,9 +414,19 @@ def send_forecast_critical_stock_email(recipient_email=None, force=False):
     # If force is True but no medicines are at risk, pick top 3 for test demonstration
     items_to_report = reorder_needed if reorder_needed else (all_fc[:3] if all_fc else [])
 
-    target_email = recipient_email or getattr(settings, 'DEFAULT_FROM_EMAIL', 'sharmaneeraj3415@gmail.com')
+    target_email = recipient_email
     if not target_email:
-        target_email = 'sharmaneeraj3415@gmail.com'
+        try:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            admin_user = User.objects.filter(is_superuser=True, is_active=True).exclude(email='').first()
+            if admin_user and admin_user.email:
+                target_email = admin_user.email.strip()
+        except Exception:
+            pass
+
+    if not target_email:
+        target_email = getattr(settings, 'DEFAULT_FROM_EMAIL', '') or '2310074@ritindia.edu'
 
     total_reorder_qty = sum(f.get('recommended_reorder_qty', 0) for f in items_to_report)
     now_str = timezone.now().strftime("%B %d, %Y at %I:%M %p")
