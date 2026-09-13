@@ -2,281 +2,555 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - PharmaCare Pharmacy Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - PharmaCare Enterprise Pharmacy System</title>
     
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     
     <style>
         * {
-            font-family: 'Plus Jakarta Sans', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-        
+
         body {
-            background: linear-gradient(135deg, #0369a1 0%, #0f172a 50%, #4338ca 100%);
+            background-color: #0b132b;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1.25rem;
-            position: relative;
             overflow-x: hidden;
+            position: relative;
         }
 
-        body::before {
-            content: '';
+        /* Ambient Animated Background Glows */
+        .ambient-orb {
             position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            opacity: 0.6;
+            z-index: 0;
+            animation: pulseGlow 12s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
             width: 500px;
             height: 500px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(14, 165, 233, 0.25) 0%, transparent 70%);
-            top: -150px;
-            left: -150px;
-            pointer-events: none;
+            background: radial-gradient(circle, #0284c7 0%, #0369a1 50%, transparent 70%);
+            top: -100px;
+            left: -100px;
         }
 
-        body::after {
-            content: '';
-            position: absolute;
+        .orb-2 {
             width: 450px;
             height: 450px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
-            bottom: -150px;
-            right: -150px;
-            pointer-events: none;
+            background: radial-gradient(circle, #4f46e5 0%, #312e81 60%, transparent 70%);
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -5s;
         }
-        
-        .login-card {
+
+        .orb-3 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, #0d9488 0%, transparent 70%);
+            top: 40%;
+            left: 30%;
+            opacity: 0.25;
+            animation-delay: -2s;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.45; }
+            50% { transform: scale(1.1) translate(20px, 15px); opacity: 0.65; }
+            100% { transform: scale(0.95) translate(-15px, -20px); opacity: 0.5; }
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card-item {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-card-item:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(56, 189, 248, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .form-card {
             background: #ffffff;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-            animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            z-index: 10;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.25);
         }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(35px) scale(0.98);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        
+
+        /* Inputs */
         .form-input {
             width: 100%;
-            padding: 11px 16px;
+            height: 48px;
+            padding: 10px 16px 10px 42px;
             border: 1.5px solid #e2e8f0;
             border-radius: 12px;
             color: #0f172a;
             font-size: 14px;
-            transition: all 0.2s ease;
+            font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             background-color: #f8fafc;
         }
-        
+
         .form-input:focus {
             outline: none;
             background-color: #ffffff;
             border-color: #0284c7;
-            box-shadow: 0 0 0 3.5px rgba(2, 132, 199, 0.15);
+            box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.12);
         }
-        
-        .btn-login {
-            width: 100%;
-            padding: 13px;
-            background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
+
+        .form-input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        /* Buttons */
+        .btn-submit {
+            height: 48px;
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%);
+            background-size: 200% auto;
+            color: #ffffff;
             font-weight: 700;
             font-size: 15px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.4);
-            background: linear-gradient(135deg, #0369a1 0%, #4338ca 100%);
-        }
-
-        .btn-login:active {
-            transform: translateY(0);
-        }
-
-        .btn-admin {
-            width: 100%;
-            padding: 12px 16px;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #f8fafc;
-            border: 1px solid #334155;
             border-radius: 12px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
         }
 
-        .btn-admin:hover {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border-color: #38bdf8;
-            color: #ffffff;
+        .btn-submit:hover {
+            background-position: right center;
             transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(14, 165, 233, 0.3);
+            box-shadow: 0 8px 24px rgba(2, 132, 199, 0.45);
         }
 
-        .btn-admin:active {
+        .btn-submit:active {
             transform: translateY(0);
+        }
+
+        /* Floating Animation */
+        @keyframes floatSlow {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .animate-float {
+            animation: floatSlow 4s ease-in-out infinite;
+        }
+
+        .animate-float-delay {
+            animation: floatSlow 4.5s ease-in-out infinite 2s;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
         }
     </style>
 </head>
-<body>
-    <div class="login-card w-full max-w-md">
-        <!-- Header Banner -->
-        <div class="p-8 bg-gradient-to-r from-sky-600 via-cyan-600 to-indigo-600 text-white text-center relative overflow-hidden">
-            <div class="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-white/10 blur-md pointer-events-none"></div>
-            
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 shadow-lg shadow-cyan-900/20 mb-3.5">
-                <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                </svg>
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center justify-center gap-2">
-                PharmaCare
-                <span class="text-[10px] font-bold bg-cyan-400/25 text-cyan-200 border border-cyan-300/40 px-2 py-0.5 rounded-full uppercase tracking-wider">PRO</span>
-            </h1>
-            <p class="text-sky-100 text-xs sm:text-sm mt-1 font-medium">Enterprise Pharmacy Management System</p>
-        </div>
-        
-        <!-- Form Area -->
-        <div class="p-6 sm:p-8">
-            <div class="mb-5 text-center">
-                <h2 class="text-xl font-bold text-slate-900 tracking-tight">Sign In</h2>
-            </div>
-            
-            {% if messages %}
-            {% for message in messages %}
-            <div class="mb-4 p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 {% if message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {% if message.tags == 'error' %}
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    {% else %}
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    {% endif %}
-                </svg>
-                <span>{{ message }}</span>
-            </div>
-            {% endfor %}
-            {% endif %}
+<body class="p-3 sm:p-6 md:p-8">
 
-            {% if error %}
-            <div class="mb-4 p-3.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold flex items-center gap-2">
-                <svg class="w-4 h-4 flex-shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{{ error }}</span>
-            </div>
-            {% endif %}
+    <!-- Ambient Glowing Orbs -->
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-orb orb-3"></div>
+
+    <!-- Main Container (Full Responsive SaaS Split Layout) -->
+    <div class="w-full max-w-5xl z-10 mx-auto">
+        <div class="glass-panel rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 transition-all duration-300">
             
-            <form method="post" action="{% url 'login' %}" class="space-y-4">
-                {% csrf_token %}
+            <!-- ============================================================== -->
+            <!-- LEFT COLUMN: Brand Hero & Visual Feature Showcase (Desktop/Tablet) -->
+            <!-- ============================================================== -->
+            <div class="lg:col-span-7 p-6 sm:p-8 md:p-10 lg:p-12 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-sky-950/70 border-b lg:border-b-0 lg:border-r border-white/10">
                 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" for="username">
-                        Username
-                    </label>
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            id="username" 
-                            name="username" 
-                            class="form-input pl-10" 
-                            placeholder="Enter your username"
-                            required
-                            aria-label="Username"
-                        >
-                        <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
+                <!-- Background Pattern Grid -->
+                <div class="absolute inset-0 opacity-[0.04] pointer-events-none" style="background-image: radial-gradient(#38bdf8 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+                <!-- Top Brand Header -->
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3.5 mb-6">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 p-0.5 shadow-lg shadow-sky-500/30 flex items-center justify-center">
+                            <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center">
+                                <svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl font-extrabold text-white tracking-tight font-outfit">PharmaCare</span>
+                                <span class="px-2 py-0.5 text-[10px] font-extrabold tracking-wider uppercase bg-gradient-to-r from-sky-500 to-cyan-400 text-slate-950 rounded-full shadow-sm">PRO</span>
+                            </div>
+                            <p class="text-xs text-slate-400 font-medium">Next-Gen Pharmacy Intelligence System</p>
+                        </div>
+                    </div>
+
+                    <!-- Main Hero Pitch -->
+                    <div class="mb-8 hidden sm:block">
+                        <h1 class="text-2xl md:text-3xl font-extrabold text-white leading-tight font-outfit tracking-tight">
+                            Streamline Pharmacy Operations with <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-teal-300">AI Intelligence</span>.
+                        </h1>
+                        <p class="text-sm text-slate-300/80 mt-2.5 leading-relaxed">
+                            Real-time POS billing, predictive stockout forecasting, and automated patient medication reminders in one secure workspace.
+                        </p>
+                    </div>
+
+                    <!-- Feature Cards (Glassmorphism Highlights) -->
+                    <div class="space-y-3 hidden sm:block">
+                        
+                        <!-- Feature 1: AI Demand Forecasting -->
+                        <div class="glass-card-item rounded-2xl p-3.5 flex items-start gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center flex-shrink-0 text-sky-400 mt-0.5">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                    AI Demand Forecasting
+                                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-sky-500/30 text-sky-200 uppercase">30-Day Auto Audit</span>
+                                </h3>
+                                <p class="text-xs text-slate-300/70 mt-0.5">Automatic 8:00 AM daily stockout predictions & 1-click supplier Purchase Orders.</p>
+                            </div>
+                        </div>
+
+                        <!-- Feature 2: Smart Expiry & WhatsApp Broadcast -->
+                        <div class="glass-card-item rounded-2xl p-3.5 flex items-start gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center flex-shrink-0 text-emerald-400 mt-0.5">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                    Batch Expiry & Reminders
+                                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/30 text-emerald-200 uppercase">Automated</span>
+                                </h3>
+                                <p class="text-xs text-slate-300/70 mt-0.5">Multi-channel WhatsApp & Email reminders for refill dates and batch shelf-life.</p>
+                            </div>
+                        </div>
+
+                        <!-- Feature 3: Fast POS Billing & Want-Book -->
+                        <div class="glass-card-item rounded-2xl p-3.5 flex items-start gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center flex-shrink-0 text-indigo-400 mt-0.5">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Rapid POS & Digital Want-Book</h3>
+                                <p class="text-xs text-slate-300/70 mt-0.5">Multi-mode payments, instant GST receipts, and live distributor short-books.</p>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-                
-                <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider" for="password">
-                            Password
-                        </label>
-                        <a href="{% url 'forgot_password' %}" class="text-xs font-semibold text-cyan-600 hover:text-cyan-800 transition">
-                            Forgot Password?
-                        </a>
+
+                <!-- Bottom Trust Metrics -->
+                <div class="pt-6 border-t border-white/10 mt-6 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="font-medium text-slate-300">Cloud Live &bull; 99.9% Uptime</span>
                     </div>
-                    <div class="relative">
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            class="form-input pl-10" 
-                            placeholder="Enter your password"
-                            required
-                            aria-label="Password"
-                        >
-                        <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-1.5 text-slate-400">
+                        <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
+                        <span>256-Bit SSL End-to-End</span>
                     </div>
                 </div>
-                
-                <button type="submit" class="btn-login mt-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                    <span>Sign In to Dashboard</span>
-                </button>
-            </form>
 
-            <!-- Divider -->
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-slate-200"></div>
-                </div>
-                <div class="relative flex justify-center text-xs uppercase">
-                    <span class="bg-white px-3 text-slate-400 font-bold tracking-wider">Or</span>
-                </div>
             </div>
 
-            <!-- Single Dedicated Admin Login Button -->
-            <a href="{% url 'admin:index' %}" id="adminLoginBtn" class="btn-admin group">
-                <svg class="w-4 h-4 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <span class="font-bold text-sm text-white">Admin Login</span>
-                <svg class="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition flex-shrink-0 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-            </a>
-            
+            <!-- ============================================================== -->
+            <!-- RIGHT COLUMN: Modern Clean Sign-In Form (Mobile & Desktop)     -->
+            <!-- ============================================================== -->
+            <div class="lg:col-span-5 p-6 sm:p-8 md:p-10 bg-white flex flex-col justify-center">
+                
+                <div class="w-full max-w-sm mx-auto">
+                    
+                    <!-- Welcome Header -->
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-extrabold text-slate-900 font-outfit tracking-tight">
+                            Sign In to Portal
+                        </h2>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+                            Enter your staff credentials to access your dashboard
+                        </p>
+                    </div>
+
+                    <!-- Role Switcher Pill Tabs -->
+                    <div class="flex items-center p-1 bg-slate-100 rounded-xl mb-6 border border-slate-200/80">
+                        <button type="button" id="tabStaff" onclick="switchRoleTab('staff')" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-200 bg-white text-sky-700 shadow-sm flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            <span>Staff / Pharmacist</span>
+                        </button>
+                        <a href="{% url 'admin:index' %}" id="tabAdmin" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            <span>Admin Portal</span>
+                        </a>
+                    </div>
+
+                    <!-- Django Messages / Alert notifications -->
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="mb-4 p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2.5 {% if message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %} animate-fadeIn">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {% if message.tags == 'error' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                {% else %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                {% endif %}
+                            </svg>
+                            <span>{{ message }}</span>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if error %}
+                    <div class="mb-4 p-3.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold flex items-center gap-2.5 animate-fadeIn">
+                        <svg class="w-4 h-4 flex-shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ error }}</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Login Form -->
+                    <form method="post" action="{% url 'login' %}" id="loginForm" class="space-y-4">
+                        {% csrf_token %}
+                        {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+
+                        <!-- Username Field -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" for="username">
+                                Username
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="username" 
+                                    name="username" 
+                                    class="form-input" 
+                                    placeholder="Enter your username"
+                                    autocomplete="username"
+                                    required
+                                    autofocus
+                                    aria-label="Username"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Password Field with Show/Hide Toggle -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider" for="password">
+                                    Password
+                                </label>
+                                <a href="{% url 'forgot_password' %}" class="text-xs font-bold text-sky-600 hover:text-sky-800 transition">
+                                    Forgot Password?
+                                </a>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password" 
+                                    class="form-input pr-11" 
+                                    placeholder="Enter your password"
+                                    autocomplete="current-password"
+                                    required
+                                    aria-label="Password"
+                                >
+                                <!-- Show / Hide Password Button -->
+                                <button 
+                                    type="button" 
+                                    id="togglePasswordBtn" 
+                                    onclick="togglePasswordVisibility()" 
+                                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 transition"
+                                    aria-label="Toggle password visibility"
+                                    tabindex="-1"
+                                >
+                                    <!-- Eye Icon (Show) -->
+                                    <svg id="eyeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    <!-- Eye Off Icon (Hide) -->
+                                    <svg id="eyeOffIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sign In Button -->
+                        <button type="submit" id="submitBtn" class="btn-submit w-full mt-2 flex items-center justify-center gap-2 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                            </svg>
+                            <span id="btnText">Sign In to Dashboard</span>
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-slate-200"></div>
+                        </div>
+                        <div class="relative flex justify-center text-xs uppercase">
+                            <span class="bg-white px-3 text-slate-400 font-bold tracking-wider">Fast Navigation</span>
+                        </div>
+                    </div>
+
+                    <!-- Direct Admin Login Secondary Link Card -->
+                    <a href="{% url 'admin:index' %}" class="w-full py-3 px-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/90 text-slate-700 hover:text-sky-700 flex items-center justify-between transition group">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center group-hover:bg-sky-600 group-hover:text-white transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-xs font-bold leading-tight text-slate-900 group-hover:text-sky-700 transition">Django Admin Console</p>
+                                <p class="text-[10px] text-slate-400 font-medium">Database, superusers & models</p>
+                            </div>
+                        </div>
+                        <svg class="w-4 h-4 text-slate-400 group-hover:text-sky-600 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+
+                    <!-- Footer Note -->
+                    <div class="text-center mt-6 text-[11px] text-slate-400 font-medium">
+                        &copy; {% now "Y" %} PharmaCare Systems &bull; All Rights Reserved
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
     </div>
+
+    <!-- Interactive Scripts -->
+    <script>
+        // Password Visibility Toggle
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            const eyeOffIcon = document.getElementById('eyeOffIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.add('hidden');
+                eyeOffIcon.classList.remove('hidden');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('hidden');
+                eyeOffIcon.classList.add('hidden');
+            }
+        }
+
+        // Role Switcher Tab Visual Handling
+        function switchRoleTab(role) {
+            const tabStaff = document.getElementById('tabStaff');
+            const usernameInput = document.getElementById('username');
+            
+            if (role === 'staff') {
+                tabStaff.classList.add('bg-white', 'text-sky-700', 'shadow-sm');
+                tabStaff.classList.remove('text-slate-600');
+                usernameInput.focus();
+            }
+        }
+
+        // Button Loading State on Form Submit
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            
+            btn.classList.add('opacity-85', 'cursor-not-allowed');
+            btnText.innerHTML = `
+                <span class="inline-flex items-center gap-2">
+                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing In...
+                </span>
+            `;
+        });
+    </script>
 </body>
 </html>

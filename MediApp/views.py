@@ -72,9 +72,10 @@ def owner_scope_purchase_orders(request, queryset=None):
 
 # Authentication Views
 def login_view(request):
-    """Login view"""
+    """Login view with next redirect support"""
+    next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect(next_url if next_url and next_url.startswith('/') else 'dashboard')
     
     error = None
     if request.method == 'POST':
@@ -85,11 +86,11 @@ def login_view(request):
         if user is not None:
             login(request, user)
             messages.success(request, f'Welcome back, {user.get_full_name() or user.username}!')
-            return redirect('dashboard')
+            return redirect(next_url if next_url and next_url.startswith('/') else 'dashboard')
         else:
-            error = 'Invalid username or password.'
+            error = 'Invalid username or password. Please verify your credentials.'
     
-    return render(request, 'login.html', {'error': error})
+    return render(request, 'login.html', {'error': error, 'next': next_url})
 
 
 def logout_view(request):
