@@ -354,6 +354,45 @@
             margin-bottom: 8px;
             display: block;
         }
+
+        /* ── Mobile Responsive Dashboard Overrides ── */
+        @media (max-width: 768px) {
+            .admin-dashboard-hero {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 16px !important;
+                padding: 16px 18px !important;
+            }
+            .hero-title-group h1 {
+                font-size: 18px !important;
+            }
+            .hero-title-group p {
+                font-size: 12.5px !important;
+            }
+            .hero-quick-actions {
+                width: 100% !important;
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+            .hero-btn {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+            .models-grid {
+                grid-template-columns: 1fr !important;
+                padding: 12px !important;
+                gap: 10px !important;
+            }
+            .model-card {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 10px !important;
+            }
+            .model-actions-right {
+                width: 100% !important;
+                justify-content: flex-end !important;
+            }
+        }
     </style>
 {% endblock %}
 
