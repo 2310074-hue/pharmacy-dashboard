@@ -4235,6 +4235,18 @@ def trigger_critical_stock_alert_now(request):
     return JsonResponse(result)
 
 
+@csrf_exempt
+def cron_daily_forecast_alert(request):
+    """
+    Public / Webhook endpoint to trigger the Daily 8:00 AM IST AI Demand Restock Alert.
+    Can be called by GitHub Actions, cron-job.org, UptimeRobot, Render Cron, etc.
+    """
+    force = request.GET.get('force') in ('1', 'true', 'True') or request.POST.get('force') in ('1', 'true', 'True')
+    from .scheduler import check_and_dispatch_daily_forecast_alert
+    result = check_and_dispatch_daily_forecast_alert(force=force)
+    return JsonResponse(result)
+
+
 # =========================================================================
 # 📅 FRONTEND EXPIRY REMINDER MODULE
 # =========================================================================

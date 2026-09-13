@@ -119,6 +119,7 @@ urlpatterns = [
     path('forecast/', views.demand_forecasting_view, name='demand_forecasting'),
     path('forecast/send-alert/', views.trigger_critical_stock_alert_now, name='trigger_critical_stock_alert_now'),
     path('api/forecast/<int:medicine_id>/', views.api_medicine_forecast, name='api_medicine_forecast'),
+    path('api/cron/daily-forecast-alert/', views.cron_daily_forecast_alert, name='cron_daily_forecast_alert'),
 
     # Module 1: Distributor Purchase Bill Auto-Import
     path('purchase-bill/import/', views.purchase_bill_import_view, name='purchase_bill_import'),
