@@ -698,30 +698,53 @@ def add_medicine(request):
             quantities = request.POST.getlist('quantity[]')
             purchase_prices = request.POST.getlist('purchase_price[]')
 
+            today_str = timezone.now().date().strftime('%Y-%m-%d')
+            batches_created_count = 0
+
             for i in range(len(batch_names)):
-                if batch_names[i]:
-                    Batch.objects.create(
+                b_name = batch_names[i].strip() if i < len(batch_names) else ''
+                if b_name:
+                    add_d = add_dates[i] if i < len(add_dates) and add_dates[i] else today_str
+                    exp_d = expiry_dates[i] if i < len(expiry_dates) and expiry_dates[i] else None
+                    if not exp_d:
+                        exp_d = (timezone.now().date() + timedelta(days=365)).strftime('%Y-%m-%d')
+                    
+                    try:
+                        qty = int(quantities[i]) if i < len(quantities) and quantities[i] else 0
+                    except (ValueError, TypeError):
+                        qty = 0
+
+                    try:
+                        p_price = Decimal(str(purchase_prices[i])) if i < len(purchase_prices) and purchase_prices[i] else Decimal('0')
+                    except Exception:
+                        p_price = Decimal('0')
+
+                    batch = Batch.objects.create(
                         medicine=medicine,
-                        batch_name=batch_names[i],
-                        add_date=add_dates[i],
-                        expiry_date=expiry_dates[i],
-                        quantity=quantities[i],
-                        purchase_price=purchase_prices[i] if i < len(purchase_prices) else 0,
+                        batch_name=b_name,
+                        add_date=add_d,
+                        expiry_date=exp_d,
+                        quantity=qty,
+                        purchase_price=p_price,
                         created_by=request.user
                     )
+                    batches_created_count += 1
 
-                    # Create inventory log
-                    InventoryLog.objects.create(
-                        medicine=medicine,
-                        batch=medicine.batches.last(),
-                        action='add',
-                        quantity_change=int(quantities[i]),
-                        performed_by=request.user,
-                        notes=f'Initial batch {batch_names[i]} added'
-                    )
+                    if qty > 0:
+                        InventoryLog.objects.create(
+                            medicine=medicine,
+                            batch=batch,
+                            action='add',
+                            quantity_change=qty,
+                            performed_by=request.user,
+                            notes=f'Initial batch {b_name} added'
+                        )
 
-            messages.success(request, f'Medicine "{medicine.name}" added successfully!')
+            messages.success(request, f'Medicine "{medicine.name}" added successfully with {batches_created_count} batch(es)!')
             return redirect('medicine_list')
+        else:
+            first_err = list(medicine_form.errors.values())[0][0] if medicine_form.errors else 'Please check all required fields.'
+            messages.error(request, f'Could not save medicine: {first_err}')
     else:
         medicine_form = MedicineForm()
 
@@ -743,6 +766,9 @@ def edit_medicine(request, id):
             form.save()
             messages.success(request, f'Medicine "{medicine.name}" updated successfully!')
             return redirect('medicine_list')
+        else:
+            first_err = list(form.errors.values())[0][0] if form.errors else 'Please check all required fields.'
+            messages.error(request, f'Could not update medicine: {first_err}')
     else:
         form = MedicineForm(instance=medicine)
     

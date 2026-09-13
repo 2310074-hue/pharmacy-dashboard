@@ -93,7 +93,7 @@ class Medicine(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
-    reorder_threshold = models.PositiveIntegerField(default=10)
+    reorder_threshold = models.PositiveIntegerField(default=10, blank=True)
     preferred_supplier = models.ForeignKey(
         'Supplier',
         on_delete=models.SET_NULL,

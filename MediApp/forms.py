@@ -81,6 +81,28 @@ class MedicineForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'supplier' in self.fields:
+            self.fields['supplier'].empty_label = '-- Select Supplier --'
+        if 'category' in self.fields:
+            self.fields['category'].empty_label = '-- Select Category (Optional) --'
+            self.fields['category'].required = False
+        if 'preferred_supplier' in self.fields:
+            self.fields['preferred_supplier'].empty_label = '-- Select Preferred Supplier (Optional) --'
+            self.fields['preferred_supplier'].required = False
+        if 'reorder_threshold' in self.fields:
+            self.fields['reorder_threshold'].required = False
+            self.fields['reorder_threshold'].initial = 10
+        if 'rack_number' in self.fields:
+            self.fields['rack_number'].required = False
+        if 'shelf_number' in self.fields:
+            self.fields['shelf_number'].required = False
+        if 'description' in self.fields:
+            self.fields['description'].required = False
+        if 'is_active' in self.fields:
+            self.fields['is_active'].required = False
+
 
 class BatchForm(forms.ModelForm):
     """Form for adding/editing batch"""

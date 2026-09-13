@@ -3,16 +3,34 @@
 {% block title %}Add Medicine - Pharmacy Management{% endblock %}
 
 {% block page_title %}Add New Medicine{% endblock %}
-{% block page_subtitle %}Add medicine with batch information{% endblock %}
+{% block page_subtitle %}Add medicine with batch & storage location{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl">
-    <div class="card p-8">
-        <form method="post" id="medicineForm">
+    <div class="card p-6 sm:p-8">
+        {% if medicine_form.errors %}
+        <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm">
+            <p class="font-bold mb-1 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                Please fix the following errors:
+            </p>
+            <ul class="list-disc pl-5 space-y-1">
+                {% for field, errors in medicine_form.errors.items %}
+                    {% for error in errors %}
+                        <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="post" id="medicineForm" class="space-y-8">
             {% csrf_token %}
             
             <!-- Medicine Information -->
-            <div class="mb-8">
+            <div>
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -20,7 +38,7 @@
                     Medicine Information
                 </h3>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             Medicine Name *
@@ -37,15 +55,22 @@
                     
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Price (₹) *
+                            Selling Price (MRP ₹) *
                         </label>
                         {{ medicine_form.price }}
                     </div>
 
                     <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Supplier *
+                        </label>
+                        {{ medicine_form.supplier }}
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
                             <span>📍 Rack / Cabinet</span>
-                            <span class="text-xs text-slate-400 font-normal">(Location)</span>
+                            <span class="text-xs text-slate-400 font-normal">(e.g. Rack A-1)</span>
                         </label>
                         {{ medicine_form.rack_number }}
                     </div>
@@ -53,27 +78,9 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
                             <span>🏷️ Shelf / Drawer</span>
-                            <span class="text-xs text-slate-400 font-normal">(Position)</span>
+                            <span class="text-xs text-slate-400 font-normal">(e.g. Shelf 2, Box B)</span>
                         </label>
                         {{ medicine_form.shelf_number }}
-                    </div>
-                    
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Supplier *
-                        </label>
-                        <div class="relative">
-                            <input 
-                                type="text" 
-                                id="supplierSearch" 
-                                class="form-input" 
-                                placeholder="Search supplier..."
-                                autocomplete="off"
-                                aria-label="Search Supplier"
-                            >
-                            <input type="hidden" name="supplier" id="supplierId" required>
-                            <div id="supplierResults" class="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-48 overflow-y-auto hidden shadow-lg"></div>
-                        </div>
                     </div>
                     
                     <div class="md:col-span-2">
@@ -86,34 +93,34 @@
             </div>
             
             <!-- Batch Information -->
-            <div class="mb-8">
+            <div class="border-t pt-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
                         <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                         </svg>
-                        Batch Information
+                        Initial Stock & Batch Information
                     </h3>
-                    <button type="button" onclick="addBatchRow()" class="btn btn-secondary">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" onclick="addBatchRow()" class="btn btn-secondary text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
-                        Add Batch
+                        + Add Another Batch
                     </button>
                 </div>
                 
                 <div id="batchContainer">
                     <!-- Initial batch row -->
-                    <div class="batch-row bg-gray-50 p-6 rounded-lg mb-4">
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div class="batch-row bg-gray-50/90 dark:bg-slate-800/60 p-5 rounded-xl mb-4 border border-gray-200/80 dark:border-slate-700">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                                     Batch Name *
                                 </label>
                                 <input 
                                     type="text" 
                                     name="batch_name[]" 
-                                    class="form-input" 
+                                    class="form-input text-sm" 
                                     placeholder="Batch A"
                                     required
                                     aria-label="Batch Name"
@@ -121,39 +128,40 @@
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                                     Add Date *
                                 </label>
                                 <input 
                                     type="date" 
                                     name="add_date[]" 
-                                    class="form-input"
+                                    id="defaultAddDate"
+                                    class="form-input text-sm" 
                                     required
                                     aria-label="Add Date"
                                 >
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                                     Expiry Date *
                                 </label>
                                 <input 
                                     type="date" 
                                     name="expiry_date[]" 
-                                    class="form-input"
+                                    class="form-input text-sm" 
                                     required
                                     aria-label="Expiry Date"
                                 >
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                    Quantity *
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Quantity (Units) *
                                 </label>
                                 <input 
                                     type="number" 
                                     name="quantity[]" 
-                                    class="form-input" 
+                                    class="form-input text-sm" 
                                     placeholder="100"
                                     min="0"
                                     required
@@ -162,13 +170,13 @@
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                    Purchase Price (₹) *
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Kharid Rate (₹) *
                                 </label>
                                 <input 
                                     type="number" 
                                     name="purchase_price[]" 
-                                    class="form-input" 
+                                    class="form-input text-sm" 
                                     placeholder="0.00"
                                     step="0.01"
                                     min="0"
@@ -182,14 +190,14 @@
             </div>
             
             <!-- Form Actions -->
-            <div class="flex gap-4">
-                <button type="submit" class="btn btn-primary">
+            <div class="flex flex-wrap gap-4 pt-4 border-t">
+                <button type="submit" id="submitBtn" class="btn btn-primary flex items-center gap-2 px-6 py-2.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    Add Medicine
+                    Save & Add Medicine
                 </button>
-                <a href="{% url 'medicine_list' %}" class="btn bg-gray-500 text-white hover:bg-gray-600">
+                <a href="{% url 'medicine_list' %}" class="btn bg-gray-500 text-white hover:bg-gray-600 flex items-center gap-2 px-5 py-2.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -203,99 +211,53 @@
 
 {% block extra_js %}
 <script>
+    // Auto-fill today's date in default Add Date field
+    document.addEventListener('DOMContentLoaded', function() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const addDateField = document.getElementById('defaultAddDate');
+        if (addDateField && !addDateField.value) {
+            addDateField.value = todayStr;
+        }
+    });
+
     let batchCount = 1;
     
     function addBatchRow() {
         batchCount++;
+        const todayStr = new Date().toISOString().split('T')[0];
         const container = document.getElementById('batchContainer');
         const newRow = document.createElement('div');
-        newRow.className = 'batch-row bg-gray-50 p-6 rounded-lg mb-4 relative';
+        newRow.className = 'batch-row bg-gray-50/90 dark:bg-slate-800/60 p-5 rounded-xl mb-4 relative border border-gray-200/80 dark:border-slate-700';
         newRow.innerHTML = `
-            <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-600 hover:text-red-800">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1" title="Remove Batch">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Batch Name *</label>
-                    <input type="text" name="batch_name[]" class="form-input" placeholder="Batch ${String.fromCharCode(64 + batchCount)}" required aria-label="Batch Name">
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Batch Name *</label>
+                    <input type="text" name="batch_name[]" class="form-input text-sm" placeholder="Batch ${String.fromCharCode(64 + batchCount)}" required aria-label="Batch Name">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Add Date *</label>
-                    <input type="date" name="add_date[]" class="form-input" required aria-label="Add Date">
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Add Date *</label>
+                    <input type="date" name="add_date[]" value="${todayStr}" class="form-input text-sm" required aria-label="Add Date">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Expiry Date *</label>
-                    <input type="date" name="expiry_date[]" class="form-input" required aria-label="Expiry Date">
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Expiry Date *</label>
+                    <input type="date" name="expiry_date[]" class="form-input text-sm" required aria-label="Expiry Date">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity *</label>
-                    <input type="number" name="quantity[]" class="form-input" placeholder="100" min="0" required aria-label="Quantity">
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Quantity *</label>
+                    <input type="number" name="quantity[]" class="form-input text-sm" placeholder="100" min="0" required aria-label="Quantity">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Purchase Price (₹) *</label>
-                    <input type="number" name="purchase_price[]" class="form-input" placeholder="0.00" step="0.01" min="0" required aria-label="Purchase Price">
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Kharid Rate (₹) *</label>
+                    <input type="number" name="purchase_price[]" class="form-input text-sm" placeholder="0.00" step="0.01" min="0" required aria-label="Purchase Price">
                 </div>
             </div>
         `;
         container.appendChild(newRow);
     }
-    
-    // Supplier search
-    const supplierSearch = document.getElementById('supplierSearch');
-    const supplierResults = document.getElementById('supplierResults');
-    const supplierId = document.getElementById('supplierId');
-    
-    let searchTimeout;
-    supplierSearch.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        const query = this.value.trim();
-        
-        if (query.length < 2) {
-            supplierResults.classList.add('hidden');
-            return;
-        }
-        
-        searchTimeout = setTimeout(() => {
-            fetch(`/api/search-suppliers/?q=${encodeURIComponent(query)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.suppliers.length > 0) {
-                        supplierResults.innerHTML = data.suppliers.map(s => `
-                            <div class="p-3 hover:bg-gray-100 cursor-pointer border-b" onclick="selectSupplier(${s.id}, '${s.name}')">
-                                <p class="font-semibold">${s.name}</p>
-                                <p class="text-sm text-gray-500">${s.location}</p>
-                            </div>
-                        `).join('');
-                        supplierResults.classList.remove('hidden');
-                    } else {
-                        supplierResults.innerHTML = '<div class="p-3 text-gray-500">No suppliers found</div>';
-                        supplierResults.classList.remove('hidden');
-                    }
-                });
-        }, 300);
-    });
-    
-    function selectSupplier(id, name) {
-        supplierId.value = id;
-        supplierSearch.value = name;
-        supplierResults.classList.add('hidden');
-    }
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!supplierSearch.contains(e.target) && !supplierResults.contains(e.target)) {
-            supplierResults.classList.add('hidden');
-        }
-    });
-    
-    // Form validation
-    document.getElementById('medicineForm').addEventListener('submit', function(e) {
-        if (!supplierId.value) {
-            e.preventDefault();
-            showAlert('Please select a supplier', 'error');
-        }
-    });
 </script>
 {% endblock %}
