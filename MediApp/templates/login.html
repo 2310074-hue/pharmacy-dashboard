@@ -144,11 +144,11 @@
             content: '';
             position: absolute;
             inset: -2px;
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.4), rgba(99, 102, 241, 0.25), rgba(45, 212, 191, 0.35));
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(99, 102, 241, 0.2), rgba(45, 212, 191, 0.3));
             border-radius: 28px;
             z-index: -1;
-            filter: blur(12px);
-            opacity: 0.6;
+            filter: blur(14px);
+            opacity: 0.55;
             transition: opacity 0.4s ease;
         }
 
@@ -274,18 +274,6 @@
             border-color: rgba(56, 189, 248, 0.4);
             transform: translateY(-1px);
         }
-
-        /* Demo Quick Pill */
-        .demo-chip {
-            background: rgba(56, 189, 248, 0.08);
-            border: 1px solid rgba(56, 189, 248, 0.22);
-            transition: all 0.2s ease;
-        }
-        .demo-chip:hover {
-            background: rgba(56, 189, 248, 0.18);
-            border-color: rgba(56, 189, 248, 0.45);
-            transform: scale(1.02);
-        }
     </style>
 </head>
 <body>
@@ -388,7 +376,7 @@
             {% endif %}
 
             <!-- Login Form -->
-            <form method="post" action="{% url 'login' %}" id="loginForm" class="space-y-4 sm:space-y-4.5">
+            <form method="post" action="{% url 'login' %}" id="loginForm" class="space-y-4 sm:space-y-5">
                 {% csrf_token %}
                 {% if next %}
                 <input type="hidden" name="next" value="{{ next }}">
@@ -396,7 +384,7 @@
 
                 <!-- Username Field -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5" for="username">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2" for="username">
                         Username / Staff ID
                     </label>
                     <div class="glass-input-group">
@@ -421,7 +409,7 @@
 
                 <!-- Password Field with Show/Hide Toggle -->
                 <div>
-                    <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-300" for="password">
                             Password
                         </label>
@@ -463,19 +451,6 @@
                             <svg id="eyeOffIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                             </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Quick Test Credentials Pill -->
-                <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400">
-                    <span class="font-medium text-slate-400">Quick Fill:</span>
-                    <div class="flex items-center gap-2">
-                        <button type="button" onclick="fillCredentials('admin', 'admin123')" class="demo-chip px-2.5 py-1 rounded-lg text-sky-300 font-semibold cursor-pointer">
-                            👤 Admin
-                        </button>
-                        <button type="button" onclick="fillCredentials('pharmacist1', 'pharma123')" class="demo-chip px-2.5 py-1 rounded-lg text-teal-300 font-semibold cursor-pointer">
-                            💊 Pharmacist
                         </button>
                     </div>
                 </div>
@@ -557,17 +532,6 @@
                 tabStaff.classList.remove('text-slate-400');
                 usernameInput.focus();
             }
-        }
-
-        // Quick Fill Helper for Easy Testing
-        function fillCredentials(user, pass) {
-            const usernameInput = document.getElementById('username');
-            const passwordInput = document.getElementById('password');
-            usernameInput.value = user;
-            passwordInput.value = pass;
-            
-            // Brief visual highlight
-            usernameInput.focus();
         }
 
         // Button Loading State on Form Submit
