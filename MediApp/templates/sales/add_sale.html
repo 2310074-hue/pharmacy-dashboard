@@ -153,8 +153,12 @@
                             <strong class="cost-price-val text-slate-800 font-bold">₹0.00</strong>
                             <span class="text-slate-400 text-[10px]">/ unit</span>
                         </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-600 font-medium">📍 Rack/Shelf:</span>
+                            <span class="rack-location-val text-sky-800 font-bold bg-sky-100/90 border border-sky-200 px-2 py-0.5 rounded text-[11px]">--</span>
+                        </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-slate-600 font-medium">💰 Est. Margin & Profit:</span>
+                            <span class="text-slate-600 font-medium">💰 Est. Margin:</span>
                             <strong class="profit-val font-bold text-emerald-700">₹0.00 (0% margin)</strong>
                         </div>
                     </div>
@@ -369,8 +373,12 @@ function addSaleItem() {
                 <strong class="cost-price-val text-slate-800 font-bold">₹0.00</strong>
                 <span class="text-slate-400 text-[10px]">/ unit</span>
             </div>
+            <div class="flex items-center gap-1.5">
+                <span class="text-slate-600 font-medium">📍 Rack/Shelf:</span>
+                <span class="rack-location-val text-sky-800 font-bold bg-sky-100/90 border border-sky-200 px-2 py-0.5 rounded text-[11px]">--</span>
+            </div>
             <div class="flex items-center gap-2">
-                <span class="text-slate-600 font-medium">💰 Est. Margin & Profit:</span>
+                <span class="text-slate-600 font-medium">💰 Est. Margin:</span>
                 <strong class="profit-val font-bold text-emerald-700">₹0.00 (0% margin)</strong>
             </div>
         </div>
@@ -498,12 +506,15 @@ function setupMedicineSearch(container) {
                 .then(data => {
                     if (data.medicines.length > 0) {
                         resultsDiv.innerHTML = data.medicines.map(m => `
-                            <div class="p-3 hover:bg-slate-50 cursor-pointer border-b ${!m.is_active ? 'opacity-75' : ''}" data-id="${m.id}" data-name="${m.name}" data-price="${m.price}" data-cost="${m.cost_price}" data-active="${m.is_active}">
+                            <div class="p-3 hover:bg-slate-50 cursor-pointer border-b ${!m.is_active ? 'opacity-75' : ''}" data-id="${m.id}" data-name="${m.name}" data-price="${m.price}" data-cost="${m.cost_price}" data-location="${m.storage_location || ''}" data-active="${m.is_active}">
                                 <div class="flex justify-between items-center">
-                                    <p class="font-semibold text-slate-800 text-sm">${m.name}</p>
+                                    <p class="font-semibold text-slate-800 text-sm flex items-center gap-1.5">
+                                        ${m.name}
+                                        ${m.storage_location ? `<span class="px-1.5 py-0.5 bg-sky-100 text-sky-800 border border-sky-200 rounded text-[10px] font-bold">📍 ${m.storage_location}</span>` : ''}
+                                    </p>
                                     ${!m.is_active ? '<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Discontinued</span>' : ''}
                                 </div>
-                                <div class="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                <div class="flex items-center gap-2 text-xs text-slate-500 mt-1 flex-wrap">
                                     <span class="font-bold text-teal-700">MRP: ₹${m.price}</span>
                                     <span>•</span>
                                     <span class="text-slate-600">Kharid: ₹${m.cost_price.toFixed(2)}</span>
@@ -519,6 +530,7 @@ function setupMedicineSearch(container) {
                                     this.dataset.id,
                                     this.dataset.name,
                                     this.dataset.price,
+                                    this.dataset.location,
                                     searchInput,
                                     medicineIdInput,
                                     batchSelect,
@@ -539,11 +551,21 @@ function setupMedicineSearch(container) {
     });
 }
 
-function selectMedicine(id, name, price, searchInput, medicineIdInput, batchSelect, priceInput, resultsDiv, itemContainer) {
+function selectMedicine(id, name, price, location, searchInput, medicineIdInput, batchSelect, priceInput, resultsDiv, itemContainer) {
     medicineIdInput.value = id;
     searchInput.value = name;
     priceInput.value = price;
     resultsDiv.classList.add('hidden');
+
+    const rackBadge = itemContainer.querySelector('.rack-location-val');
+    if (rackBadge) {
+        rackBadge.textContent = location || 'Not Assigned';
+        if (location) {
+            rackBadge.className = 'rack-location-val text-sky-800 font-bold bg-sky-100/90 border border-sky-200 px-2 py-0.5 rounded text-[11px]';
+        } else {
+            rackBadge.className = 'rack-location-val text-slate-400 font-normal italic px-1 text-[11px]';
+        }
+    }
     
     // Fetch batches with purchase_price
     fetch(`/api/medicine-batches/?medicine_id=${id}`)

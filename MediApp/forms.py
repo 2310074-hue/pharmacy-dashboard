@@ -32,7 +32,7 @@ class MedicineForm(forms.ModelForm):
     """Form for adding/editing medicine"""
     class Meta:
         model = Medicine
-        fields = ['name', 'category', 'description', 'supplier', 'price', 'reorder_threshold', 'preferred_supplier', 'is_active']
+        fields = ['name', 'category', 'description', 'supplier', 'price', 'rack_number', 'shelf_number', 'reorder_threshold', 'preferred_supplier', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-input',
@@ -57,6 +57,16 @@ class MedicineForm(forms.ModelForm):
                 'step': '0.01',
                 'min': '0.01',
                 'required': True
+            }),
+            'rack_number': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'e.g. Rack A-1, Cabinet 3',
+                'aria-label': 'Rack Number'
+            }),
+            'shelf_number': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'e.g. Shelf 2, Box B',
+                'aria-label': 'Shelf Number'
             }),
             'reorder_threshold': forms.NumberInput(attrs={
                 'class': 'form-input',

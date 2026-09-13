@@ -597,7 +597,9 @@ def medicine_list(request):
         medicines = medicines.filter(
             Q(name__icontains=search_query) |
             Q(description__icontains=search_query) |
-            Q(supplier__name__icontains=search_query)
+            Q(supplier__name__icontains=search_query) |
+            Q(rack_number__icontains=search_query) |
+            Q(shelf_number__icontains=search_query)
         )
 
     medicines = list(medicines)
@@ -1597,6 +1599,9 @@ def search_medicines(request):
             'is_active': m.is_active,
             'cost_price': cost_price,
             'margin_percent': margin_pct,
+            'rack_number': m.rack_number or '',
+            'shelf_number': m.shelf_number or '',
+            'storage_location': m.storage_location or '',
         })
     
     return JsonResponse({'medicines': data})

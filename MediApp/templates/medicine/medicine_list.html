@@ -21,7 +21,7 @@
           value="{{ search_query }}"
           id="searchInput"
           class="form-input pl-10 pr-10 w-full"
-          placeholder="Search medicines..."
+          placeholder="Search medicine, supplier, rack (e.g. Rack A)..."
           aria-label="Search Medicines"
           oninput="handleSearchInput()"
         >
@@ -94,14 +94,14 @@
        data-expired="{% if nearest_batch and nearest_batch.is_expired %}true{% else %}false{% endif %}">
 
     <!-- Header -->
-    <div class="flex items-start justify-between mb-4">
+    <div class="flex items-start justify-between mb-3">
       <div class="flex-1">
-        <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ medicine.name }}
+        <h3 class="text-xl font-semibold text-gray-800 mb-1.5">{{ medicine.name }}
           {% if not medicine.is_active %}
           <span class="ml-2 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-bold align-middle">Discontinued</span>
           {% endif %}
         </h3>
-        <p class="text-sm text-gray-600 mb-2">{{ medicine.description|truncatewords:15 }}</p>
+        <p class="text-sm text-gray-600 mb-1.5">{{ medicine.description|truncatewords:15 }}</p>
         <p class="text-sm text-gray-500">
           <span class="font-semibold">Supplier:</span> {{ medicine.supplier.name|default:"N/A" }}
         </p>
@@ -111,6 +111,22 @@
         <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-semibold">Low Stock</span>
         {% endif %}
       </div>
+    </div>
+
+    <!-- Storage Rack & Shelf Locator Tag -->
+    <div class="mb-4 flex items-center justify-between p-2 rounded-lg bg-sky-50/90 dark:bg-sky-950/60 border border-sky-200/80 dark:border-sky-800/80 text-xs">
+      <div class="flex items-center gap-1.5 font-medium text-sky-900 dark:text-sky-200">
+        <span class="text-sm">📍</span>
+        <span class="text-slate-600 dark:text-slate-300">Location:</span>
+        {% if medicine.storage_location %}
+        <strong class="font-bold text-sky-700 dark:text-sky-300">{{ medicine.storage_location }}</strong>
+        {% else %}
+        <span class="text-slate-400 dark:text-slate-500 italic">Not Assigned</span>
+        {% endif %}
+      </div>
+      <a href="{% url 'edit_medicine' medicine.id %}" class="text-[11px] font-semibold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5" title="Change Rack/Shelf">
+        {% if medicine.storage_location %}Edit{% else %}+ Set Rack{% endif %}
+      </a>
     </div>
 
     <!-- Price & Quantity -->

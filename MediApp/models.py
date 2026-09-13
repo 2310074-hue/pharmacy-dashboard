@@ -101,6 +101,18 @@ class Medicine(models.Model):
         blank=True,
         related_name='preferred_medicines'
     )
+    rack_number = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text='Storage Rack or Cabinet, e.g., Rack A-1, Cabinet 3'
+    )
+    shelf_number = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text='Shelf or Drawer Number, e.g., Shelf 2, Box B'
+    )
     is_active = models.BooleanField(
         default=True,
         help_text='Uncheck this if the medicine is discontinued or no longer available'
@@ -113,6 +125,16 @@ class Medicine(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def storage_location(self):
+        """Return formatted storage location for chemist/pharmacist locator"""
+        parts = []
+        if self.rack_number:
+            parts.append(self.rack_number if 'rack' in self.rack_number.lower() or 'cabinet' in self.rack_number.lower() else f"Rack {self.rack_number}")
+        if self.shelf_number:
+            parts.append(self.shelf_number if 'shelf' in self.shelf_number.lower() or 'box' in self.shelf_number.lower() or 'drawer' in self.shelf_number.lower() else f"Shelf {self.shelf_number}")
+        return " • ".join(parts) if parts else ""
 
     @property
     def total_quantity(self):
