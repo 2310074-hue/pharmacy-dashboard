@@ -324,8 +324,8 @@
                 
                 <div class="w-full max-w-sm mx-auto">
                     
-                    <!-- Welcome Header -->
-                    <div class="mb-6">
+                    <!-- Welcome Header (Centered) -->
+                    <div class="mb-6 text-center">
                         <h2 class="text-2xl font-extrabold text-slate-900 font-outfit tracking-tight">
                             Sign In to Portal
                         </h2>
@@ -464,36 +464,8 @@
                         </button>
                     </form>
 
-                    <!-- Divider -->
-                    <div class="relative my-6">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-slate-200"></div>
-                        </div>
-                        <div class="relative flex justify-center text-xs uppercase">
-                            <span class="bg-white px-3 text-slate-400 font-bold tracking-wider">Fast Navigation</span>
-                        </div>
-                    </div>
-
-                    <!-- Direct Admin Login Secondary Link Card -->
-                    <a href="{% url 'admin:index' %}" class="w-full py-3 px-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/90 text-slate-700 hover:text-sky-700 flex items-center justify-between transition group">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center group-hover:bg-sky-600 group-hover:text-white transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                            </div>
-                            <div class="text-left">
-                                <p class="text-xs font-bold leading-tight text-slate-900 group-hover:text-sky-700 transition">Django Admin Console</p>
-                                <p class="text-[10px] text-slate-400 font-medium">Database, superusers & models</p>
-                            </div>
-                        </div>
-                        <svg class="w-4 h-4 text-slate-400 group-hover:text-sky-600 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </a>
-
                     <!-- Footer Note -->
-                    <div class="text-center mt-6 text-[11px] text-slate-400 font-medium">
+                    <div class="text-center mt-8 text-[11px] text-slate-400 font-medium">
                         &copy; {% now "Y" %} PharmaCare Systems &bull; All Rights Reserved
                     </div>
 
