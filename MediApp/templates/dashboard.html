@@ -162,7 +162,7 @@
         <div class="flex items-start justify-between relative z-10">
             <div>
                 <p class="text-[11px] font-bold text-rose-100 uppercase tracking-wider flex items-center gap-1.5">
-                    <span>Expired Dead Loss</span>
+                    <span>Expired Dead Loss ({{ expired_subtext }})</span>
                     <span class="px-1.5 py-0.2 bg-black/30 text-white text-[9px] font-extrabold rounded">₹ LOSS</span>
                 </p>
                 <h3 class="text-2xl sm:text-3xl font-black text-white mt-1.5 tracking-tight">₹{{ expired_loss_val|floatformat:2 }}</h3>
@@ -185,7 +185,7 @@
         <div class="flex items-start justify-between relative z-10">
             <div>
                 <p class="text-[11px] font-bold text-indigo-100 uppercase tracking-wider flex items-center gap-1.5">
-                    <span>30-Day Expiry At-Risk</span>
+                    <span>{{ expiring_label }} At-Risk</span>
                     <span class="px-1.5 py-0.2 bg-white/20 text-white text-[9px] font-extrabold rounded">₹ RISK</span>
                 </p>
                 <h3 class="text-2xl sm:text-3xl font-black text-white mt-1.5 tracking-tight">₹{{ expiring_soon_loss_val|floatformat:2 }}</h3>
