@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New Customer - Pharmacy Management{% endblock %}
+{% block page_title %}Add New Customer{% endblock %}
+{% block page_subtitle %}Register a new customer account in the system{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <div class="card p-8">
+    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100 dark:border-slate-700/60">
+      <div class="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-gray-800 dark:text-slate-100">Customer Registration</h3>
+        <p class="text-xs text-gray-500 dark:text-slate-400">Fill in the contact details for billing and automated refill alerts.</p>
+      </div>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="space-y-5">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-1.5">Customer Name *</label>
+          {{ form.name }}
+          {% if form.name.errors %}
+            <p class="text-xs text-rose-500 mt-1">{{ form.name.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-1.5">Email Address *</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+            <p class="text-xs text-rose-500 mt-1">{{ form.email.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-slate-200 mb-1.5">Contact Number *</label>
+          {{ form.contact_number }}
+          {% if form.contact_number.errors %}
+            <p class="text-xs text-rose-500 mt-1">{{ form.contact_number.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-xl">
+          {{ form.is_permanent }}
+          <label class="text-sm font-semibold text-amber-900 dark:text-amber-300 cursor-pointer">
+            ⭐ Permanent VIP Member
+            <span class="block text-xs font-normal text-amber-700 dark:text-amber-400/80 mt-0.5">Receives priority stock availability notifications and refill reminder emails.</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 mt-8 pt-4 border-t border-gray-100 dark:border-slate-700/60">
+        <button type="submit" class="btn btn-primary flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Save Customer
+        </button>
+        <a href="{% url 'customer_list' %}" class="btn bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
