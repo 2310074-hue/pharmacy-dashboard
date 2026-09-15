@@ -4651,9 +4651,10 @@ def expiry_reminder_list(request):
         item.whatsapp_url = f"https://wa.me/{clean_num}?text={urllib.parse.quote(wa_msg)}" if clean_num else ""
 
     # ── Pharmacy Store Shelf Expiry & Financial Loss Calculations ──
-    shelf_batches = owner_scope_batches(
+    shelf_batches = owner_scope_queryset(
         request,
-        Batch.objects.filter(quantity__gt=0).select_related('medicine', 'medicine__supplier', 'medicine__category')
+        Batch.objects.filter(quantity__gt=0).select_related('medicine', 'medicine__supplier', 'medicine__category'),
+        'created_by'
     )
 
     # 1. Expired Batches (100% Dead Financial Loss)
@@ -4809,15 +4810,23 @@ def expiry_reminder_list(request):
 def export_expiry_loss_excel(request):
     """Export detailed pharmacy inventory expiry and financial loss audit to Excel/CSV"""
     today = timezone.now().date()
-    shelf_batches = owner_scope_batches(
+    shelf_batches = owner_scope_queryset(
         request,
-        Batch.objects.filter(quantity__gt=0).select_related('medicine', 'medicine__supplier', 'medicine__category')
+        Batch.objects.filter(quantity__gt=0).select_related('medicine', 'medicine__supplier', 'medicine__category'),
+        'created_by'
     )
     
     risk_batches = sorted(
         [b for b in shelf_batches if b.expiry_date and b.expiry_date <= today + timedelta(days=90)],
         key=lambda b: b.expiry_date
     )
+
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        EXCEL_AVAILABLE = True
+    except ImportError:
+        EXCEL_AVAILABLE = False
 
     if not EXCEL_AVAILABLE:
         import csv
