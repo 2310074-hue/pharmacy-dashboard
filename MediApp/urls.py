@@ -67,6 +67,7 @@ urlpatterns = [
 
     # Expiry Reminders (Customer Purchase Expiry Notification Module)
     path('expiry-reminders/', views.expiry_reminder_list, name='expiry_reminder_list'),
+    path('expiry-reminders/export-loss/', views.export_expiry_loss_excel, name='export_expiry_loss_excel'),
     path('expiry-reminders/send-bulk/', views.send_expiry_reminders_bulk, name='send_expiry_reminders_bulk'),
     path('expiry-reminders/send-whatsapp-bulk/', views.send_cloud_whatsapp_bulk_view, name='send_cloud_whatsapp_bulk_view'),
     path('expiry-reminders/send-whatsapp-single/', views.send_cloud_whatsapp_single_view, name='send_cloud_whatsapp_single_view'),

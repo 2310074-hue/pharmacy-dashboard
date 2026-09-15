@@ -7,13 +7,265 @@
 {% block content %}
 <div class="space-y-6">
 
-    <!-- Top KPI Summary Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         1. PHARMACY INVENTORY EXPIRY & FINANCIAL LOSS CONTROL CENTER
+         ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="card p-6 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white shadow-xl border border-slate-700/60 rounded-2xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div class="space-y-1.5 max-w-2xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold border border-rose-400/30">
+                    <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+                    Financial Loss & Expiry Intelligence
+                </div>
+                <h2 class="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+                    🏥 Pharmacy Shelf Expiry & Financial Loss Tracker
+                </h2>
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    Live financial audit of expired shelf stock and upcoming 30/90-day at-risk inventory. Calculate exact dead losses in ₹, initiate supplier returns, and export audit sheets.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- 1-Click Excel Download Button -->
+                <a href="{% url 'export_expiry_loss_excel' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md transition-all transform hover:-translate-y-0.5">
+                    <svg class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>📥 Export Loss Sheet (.xlsx)</span>
+                </a>
+
+                <!-- Toggle Batch Breakdown Table Button -->
+                <button type="button" onclick="toggleShelfLossTable()" id="btnToggleLossTable" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-200 bg-white/10 hover:bg-white/20 border border-white/15 transition-all">
+                    <svg class="w-4 h-4 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span id="lossTableToggleText">📊 View Batch Loss Breakdown ({{ shelf_loss_watchlist|length }})</span>
+                </button>
+
+                <!-- Link to Executive Dossier -->
+                <a href="{% url 'executive_dossier_report' %}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-600 transition-all" title="View Full Printable Executive Audit Dossier">
+                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <span>Printable Audit</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3 Master Financial Loss KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        
+        <!-- KPI 1: Expired Dead Loss -->
+        <div class="card p-6 bg-gradient-to-br from-rose-50 to-white border-l-4 border-l-rose-600 shadow-sm hover:shadow-md transition">
+            <div class="flex items-start justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-rose-100 text-rose-800 border border-rose-200">
+                            ⛔ 100% Dead Loss
+                        </span>
+                    </div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-rose-700 mt-2">Expired Stock Loss</p>
+                    <h3 class="text-3xl font-black text-gray-900 mt-1">₹{{ expired_loss_total|floatformat:2 }}</h3>
+                    <p class="text-xs text-rose-600 font-semibold mt-1.5 flex items-center gap-1">
+                        <span>📦 {{ expired_units_total }} units across {{ expired_batches_count }} batches</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-1">Potential MRP Value: ₹{{ expired_mrp_loss_total|floatformat:2 }}</p>
+                </div>
+                <div class="w-13 h-13 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl font-bold shadow-inner">
+                    💸
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI 2: 30-Day Near-Expiry Loss At-Risk -->
+        <div class="card p-6 bg-gradient-to-br from-amber-50 to-white border-l-4 border-l-amber-500 shadow-sm hover:shadow-md transition">
+            <div class="flex items-start justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800 border border-amber-200">
+                            ⚠️ Immediate FEFO Action
+                        </span>
+                    </div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-amber-700 mt-2">30-Day Expiry At-Risk</p>
+                    <h3 class="text-3xl font-black text-gray-900 mt-1">₹{{ expiring_30d_loss_total|floatformat:2 }}</h3>
+                    <p class="text-xs text-amber-700 font-semibold mt-1.5 flex items-center gap-1">
+                        <span>⏳ {{ expiring_30d_units_total }} units across {{ expiring_30d_batches_count }} batches</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-1">Potential MRP Value: ₹{{ expiring_30d_mrp_total|floatformat:2 }}</p>
+                </div>
+                <div class="w-13 h-13 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl font-bold shadow-inner">
+                    ⏰
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI 3: 90-Day Extended Risk Buffer -->
+        <div class="card p-6 bg-gradient-to-br from-yellow-50 to-white border-l-4 border-l-yellow-500 shadow-sm hover:shadow-md transition">
+            <div class="flex items-start justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-yellow-100 text-yellow-800 border border-yellow-200">
+                            📅 31-90 Days Clearance
+                        </span>
+                    </div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-yellow-800 mt-2">90-Day Risk Buffer</p>
+                    <h3 class="text-3xl font-black text-gray-900 mt-1">₹{{ expiring_90d_loss_total|floatformat:2 }}</h3>
+                    <p class="text-xs text-yellow-700 font-semibold mt-1.5 flex items-center gap-1">
+                        <span>📦 {{ expiring_90d_units_total }} units across {{ expiring_90d_batches_count }} batches</span>
+                    </p>
+                    <p class="text-[11px] text-gray-500 mt-1">Total At-Risk Value: ₹{{ total_financial_risk_val|floatformat:2 }}</p>
+                </div>
+                <div class="w-13 h-13 rounded-2xl bg-yellow-100 text-yellow-700 flex items-center justify-center text-2xl font-bold shadow-inner">
+                    🛡️
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         2. DETAILED SHELF LOSS BREAKDOWN TABLE (Interactive Drawer / Panel)
+         ═══════════════════════════════════════════════════════════════════════════ -->
+    <div id="shelfLossTableContainer" class="card p-6 border border-slate-200 rounded-2xl shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-gray-100">
+            <div>
+                <h3 class="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+                    <span>📋 Pharmacy Shelf Expiry & Batch Financial Loss Audit</span>
+                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200">
+                        {{ shelf_loss_watchlist|length }} Batches Audited
+                    </span>
+                </h3>
+                <p class="text-xs text-gray-500 mt-0.5">
+                    Individual unit economics, dead loss amounts, and 1-click supplier return request shortcuts.
+                </p>
+            </div>
+
+            <!-- Search Filter for Shelf Loss -->
+            <div class="relative min-w-[260px]">
+                <input 
+                    type="text" 
+                    id="shelfLossSearch" 
+                    onkeyup="filterShelfLossTable()" 
+                    placeholder="Search medicine, batch, or supplier..." 
+                    class="form-input text-xs pl-9 pr-3 py-2 w-full rounded-xl"
+                >
+                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Shelf Loss Responsive Table -->
+        <div class="overflow-x-auto mt-4">
+            <table class="w-full text-left border-collapse" id="shelfLossTable">
+                <thead>
+                    <tr class="bg-gray-50/80 border-b border-gray-200 text-[11px] font-extrabold text-gray-500 uppercase tracking-wider">
+                        <th class="py-3 px-4">Medicine &amp; Category</th>
+                        <th class="py-3 px-3">Batch No.</th>
+                        <th class="py-3 px-3 text-right">Units on Shelf</th>
+                        <th class="py-3 px-3 text-center">Expiry Date &amp; Status</th>
+                        <th class="py-3 px-3 text-right">Purchase Rate (Kharid)</th>
+                        <th class="py-3 px-3 text-right">Selling MRP</th>
+                        <th class="py-3 px-4 text-right">Total Financial Loss</th>
+                        <th class="py-3 px-4 text-center">Supplier &amp; Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-xs">
+                    {% for item in shelf_loss_watchlist %}
+                    <tr class="hover:bg-slate-50/80 transition {% if item.is_expired %}bg-rose-50/30{% endif %}">
+                        <td class="py-3.5 px-4 font-bold text-gray-900">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base">{% if item.is_expired %}🔴{% else %}💊{% endif %}</span>
+                                <div>
+                                    <div>{{ item.medicine_name }}</div>
+                                    <span class="text-[10px] font-semibold text-gray-400">{{ item.category }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-3 font-mono font-bold text-indigo-700">
+                            <code>{{ item.batch_name }}</code>
+                        </td>
+                        <td class="py-3.5 px-3 text-right font-extrabold text-gray-800">
+                            {{ item.quantity }} <span class="text-[10px] font-normal text-gray-500">units</span>
+                        </td>
+                        <td class="py-3.5 px-3 text-center">
+                            <div class="font-semibold text-gray-800">{{ item.expiry_date }}</div>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold mt-0.5 border {{ item.badge_class }}">
+                                {{ item.status_badge }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-3 text-right font-semibold text-gray-700">
+                            ₹{{ item.purchase_price|floatformat:2 }}
+                        </td>
+                        <td class="py-3.5 px-3 text-right font-semibold text-gray-500">
+                            ₹{{ item.mrp|floatformat:2 }}
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-black text-sm {% if item.is_expired %}text-rose-600{% else %}text-amber-600{% endif %}">
+                            ₹{{ item.total_loss|floatformat:2 }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            <div class="flex items-center justify-center gap-2 flex-wrap">
+                                {% if item.supplier_wa_url %}
+                                <a 
+                                    href="{{ item.supplier_wa_url }}" 
+                                    target="_blank" 
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 transition"
+                                    title="Send WhatsApp Stock Return Request to {{ item.supplier_name }}"
+                                >
+                                    <span>💬 Return Request</span>
+                                </a>
+                                {% else %}
+                                <span class="text-[11px] text-gray-400 font-medium">{{ item.supplier_name }}</span>
+                                {% endif %}
+
+                                {% if item.medicine_id %}
+                                <a 
+                                    href="{% url 'edit_medicine' item.medicine_id %}" 
+                                    class="p-1 rounded text-gray-400 hover:text-indigo-600 hover:bg-gray-100 transition"
+                                    title="Edit Medicine / Batch"
+                                >
+                                    ✏️
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-8 text-emerald-600 font-bold">
+                            🎉 Excellent! No expired or near-expiry batches on pharmacy shelf.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if shelf_loss_watchlist %}
+                <tfoot>
+                    <tr class="bg-slate-900 text-white font-extrabold text-xs">
+                        <td colspan="2" class="py-3 px-4">TOTAL AUDITED LOSS</td>
+                        <td class="py-3 px-3 text-right">{{ expired_units_total|add:expiring_30d_units_total|add:expiring_90d_units_total }} units</td>
+                        <td colspan="3" class="py-3 px-3"></td>
+                        <td class="py-3 px-4 text-right text-sm text-rose-400 font-black">₹{{ total_financial_risk_val|floatformat:2 }}</td>
+                        <td class="py-3 px-4 text-center">
+                            <a href="{% url 'export_expiry_loss_excel' %}" class="text-cyan-300 hover:underline text-[11px]">📥 Download Excel</a>
+                        </td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         3. CUSTOMER EXPRY ALERTS & NOTIFICATION DISPATCHER
+         ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
         <!-- Total Alerts -->
         <div class="card p-5 bg-gradient-to-br from-cyan-50 to-white border-l-4 border-cyan-500">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold uppercase tracking-wider text-cyan-700">Total Expiry Alerts</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-cyan-700">Customer Purchase Alerts</p>
                     <h3 class="text-2xl font-black text-gray-800 mt-1">{{ total_alerts_count }}</h3>
                     <p class="text-xs text-gray-500 mt-1">Customer purchase records</p>
                 </div>
@@ -1452,9 +1704,39 @@
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    // ── Shelf Expiry Loss Table Toggle & Live Filter ──
+    let isLossTableOpen = true;
+    function toggleShelfLossTable() {
+        const container = document.getElementById('shelfLossTableContainer');
+        const btnText = document.getElementById('lossTableToggleText');
+        if (!container) return;
+
+        isLossTableOpen = !isLossTableOpen;
+        if (isLossTableOpen) {
+            container.style.display = 'block';
+            if (btnText) btnText.innerHTML = `📊 Hide Batch Loss Table`;
+        } else {
+            container.style.display = 'none';
+            if (btnText) btnText.innerHTML = `📊 View Batch Loss Breakdown ({{ shelf_loss_watchlist|length }})`;
+        }
+    }
+
+    function filterShelfLossTable() {
+        const input = document.getElementById('shelfLossSearch');
+        if (!input) return;
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('shelfLossTable');
+        if (!table) return;
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const text = rows[i].textContent || rows[i].innerText;
+            if (text.toLowerCase().indexOf(filter) > -1) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
     }
 </script>
 {% endblock %}

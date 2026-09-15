@@ -156,16 +156,19 @@
         </div>
     </div>
     
-    <!-- Expired Batches (Rose / Crimson Gradient) -->
-    <div class="bg-gradient-to-br from-rose-600 via-red-600 to-pink-700 text-white rounded-2xl p-6 shadow-lg shadow-rose-900/15 relative overflow-hidden group hover:shadow-xl hover:-translate-y-0.5 transition duration-200 border border-white/20">
+    <!-- Expired Batches Financial Dead Loss (Rose / Crimson Gradient) -->
+    <a href="{% url 'expiry_reminder_list' %}" class="bg-gradient-to-br from-rose-600 via-red-600 to-pink-700 text-white rounded-2xl p-6 shadow-lg shadow-rose-900/15 relative overflow-hidden group hover:shadow-xl hover:-translate-y-0.5 transition duration-200 border border-white/20 block cursor-pointer" title="Click to view Expired Medicine Financial Loss Breakdown">
         <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
         <div class="flex items-start justify-between relative z-10">
             <div>
-                <p class="text-[11px] font-bold text-rose-100 uppercase tracking-wider">Expired Batches</p>
-                <h3 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">{{ expired_count }}</h3>
-                <div class="mt-3 flex items-center gap-2">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-black/20 text-white border border-white/20 backdrop-blur-xs">❌ Action Required</span>
-                    <span class="text-[11px] text-rose-100/80 font-medium">{{ expired_subtext|default:"With stock" }}</span>
+                <p class="text-[11px] font-bold text-rose-100 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>Expired Dead Loss</span>
+                    <span class="px-1.5 py-0.2 bg-black/30 text-white text-[9px] font-extrabold rounded">₹ LOSS</span>
+                </p>
+                <h3 class="text-2xl sm:text-3xl font-black text-white mt-1.5 tracking-tight">₹{{ expired_loss_val|floatformat:2 }}</h3>
+                <div class="mt-2.5 flex items-center gap-2 flex-wrap">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-black/25 text-white border border-white/20 backdrop-blur-xs">⛔ {{ expired_count }} batches ({{ expired_units_val }} units)</span>
+                    <span class="text-[11px] text-rose-100 font-medium">Click for breakdown →</span>
                 </div>
             </div>
             <div class="w-12 h-12 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl backdrop-blur-xs group-hover:scale-110 transition-transform shadow-inner">
@@ -174,18 +177,21 @@
                 </svg>
             </div>
         </div>
-    </div>
+    </a>
     
-    <!-- Expiring Soon (Blue / Indigo / Violet Gradient) -->
-    <div class="bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 text-white rounded-2xl p-6 shadow-lg shadow-indigo-900/15 relative overflow-hidden group hover:shadow-xl hover:-translate-y-0.5 transition duration-200 border border-white/20">
+    <!-- Expiring Soon Financial Risk (Blue / Indigo / Violet Gradient) -->
+    <a href="{% url 'expiry_reminder_list' %}" class="bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 text-white rounded-2xl p-6 shadow-lg shadow-indigo-900/15 relative overflow-hidden group hover:shadow-xl hover:-translate-y-0.5 transition duration-200 border border-white/20 block cursor-pointer" title="Click to view Upcoming Expiry Risk">
         <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
         <div class="flex items-start justify-between relative z-10">
             <div>
-                <p class="text-[11px] font-bold text-indigo-100 uppercase tracking-wider">{{ expiring_label|default:"Expiring Soon" }}</p>
-                <h3 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">{{ expiring_soon_count }}</h3>
-                <div class="mt-3 flex items-center gap-2">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 text-white border border-white/30 backdrop-blur-xs">⏳ 30-Day Window</span>
-                    <span class="text-[11px] text-indigo-100/80 font-medium">{{ expiring_subtext|default:"Batches expiring" }}</span>
+                <p class="text-[11px] font-bold text-indigo-100 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>30-Day Expiry At-Risk</span>
+                    <span class="px-1.5 py-0.2 bg-white/20 text-white text-[9px] font-extrabold rounded">₹ RISK</span>
+                </p>
+                <h3 class="text-2xl sm:text-3xl font-black text-white mt-1.5 tracking-tight">₹{{ expiring_soon_loss_val|floatformat:2 }}</h3>
+                <div class="mt-2.5 flex items-center gap-2 flex-wrap">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 text-white border border-white/30 backdrop-blur-xs">⏳ {{ expiring_soon_count }} batches ({{ expiring_soon_units_val }} units)</span>
+                    <span class="text-[11px] text-indigo-100 font-medium">FEFO action →</span>
                 </div>
             </div>
             <div class="w-12 h-12 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center font-bold text-xl backdrop-blur-xs group-hover:scale-110 transition-transform shadow-inner">
@@ -194,7 +200,7 @@
                 </svg>
             </div>
         </div>
-    </div>
+    </a>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════

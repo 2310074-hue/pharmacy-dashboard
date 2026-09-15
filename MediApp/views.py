@@ -552,6 +552,21 @@ def dashboard(request):
         expiring_subtext = 'Batches expiring today'
         expired_subtext = 'Expired today'
     
+    # Expiry financial loss calculations
+    expired_loss_val = sum(
+        (Decimal(str(b.quantity)) * (b.purchase_price if b.purchase_price > 0 else (b.medicine.price if b.medicine else Decimal('0.00')))
+         for b in expired_batches if b.medicine),
+        Decimal('0.00')
+    )
+    expired_units_val = sum((b.quantity for b in expired_batches), 0)
+
+    expiring_soon_loss_val = sum(
+        (Decimal(str(b.quantity)) * (b.purchase_price if b.purchase_price > 0 else (b.medicine.price if b.medicine else Decimal('0.00')))
+         for b in expiring_soon if b.medicine),
+        Decimal('0.00')
+    )
+    expiring_soon_units_val = sum((b.quantity for b in expiring_soon), 0)
+
     # Recent items
     recent_logs = InventoryLog.objects.filter(
         performed_by=request.user
@@ -573,7 +588,11 @@ def dashboard(request):
         'period_new_medicines': period_new_medicines,
         'period_new_suppliers': period_new_suppliers,
         'expired_count': expired_batches.count(),
+        'expired_loss_val': float(expired_loss_val),
+        'expired_units_val': expired_units_val,
         'expiring_soon_count': expiring_soon.count(),
+        'expiring_soon_loss_val': float(expiring_soon_loss_val),
+        'expiring_soon_units_val': expiring_soon_units_val,
         'expiring_label': expiring_label,
         'expiring_subtext': expiring_subtext,
         'expired_subtext': expired_subtext,
@@ -3758,24 +3777,44 @@ def _medibot_local_engine(prompt, request=None):
                 lines = []
                 for m in matching_meds[:4]:
                     batches = m.batches.filter(quantity__gt=0).order_by('expiry_date')
-                    b_info = ', '.join([f"`{b.batch_name}` (Qty: {b.quantity}, Exp: {b.expiry_date})" for b in batches]) if batches.exists() else "No active batches in stock"
+                    b_info = ', '.join([f"`{b.batch_name}` (Qty: {b.quantity}, Exp: {b.expiry_date}, Loss: Rs.{(b.quantity * (b.purchase_price if b.purchase_price > 0 else m.price)):.2f})" for b in batches]) if batches.exists() else "No active batches in stock"
                     lines.append(
-                        f"### ⏰ {m.name} — Expiry & Batch Details\n"
+                        f"### ⏰ {m.name} — Expiry & Financial Loss Details\n"
                         f"• **Current Stock:** {m.total_quantity} units\n"
                         f"• **Active Batches & Expiry Dates:** {b_info}"
                     )
                 return "\n\n".join(lines)
 
-        exp_batches = Batch.objects.filter(
+        # Shelf Expired & Near-Expiry Batches with exact ₹ loss
+        expired_shelf = Batch.objects.filter(
+            medicine__in=scoped_meds,
+            expiry_date__lt=today,
+            quantity__gt=0
+        ).select_related('medicine')
+        expired_loss = sum(((Decimal(str(b.quantity)) * (b.purchase_price if b.purchase_price > 0 else b.medicine.price)) for b in expired_shelf if b.medicine), Decimal('0.00'))
+
+        near_shelf = Batch.objects.filter(
             medicine__in=scoped_meds,
             expiry_date__gte=today,
             expiry_date__lte=today + timedelta(days=30),
             quantity__gt=0
         ).select_related('medicine').order_by('expiry_date')
-        if not exp_batches.exists():
-            return "✅ **Good news!** No medicine batches in your inventory are expiring within the next 30 days."
-        lines = [f"• **{b.medicine.name}** (Batch: `{b.batch_name}`) — Qty: **{b.quantity}**, Exp: **{b.expiry_date}**" for b in exp_batches[:10]]
-        return f"⏰ **Medicines Expiring Soon (Next 30 Days):**\n\n" + "\n".join(lines)
+        near_loss = sum(((Decimal(str(b.quantity)) * (b.purchase_price if b.purchase_price > 0 else b.medicine.price)) for b in near_shelf if b.medicine), Decimal('0.00'))
+
+        lines = []
+        if expired_shelf.exists():
+            exp_lines = [f"• **{b.medicine.name}** (`{b.batch_name}`): {b.quantity} units expired on {b.expiry_date} ➔ **Rs.{float(b.quantity * (b.purchase_price if b.purchase_price > 0 else b.medicine.price)):.2f} Dead Loss**" for b in expired_shelf[:6]]
+            lines.append(f"⛔ **Already Expired Stock (Total Dead Loss: Rs.{expired_loss:,.2f}):**\n" + "\n".join(exp_lines))
+
+        if near_shelf.exists():
+            near_lines = [f"• **{b.medicine.name}** (`{b.batch_name}`): {b.quantity} units (Exp: {b.expiry_date}) ➔ **Rs.{float(b.quantity * (b.purchase_price if b.purchase_price > 0 else b.medicine.price)):.2f} At-Risk**" for b in near_shelf[:6]]
+            lines.append(f"⚠️ **Expiring Within 30 Days (Loss At-Risk: Rs.{near_loss:,.2f}):**\n" + "\n".join(near_lines))
+
+        if lines:
+            lines.append(f"\n💰 **Total Financial Loss at Risk:** **Rs.{(expired_loss + near_loss):,.2f}**\n💡 *Tip: Visit Expiry Reminders module to download the full Excel loss audit sheet or dispatch supplier return notices.*")
+            return "\n\n".join(lines)
+
+        return "✅ **Good news!** No medicine batches in your inventory are expired or expiring within the next 30 days."
 
     # 9. SALES & REVENUE INTENT
     if intent == 'SALES_REVENUE':
@@ -4611,6 +4650,129 @@ def expiry_reminder_list(request):
         item.whatsapp_message = wa_msg
         item.whatsapp_url = f"https://wa.me/{clean_num}?text={urllib.parse.quote(wa_msg)}" if clean_num else ""
 
+    # ── Pharmacy Store Shelf Expiry & Financial Loss Calculations ──
+    shelf_batches = owner_scope_batches(
+        request,
+        Batch.objects.filter(quantity__gt=0).select_related('medicine', 'medicine__supplier', 'medicine__category')
+    )
+
+    # 1. Expired Batches (100% Dead Financial Loss)
+    expired_shelf_batches = [b for b in shelf_batches if b.expiry_date and b.expiry_date < today]
+    expired_loss_total = sum(
+        (Decimal(str(b.quantity)) * (b.purchase_price if b.purchase_price > 0 else (b.medicine.price if b.medicine else Decimal('0.00')))
+         for b in expired_shelf_batches),
+        Decimal('0.00')
+    )
+    expired_mrp_loss_total = sum(
+        (Decimal(str(b.quantity)) * (b.medicine.price if b.medicine else Decimal('0.00'))
+         for b in expired_shelf_batches),
+        Decimal('0.00')
+    )
+    expired_units_total = sum((b.quantity for b in expired_shelf_batches), 0)
+    expired_batches_count = len(expired_shelf_batches)
+
+    # 2. Critical & 30-Day Near-Expiry (Urgent Loss At-Risk)
+    expiring_30d_batches = [b for b in shelf_batches if b.expiry_date and today <= b.expiry_date <= today + timedelta(days=30)]
+    expiring_30d_loss_total = sum(
+        (Decimal(str(b.quantity)) * (b.purchase_price if b.purchase_price > 0 else (b.medicine.price if b.medicine else Decimal('0.00')))
+         for b in expiring_30d_batches),
+        Decimal('0.00')
+    )
+    expiring_30d_mrp_total = sum(
+        (Decimal(str(b.quantity)) * (b.medicine.price if b.medicine else Decimal('0.00'))
+         for b in expiring_30d_batches),
+        Decimal('0.00')
+    )
+    expiring_30d_units_total = sum((b.quantity for b in expiring_30d_batches), 0)
+    expiring_30d_batches_count = len(expiring_30d_batches)
+
+    # 3. 31 to 90 Days Extended Buffer
+    expiring_90d_batches = [b for b in shelf_batches if b.expiry_date and today + timedelta(days=30) < b.expiry_date <= today + timedelta(days=90)]
+    expiring_90d_loss_total = sum(
+        (Decimal(str(b.quantity)) * (b.purchase_price if b.purchase_price > 0 else (b.medicine.price if b.medicine else Decimal('0.00')))
+         for b in expiring_90d_batches),
+        Decimal('0.00')
+    )
+    expiring_90d_units_total = sum((b.quantity for b in expiring_90d_batches), 0)
+    expiring_90d_batches_count = len(expiring_90d_batches)
+
+    # Combined Total Loss at Risk
+    total_financial_risk_val = expired_loss_total + expiring_30d_loss_total
+
+    # Detailed Shelf Loss Watchlist (Sorted: expired first, then soonest expiry)
+    shelf_loss_watchlist = []
+    all_shelf_risk = sorted(expired_shelf_batches + expiring_30d_batches + expiring_90d_batches, key=lambda b: b.expiry_date)
+    for b in all_shelf_risk:
+        days_left = (b.expiry_date - today).days
+        unit_cost = b.purchase_price if b.purchase_price > 0 else (b.medicine.price if b.medicine else Decimal('0.00'))
+        mrp = b.medicine.price if b.medicine else Decimal('0.00')
+        loss_val = Decimal(str(b.quantity)) * unit_cost
+        mrp_val = Decimal(str(b.quantity)) * mrp
+
+        if days_left < 0:
+            status_code = 'expired'
+            status_badge = f'Expired ({abs(days_left)}d ago)'
+            badge_class = 'bg-rose-100 text-rose-800 border-rose-300'
+        elif days_left == 0:
+            status_code = 'today'
+            status_badge = 'Expires Today'
+            badge_class = 'bg-red-100 text-red-800 border-red-300 font-extrabold'
+        elif days_left <= 7:
+            status_code = 'critical'
+            status_badge = f'Critical ({days_left}d left)'
+            badge_class = 'bg-red-100 text-red-800 border-red-300'
+        elif days_left <= 30:
+            status_code = 'urgent'
+            status_badge = f'Expiring Soon ({days_left}d left)'
+            badge_class = 'bg-amber-100 text-amber-800 border-amber-300'
+        else:
+            status_code = 'warning'
+            status_badge = f'{days_left}d left'
+            badge_class = 'bg-yellow-100 text-yellow-800 border-yellow-300'
+
+        sup = b.medicine.supplier if (b.medicine and b.medicine.supplier) else None
+        sup_name = sup.name if sup else 'Direct / No Supplier'
+        sup_contact = sup.contact_number if sup else ''
+        clean_sup_phone = re.sub(r'[^0-9]', '', sup_contact)
+        if len(clean_sup_phone) == 10:
+            clean_sup_phone = '91' + clean_sup_phone
+
+        wa_return_msg = (
+            f"📦 *PharmaCare Return / Replacement Request*\n\n"
+            f"Dear *{sup_name}*,\n"
+            f"We have the following medicine batch near or past expiry from your supply:\n\n"
+            f"💊 *Medicine:* {b.medicine.name if b.medicine else 'N/A'}\n"
+            f"🏷️ *Batch No:* {b.batch_name}\n"
+            f"📦 *Remaining Stock:* {b.quantity} units\n"
+            f"📅 *Expiry Date:* {b.expiry_date.strftime('%d-%b-%Y')}\n"
+            f"💰 *Purchase Value:* Rs.{float(loss_val):,.2f}\n\n"
+            f"Please arrange a stock pickup or issue a credit note for this batch.\n\n"
+            f"Regards,\n*PharmaCare Pharmacy*"
+        )
+        sup_wa_url = f"https://wa.me/{clean_sup_phone}?text={urllib.parse.quote(wa_return_msg)}" if clean_sup_phone else ""
+
+        shelf_loss_watchlist.append({
+            'medicine_id': b.medicine.id if b.medicine else None,
+            'medicine_name': b.medicine.name if b.medicine else 'Unknown',
+            'category': b.medicine.category.name if (b.medicine and b.medicine.category) else 'General',
+            'batch_id': b.id,
+            'batch_name': b.batch_name,
+            'quantity': b.quantity,
+            'expiry_date': b.expiry_date.strftime('%d-%b-%Y'),
+            'days_left': days_left,
+            'status_code': status_code,
+            'status_badge': status_badge,
+            'badge_class': badge_class,
+            'purchase_price': float(unit_cost),
+            'mrp': float(mrp),
+            'total_loss': float(loss_val),
+            'potential_revenue_loss': float(mrp_val),
+            'supplier_name': sup_name,
+            'supplier_contact': sup_contact,
+            'supplier_wa_url': sup_wa_url,
+            'is_expired': days_left < 0,
+        })
+
     context = {
         'logs': logs_page,
         'page_obj': logs_page,
@@ -4625,8 +4787,216 @@ def expiry_reminder_list(request):
         'search_query': search_query,
         'status_filter': status_filter,
         'timeline_filter': timeline_filter,
+        # Shelf Financial Loss Intelligence
+        'expired_loss_total': float(expired_loss_total),
+        'expired_mrp_loss_total': float(expired_mrp_loss_total),
+        'expired_units_total': expired_units_total,
+        'expired_batches_count': expired_batches_count,
+        'expiring_30d_loss_total': float(expiring_30d_loss_total),
+        'expiring_30d_mrp_total': float(expiring_30d_mrp_total),
+        'expiring_30d_units_total': expiring_30d_units_total,
+        'expiring_30d_batches_count': expiring_30d_batches_count,
+        'expiring_90d_loss_total': float(expiring_90d_loss_total),
+        'expiring_90d_units_total': expiring_90d_units_total,
+        'expiring_90d_batches_count': expiring_90d_batches_count,
+        'total_financial_risk_val': float(total_financial_risk_val),
+        'shelf_loss_watchlist': shelf_loss_watchlist,
     }
     return render(request, 'expiry/expiry_reminder_list.html', context)
+
+
+@assistant_or_above
+def export_expiry_loss_excel(request):
+    """Export detailed pharmacy inventory expiry and financial loss audit to Excel/CSV"""
+    today = timezone.now().date()
+    shelf_batches = owner_scope_batches(
+        request,
+        Batch.objects.filter(quantity__gt=0).select_related('medicine', 'medicine__supplier', 'medicine__category')
+    )
+    
+    risk_batches = sorted(
+        [b for b in shelf_batches if b.expiry_date and b.expiry_date <= today + timedelta(days=90)],
+        key=lambda b: b.expiry_date
+    )
+
+    if not EXCEL_AVAILABLE:
+        import csv
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="pharmacy_expiry_financial_loss_report_{today}.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['PharmaCare Pharmacy - Expiry & Financial Loss Audit Report'])
+        writer.writerow(['Generated Date', today.strftime('%d-%b-%Y')])
+        writer.writerow([])
+        writer.writerow([
+            'Medicine Name', 'Category', 'Batch No', 'Quantity in Stock', 'Expiry Date',
+            'Days Remaining / Status', 'Purchase Cost/Unit (Rs.)', 'MRP/Unit (Rs.)',
+            'Total Financial Loss (Rs.)', 'Total MRP Loss (Rs.)', 'Supplier Name', 'Supplier Contact'
+        ])
+        for b in risk_batches:
+            days_left = (b.expiry_date - today).days
+            status_str = f"Expired ({abs(days_left)} days ago)" if days_left < 0 else f"{days_left} days left"
+            unit_cost = float(b.purchase_price if b.purchase_price > 0 else (b.medicine.price if b.medicine else Decimal('0.00')))
+            mrp = float(b.medicine.price if b.medicine else Decimal('0.00'))
+            tot_loss = float(b.quantity * unit_cost)
+            tot_mrp_loss = float(b.quantity * mrp)
+            sup_name = b.medicine.supplier.name if (b.medicine and b.medicine.supplier) else 'N/A'
+            sup_contact = b.medicine.supplier.contact_number if (b.medicine and b.medicine.supplier) else 'N/A'
+            writer.writerow([
+                b.medicine.name if b.medicine else 'N/A',
+                b.medicine.category.name if (b.medicine and b.medicine.category) else 'General',
+                b.batch_name,
+                b.quantity,
+                b.expiry_date.strftime('%Y-%m-%d'),
+                status_str,
+                unit_cost,
+                mrp,
+                tot_loss,
+                tot_mrp_loss,
+                sup_name,
+                sup_contact
+            ])
+        return response
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Expiry Loss Audit"
+
+    # Title header
+    ws.merge_cells('A1:L1')
+    title_cell = ws['A1']
+    title_cell.value = "PharmaCare Pharmacy — Inventory Expiry & Financial Loss Audit"
+    title_cell.font = Font(name='Calibri', size=15, bold=True, color='FFFFFF')
+    title_cell.fill = PatternFill(start_color='0F172A', end_color='0F172A', fill_type='solid')
+    title_cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 36
+
+    # Subtitle
+    ws.merge_cells('A2:L2')
+    sub_cell = ws['A2']
+    sub_cell.value = f"Audit Generated on {today.strftime('%d %B %Y')} | Scope: Expired & Near-Expiry Batches on Shelf"
+    sub_cell.font = Font(name='Calibri', size=10, italic=True, color='94A3B8')
+    sub_cell.fill = PatternFill(start_color='1E293B', end_color='1E293B', fill_type='solid')
+    sub_cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[2].height = 22
+
+    headers = [
+        'Medicine Name', 'Category', 'Batch No.', 'Units on Shelf', 'Expiry Date',
+        'Status / Timeline', 'Purchase Cost (Rs.)', 'Selling Price / MRP (Rs.)',
+        'Total Dead Loss / At-Risk (Rs.)', 'Potential Revenue Loss (Rs.)', 'Supplier Name', 'Supplier Contact'
+    ]
+    ws.append([])
+    ws.append(headers)
+    ws.row_dimensions[4].height = 28
+
+    header_fill = PatternFill(start_color='0284C7', end_color='0284C7', fill_type='solid')
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    for col_num in range(1, len(headers) + 1):
+        cell = ws.cell(row=4, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+    row_num = 5
+    total_loss_sum = Decimal('0.00')
+    total_mrp_loss_sum = Decimal('0.00')
+    total_units_sum = 0
+
+    thin_border = Border(
+        left=Side(style='thin', color='E2E8F0'),
+        right=Side(style='thin', color='E2E8F0'),
+        top=Side(style='thin', color='E2E8F0'),
+        bottom=Side(style='thin', color='E2E8F0')
+    )
+
+    for b in risk_batches:
+        days_left = (b.expiry_date - today).days
+        unit_cost = b.purchase_price if b.purchase_price > 0 else (b.medicine.price if b.medicine else Decimal('0.00'))
+        mrp = b.medicine.price if b.medicine else Decimal('0.00')
+        tot_loss = Decimal(str(b.quantity)) * unit_cost
+        tot_mrp_loss = Decimal(str(b.quantity)) * mrp
+
+        total_loss_sum += tot_loss
+        total_mrp_loss_sum += tot_mrp_loss
+        total_units_sum += b.quantity
+
+        if days_left < 0:
+            status_text = f"EXPIRED ({abs(days_left)}d ago)"
+            row_fill = PatternFill(start_color='FFF1F2', end_color='FFF1F2', fill_type='solid')
+        elif days_left <= 7:
+            status_text = f"CRITICAL ({days_left}d left)"
+            row_fill = PatternFill(start_color='FEF2F2', end_color='FEF2F2', fill_type='solid')
+        elif days_left <= 30:
+            status_text = f"EXPIRING SOON ({days_left}d left)"
+            row_fill = PatternFill(start_color='FFFBEB', end_color='FFFBEB', fill_type='solid')
+        else:
+            status_text = f"WARNING ({days_left}d left)"
+            row_fill = PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid')
+
+        sup_name = b.medicine.supplier.name if (b.medicine and b.medicine.supplier) else 'N/A'
+        sup_contact = b.medicine.supplier.contact_number if (b.medicine and b.medicine.supplier) else 'N/A'
+
+        row_data = [
+            b.medicine.name if b.medicine else 'N/A',
+            b.medicine.category.name if (b.medicine and b.medicine.category) else 'General',
+            b.batch_name,
+            b.quantity,
+            b.expiry_date.strftime('%d-%b-%Y'),
+            status_text,
+            float(unit_cost),
+            float(mrp),
+            float(tot_loss),
+            float(tot_mrp_loss),
+            sup_name,
+            sup_contact
+        ]
+        ws.append(row_data)
+
+        for col_num in range(1, len(headers) + 1):
+            cell = ws.cell(row=row_num, column=col_num)
+            cell.fill = row_fill
+            cell.border = thin_border
+            if col_num in [4, 7, 8, 9, 10]:
+                cell.alignment = Alignment(horizontal='right', vertical='center')
+            else:
+                cell.alignment = Alignment(horizontal='left' if col_num in [1, 2, 11] else 'center', vertical='center')
+            if col_num in [7, 8, 9, 10]:
+                cell.number_format = '₹#,##0.00'
+        row_num += 1
+
+    # Total row
+    summary_row = [
+        'TOTAL AUDITED LOSS', '', '', total_units_sum, '', '', '', '',
+        float(total_loss_sum), float(total_mrp_loss_sum), '', ''
+    ]
+    ws.append(summary_row)
+    ws.row_dimensions[row_num].height = 24
+    summary_fill = PatternFill(start_color='0F172A', end_color='0F172A', fill_type='solid')
+    summary_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    for col_num in range(1, len(headers) + 1):
+        cell = ws.cell(row=row_num, column=col_num)
+        cell.fill = summary_fill
+        cell.font = summary_font
+        cell.border = thin_border
+        if col_num in [4, 9, 10]:
+            cell.alignment = Alignment(horizontal='right', vertical='center')
+            if col_num in [9, 10]:
+                cell.number_format = '₹#,##0.00'
+        else:
+            cell.alignment = Alignment(horizontal='left', vertical='center')
+
+    col_widths = {
+        'A': 28, 'B': 18, 'C': 16, 'D': 16, 'E': 15, 'F': 24,
+        'G': 18, 'H': 20, 'I': 26, 'J': 26, 'K': 24, 'L': 18
+    }
+    for col_letter, width in col_widths.items():
+        ws.column_dimensions[col_letter].width = width
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="pharmacy_expiry_financial_loss_audit_{today}.xlsx"'
+    wb.save(response)
+    return response
 
 
 @assistant_or_above
